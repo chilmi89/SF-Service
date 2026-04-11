@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { verifyJWT } from '@/lib/jwt';
+import { verifySessionToken } from '@/lib/session';
 import cloudinary from '@/lib/cloudinary';
 
 /**
@@ -21,7 +21,7 @@ import cloudinary from '@/lib/cloudinary';
  *   put:
  *     summary: Memperbarui data tenant (Mendukung upload gambar toko)
  *     security:
- *       - BearerAuth: []
+ *       - CookieAuth: []
  *     tags: [Tenants]
  *     requestBody:
  *       required: true
@@ -57,7 +57,7 @@ import cloudinary from '@/lib/cloudinary';
  *   delete:
  *     summary: Menghapus tenant
  *     security:
- *       - BearerAuth: []
+ *       - CookieAuth: []
  *     tags: [Tenants]
  *     responses:
  *       204:
@@ -65,7 +65,7 @@ import cloudinary from '@/lib/cloudinary';
  */
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -86,13 +86,13 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.split(' ')[1];
-    if (!token || !(await verifyJWT(token))) {
+    // 1. Verifikasi Identitas dari HttpOnly Cookie
+    const token = request.cookies.get('token')?.value;
+    if (!token || !(await verifySessionToken(token))) {
       return NextResponse.json({ error: 'Tidak sah' }, { status: 401 });
     }
 
@@ -175,13 +175,13 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.split(' ')[1];
-    if (!token || !(await verifyJWT(token))) {
+    // 1. Verifikasi Identitas dari HttpOnly Cookie
+    const token = request.cookies.get('token')?.value;
+    if (!token || !(await verifySessionToken(token))) {
       return NextResponse.json({ error: 'Tidak sah' }, { status: 401 });
     }
 

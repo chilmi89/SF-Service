@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { signJWT } from '@/lib/jwt';
+import { createSessionToken } from '@/lib/session';
 
 /**
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Melakukan login user
- *     description: Memvalidasi kredensial login (email dan password) dan mengembalikan data basic user (tanpa token aktif jika hanya basic auth).
+ *     summary: Melakukan login user (HttpOnly Cookie)
+ *     description: Memvalidasi kredensial login dan menyimpan sesi di dalam **HttpOnly Cookie** yang aman (Bank Standard).
  *     tags:
  *       - Auth
  *     requestBody:
@@ -109,24 +109,35 @@ export async function POST(request: Request) {
       redirectPath = '/home';
     }
 
-    // 4. Buat Token JWT
-    const token = await signJWT({
+    // 4. Buat Token Sesi (Session)
+    const token = await createSessionToken({
       userId: user.id,
       email: user.email,
       role: roleName,
       profileId: profile?.id
     });
 
-    // 5. Login berhasil (Minimal respon sesuai permintaan + Token)
-    return NextResponse.json(
+    // 5. Login berhasil - Set Token di HttpOnly Cookie
+    const response = NextResponse.json(
       { 
         message: 'Login berhasil', 
-        token: token,
         redirectPath: redirectPath,
         profile_id: profile?.id || null
       },
       { status: 200 }
     );
+
+    response.cookies.set({
+      name: 'token',
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 // 1 hari
+    });
+
+    return response;
     
   } catch (error) {
     console.error('Login API Error:', error);

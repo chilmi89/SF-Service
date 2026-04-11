@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { createSessionToken } from '@/lib/session';
 
 /**
  * @swagger
@@ -114,10 +115,34 @@ export async function POST(request: Request) {
       console.error('Error saat membuat profile baru:', profileError);
     }
 
-    return NextResponse.json(
-      { message: 'Registrasi berhasil, dan profile berhasil dibuat', user: newUser },
+    // 6. Buat Sesi agar user langsung ter-login
+    const token = await createSessionToken({
+      userId: newUser.id,
+      email: newUser.email,
+      role: 'user biasa', // Default role name
+      profileId: null // Baru dibuat, belum ada ID profil spesifik di return
+    });
+
+    const response = NextResponse.json(
+      { 
+        message: 'Registrasi berhasil, dan profile berhasil dibuat', 
+        user: newUser,
+        redirectPath: '/home'
+      },
       { status: 201 }
     );
+
+    response.cookies.set({
+      name: 'token',
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 // 1 hari
+    });
+
+    return response;
   } catch (error) {
     console.error('Register API Error:', error);
     return NextResponse.json(

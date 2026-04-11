@@ -81,7 +81,7 @@ CREATE TABLE public.orders (
     created_at TIMESTAMP DEFAULT now()
 );
 
--- 10. Table: tasks
+-- 10. Table: taskss
 CREATE TABLE public.tasks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,

@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { verifyJWT } from '@/lib/jwt';
+import { verifySessionToken } from '@/lib/session';
 import cloudinary from '@/lib/cloudinary';
 
 /**
@@ -23,7 +23,7 @@ import cloudinary from '@/lib/cloudinary';
  *     summary: Memperbarui data profil (Mendukung upload file avatar)
  *     tags: [Profiles]
  *     security:
- *       - BearerAuth: []
+ *       - CookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -37,7 +37,6 @@ import cloudinary from '@/lib/cloudinary';
  *               avatar_url: { type: string }
  *               email: { type: string }
  *               password: { type: string }
- *               kode_tenant: { type: string }
  *         multipart/form-data:
  *           schema:
  *             type: object
@@ -47,7 +46,6 @@ import cloudinary from '@/lib/cloudinary';
  *               address: { type: string }
  *               email: { type: string }
  *               password: { type: string }
- *               kode_tenant: { type: string }
  *               file:
  *                 type: string
  *                 format: binary
@@ -59,14 +57,14 @@ import cloudinary from '@/lib/cloudinary';
  *     summary: Menghapus profil
  *     tags: [Profiles]
  *     security:
- *       - BearerAuth: []
+ *       - CookieAuth: []
  *     responses:
  *       204:
  *         description: Berhasil dihapus
  */
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -103,15 +101,14 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // 1. Verifikasi Token
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.split(' ')[1];
+    // 1. Verifikasi Identitas dari HttpOnly Cookie
+    const token = request.cookies.get('token')?.value;
     
-    const decoded = token ? await verifyJWT(token) : null;
+    const decoded = token ? await verifySessionToken(token) : null;
     if (!token || !decoded) {
       return NextResponse.json({ error: 'Sesi habis atau tidak sah. Silakan login kembali.' }, { status: 401 });
     }
@@ -144,7 +141,6 @@ export async function PUT(
         full_name: formData.get('full_name') as string || undefined,
         phone: formData.get('phone') as string || undefined,
         address: formData.get('address') as string || undefined,
-        kode_tenant: formData.get('kode_tenant') as string || undefined,
       };
       email = formData.get('email') as string;
       password = formData.get('password') as string;
@@ -178,7 +174,6 @@ export async function PUT(
         phone: body.phone,
         address: body.address,
         avatar_url: body.avatar_url,
-        kode_tenant: body.kode_tenant,
       };
       email = body.email;
       password = body.password;
@@ -249,15 +244,14 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // 1. Verifikasi Token
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.split(' ')[1];
+    // 1. Verifikasi Identitas dari HttpOnly Cookie
+    const token = request.cookies.get('token')?.value;
     
-    if (!token || !(await verifyJWT(token))) {
+    if (!token || !(await verifySessionToken(token))) {
       return NextResponse.json({ error: 'Sesi habis atau tidak sah. Silakan login kembali.' }, { status: 401 });
     }
 

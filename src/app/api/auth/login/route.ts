@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { supabase } from '@/lib/supabase'; // Menyesuaikan dengan letak supabase.ts kita
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { signJWT } from '@/lib/jwt';
 
 /**
  * @swagger
@@ -29,6 +30,20 @@ import { supabase } from '@/lib/supabase'; // Menyesuaikan dengan letak supabase
  *     responses:
  *       200:
  *         description: Login berhasil
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string, example: "Login berhasil" }
+ *                 redirectPath: { type: string, example: "/admin/dashboard" }
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string }
+ *                     email: { type: string }
+ *                     role: { type: string }
+ *                     created_at: { type: string }
  *       400:
  *         description: Email dan password tidak boleh kosong
  *       401:
@@ -47,15 +62,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Cari user berdasarkan email
-    const { data: user, error: findError } = await supabase
+    // 1. Cari user berdasarkan email (Gunakan Admin untuk menembus RLS)
+    const { data: user, error: findError } = await supabaseAdmin
       .from('auth_users')
       .select('id, email, password, created_at')
       .eq('email', email)
       .single();
 
     if (findError || !user) {
-      // Lebih aman menggunakan pesan generik saat login gagal
       return NextResponse.json(
         { error: 'Email atau password salah' },
         { status: 401 }
@@ -72,15 +86,44 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Login berhasil (Jangan kembalikan password di response)
+    // 3. Ambil Profile dan Role user (Gunakan Admin untuk bypass RLS)
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, full_name, role_id, roles(name)')
+      .eq('user_id', user.id)
+      .single();
+
+    let redirectPath = '/';
+    const roleName = (profile?.roles as any)?.name;
+
+    // Logika Redirect (Diprioritaskan dari yang paling spesifik)
+    if (roleName === 'super admin') {
+      redirectPath = '/super-admin';
+    } else if (roleName === 'owner tunggal') {
+      redirectPath = '/owner-tunggal';
+    } else if (roleName === 'admin tenant' || roleName === 'owner') {
+      redirectPath = '/admin';
+    } else if (roleName === 'teknisi') {
+      redirectPath = '/teknisi';
+    } else if (roleName === 'user biasa') {
+      redirectPath = '/home';
+    }
+
+    // 4. Buat Token JWT
+    const token = await signJWT({
+      userId: user.id,
+      email: user.email,
+      role: roleName,
+      profileId: profile?.id
+    });
+
+    // 5. Login berhasil (Minimal respon sesuai permintaan + Token)
     return NextResponse.json(
       { 
         message: 'Login berhasil', 
-        user: {
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at
-        }
+        token: token,
+        redirectPath: redirectPath,
+        profile_id: profile?.id || null
       },
       { status: 200 }
     );

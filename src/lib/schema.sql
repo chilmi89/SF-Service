@@ -33,17 +33,23 @@ CREATE TABLE public.tenants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(100) NOT NULL UNIQUE,
-    is_active BOOLEAN DEFAULT true
+    address TEXT,
+    phone VARCHAR(20),
+    image_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    kode_tenant VARCHAR(50) NOT NULL UNIQUE
 );
 
 -- 6. Table: profiles
 CREATE TABLE public.profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES public.auth_users(id) ON DELETE CASCADE,
-    tenant_id UUID REFERENCES public.tenants(id) ON DELETE SET NULL,
+    kode_tenant VARCHAR(50) REFERENCES public.tenants(kode_tenant) ON DELETE SET NULL,
     role_id UUID REFERENCES public.roles(id) ON DELETE SET NULL,
     full_name VARCHAR(255),
-    phone VARCHAR(20)
+    phone VARCHAR(20),
+    avatar_url TEXT,
+    address TEXT
 );
 
 -- 7. Table: layanan

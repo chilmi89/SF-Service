@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { verifyJWT } from '@/lib/jwt';
+import { verifySessionToken } from '@/lib/session';
 
 /**
  * @swagger
@@ -20,7 +20,7 @@ import { verifyJWT } from '@/lib/jwt';
  *   post:
  *     summary: Menambah layanan baru
  *     security:
- *       - BearerAuth: []
+ *       - CookieAuth: []
  *     tags: [Layanan]
  *     requestBody:
  *       required: true
@@ -38,7 +38,7 @@ import { verifyJWT } from '@/lib/jwt';
  *         description: Layanan dibuat
  */
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get('tenant_id');
@@ -58,11 +58,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.split(' ')[1];
-    if (!token || !(await verifyJWT(token))) {
+    // 1. Verifikasi Identitas dari HttpOnly Cookie
+    const token = request.cookies.get('token')?.value;
+    if (!token || !(await verifySessionToken(token))) {
       return NextResponse.json({ error: 'Tidak sah' }, { status: 401 });
     }
 

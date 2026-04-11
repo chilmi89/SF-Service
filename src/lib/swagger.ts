@@ -24,16 +24,16 @@ export const getApiDocs = () => {
       },
       components: {
         securitySchemes: {
-          BearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
+          CookieAuth: {
+            type: 'apiKey',
+            in: 'cookie',
+            name: 'token',
           },
         },
       },
       security: [
         {
-          BearerAuth: [],
+          CookieAuth: [],
         },
       ],
     },

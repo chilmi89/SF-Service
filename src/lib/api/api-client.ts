@@ -14,28 +14,28 @@ export async function apiClient<T = any>(
   { body, ...customConfig }: FetchOptions = {}
 ): Promise<{ data: T | null; error: string | null }> {
   // Ambil BASE_URL dari environment jika ada (misal untuk testing antar laptop)
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-  const fullUrl = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
-
-  // Ambil token dari localStorage jika sedang berjalan di browser
-  let token = null;
-  if (typeof window !== 'undefined') {
-    token = localStorage.getItem('auth_token');
-  }
+  const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const fullUrl = endpoint.startsWith('http') ? endpoint : `${baseUrl}${cleanEndpoint}`;
 
   const headers: any = { 
     'Content-Type': 'application/json', 
     ...customConfig.headers 
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  // Inject Bearer Token automatically if available and valid
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token && token !== 'undefined' && token !== 'null') {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
   }
 
   const config: RequestInit = {
     ...customConfig,
     method: customConfig.method || (body ? 'POST' : 'GET'),
     headers,
+    mode: 'cors',
   };
 
   if (body) {

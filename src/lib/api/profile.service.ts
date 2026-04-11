@@ -42,6 +42,8 @@ export const profileService = {
     phone?: string;
     address?: string;
     avatar_url?: string;
+    email?: string;
+    password?: string;
   }) {
     return apiClient(`/api/profiles/${id}`, {
       method: 'PUT',

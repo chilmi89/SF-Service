@@ -24,4 +24,35 @@ export const authService = {
       body: { email, password },
     });
   },
+
+  /**
+   * Get user profile details
+   */
+  async getProfile(id?: string) {
+    const endpoint = id ? `/api/profile/${id}` : '/api/profile';
+    return apiClient(endpoint, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Update user profile details
+   */
+  async updateProfile(id: string | null, profileData: any) {
+    const endpoint = id ? `/api/profile/${id}` : '/api/profile';
+    return apiClient(endpoint, {
+      method: 'PUT',
+      body: profileData,
+    });
+  },
+
+  /**
+   * Change user password
+   */
+  async changePassword(data: { current_password?: string; new_password: string }) {
+    return apiClient('/api/auth/update-password', {
+      method: 'POST',
+      body: data,
+    });
+  },
 };

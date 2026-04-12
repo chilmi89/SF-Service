@@ -47,7 +47,7 @@ export default function LoginPage() {
 
     const { data, error: apiError } = await authService.login(email, password);
 
-    if (apiError || !data || !data.token) {
+    if (apiError || !data) {
       setToast({
         title: "Login Gagal",
         message: apiError || "Email atau password mungkin salah.",
@@ -57,30 +57,24 @@ export default function LoginPage() {
       return;
     }
 
-    // Decode JWT Token to get user info (role, email, etc.)
+    // Login Berhasil (Token sudah ada di HttpOnly Cookie)
     try {
-      const token = data.token;
-      const payloadBase64 = token.split('.')[1];
-      const decodedPayload = JSON.parse(atob(payloadBase64));
-      
-      // Save info from token to localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("user_role", decodedPayload.role || "user");
-      localStorage.setItem("user_email", decodedPayload.email || email);
-      
-      if (decodedPayload.profileId) {
-        localStorage.setItem("profile_id", decodedPayload.profileId);
-      } else if (data.profile_id) {
+      // Simpan informasi dasar jika diperlukan (opsional, karena sisa data ada di session)
+      if (data.profile_id) {
         localStorage.setItem("profile_id", data.profile_id);
       }
-
+      
       setToast({
         title: "Berhasil Masuk",
         message: "Selamat datang kembali! Menyiapkan dashboard Anda...",
         type: "success"
       });
+
+      // Simpan path redirect untuk digunakan setelah toast ditutup
+      (window as any)._nextRedirectPath = data.redirectPath || "/";
+      
     } catch (err) {
-      console.error("Token decoding error:", err);
+      console.error("Login handling error:", err);
       setToast({
         title: "Error Sistem",
         message: "Gagal memproses data login.",
@@ -92,9 +86,11 @@ export default function LoginPage() {
 
   const handleToastClose = () => {
     const wasSuccess = toast?.type === 'success' && toast.title === "Berhasil Masuk";
+    const nextPath = (window as any)._nextRedirectPath || "/";
+    
     setToast(null);
     if (wasSuccess) {
-      router.push("/");
+      router.push(nextPath);
     }
   };
 

@@ -5,5 +5,11 @@ export default function FrontendLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <LayoutProvider>{children}</LayoutProvider>;
+  return (
+    <>
+      <LayoutProvider>
+      {children}
+      </LayoutProvider>
+    </>
+  );
 }

@@ -18,8 +18,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Toast, ToastType } from "@/components/toast";
 import Image from "next/image";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -349,5 +350,17 @@ export default function LoginPage() {
         onClose={handleToastClose}
       />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <Loader2 className="h-10 w-10 animate-spin text-black" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

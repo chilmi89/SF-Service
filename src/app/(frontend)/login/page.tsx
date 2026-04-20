@@ -64,6 +64,18 @@ export default function LoginPage() {
         localStorage.setItem("profile_id", data.profile_id);
       }
       
+      // Infer role from redirect path (since backend uses HttpOnly cookies)
+      const redirectPath = data.redirectPath || "/";
+      let role = "user biasa";
+      if (redirectPath.startsWith("/super-admin")) role = "super admin";
+      else if (redirectPath.startsWith("/owner-tunggal")) role = "owner tunggal";
+      else if (redirectPath.startsWith("/admin")) role = "admin";
+      else if (redirectPath.startsWith("/teknisi")) role = "teknisi";
+      else if (redirectPath.startsWith("/home")) role = "user biasa";
+
+      localStorage.setItem("token", "true"); // UI flag for Navbar
+      localStorage.setItem("user_role", role);
+      
       setToast({
         title: "Berhasil Masuk",
         message: "Selamat datang kembali! Menyiapkan dashboard Anda...",

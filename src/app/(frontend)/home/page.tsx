@@ -44,8 +44,8 @@ export default function Home() {
                     Tanpa Beban 
                     <span className="text-[#a1a1a1]"> bersama FixIt.</span>
                   </h1>
-                  <p className="max-w-md text-md font-medium text-[#666]">
-                    Temukan teknisi profesional untuk segala kebutuhan servis rumah Anda. Cepat, transparan, dan bergaransi resmi.
+                  <p className="max-w-2xl text-md font-medium text-[#666]">
+                    Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum quasi doloribus quos velit quibusdam ullam eveniet? A quisquam ex libero, harum ratione iure accusamus reprehenderit rerum excepturi nulla amet ipsum?
                   </p>
                 </motion.div>
 
@@ -114,7 +114,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="relative aspect-square w-80 max-w-xl lg:ml-auto"
+                className="relative aspect-square w-120 max-w-xl lg:ml-auto"
               >
                 <div className="relative h-full w-full overflow-hidden rounded-2xl bg-gray-50 shadow-[0_40px_100px_rgba(0,0,0,0.08)]">
                   <Image 
@@ -163,7 +163,7 @@ export default function Home() {
             </div>
 
             {/* Gallery Grid */}
-            <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] gap-x-8 gap-y-12">
               {[
                 { title: "Servis & Cuci AC", img: "ac", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k" },
                 { title: "Instalasi Pipa Air", img: "plumbing", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 54, views: "5.4k" },

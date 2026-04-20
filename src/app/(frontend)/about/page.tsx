@@ -66,7 +66,7 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/20 to-transparent" />
           </div>
 
-          <div className="mx-auto max-w-7xl relative z-10 w-full px-6 lg:px-12 pt-32 pb-20">
+          <div className="w-full relative z-10 px-6 md:px-12 lg:px-20 pt-32 pb-20">
             <motion.div
               initial="hidden"
               animate="visible"
@@ -106,8 +106,8 @@ export default function LandingPage() {
 
 
         {/* Highlight Features Section */}
-        <section className="px-6 py-20 bg-gray-50/30">
-          <div className="mx-auto max-w-7xl">
+        <section className="py-20 bg-gray-50/30">
+          <div className="w-full px-6 md:px-12 lg:px-20">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               {[
                 {
@@ -149,8 +149,8 @@ export default function LandingPage() {
         </section>
 
         {/* Feature Section (Grid 12) */}
-        <section className="px-6 py-24 bg-white/50">
-          <div className="mx-auto max-w-7xl">
+        <section className="py-24 bg-white/50">
+          <div className="w-full px-6 md:px-12 lg:px-20">
             {/* Section Header */}
             <div className="mb-16 max-w-2xl">
               <motion.h2 
@@ -246,8 +246,8 @@ export default function LandingPage() {
         </section>
 
         {/* Services List Section */}
-        <section className="bg-black/[0.02] px-6 py-24">
-          <div className="mx-auto max-w-7xl">
+        <section className="bg-black/[0.02] py-24">
+          <div className="w-full px-6 md:px-12 lg:px-20">
             <div className="mb-8">
               <div className="mb-10 space-y-2">
                 <h2 className="text-4xl font-black md:text-5xl">Layanan Kami</h2>
@@ -317,8 +317,8 @@ export default function LandingPage() {
         </section>
 
         {/* Why ServisHub? Section */}
-        <section className="px-6 py-24 bg-gray-50/50">
-          <div className="mx-auto max-w-7xl">
+        <section className="py-24 bg-gray-50/50">
+          <div className="w-full px-6 md:px-12 lg:px-20">
             <div className="mb-20 text-center">
               <h2 className="text-4xl font-black mb-6">Mengapa FixtIt?</h2>
               <div className="mx-auto h-1 w-16 bg-black rounded-full" />
@@ -369,8 +369,8 @@ export default function LandingPage() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="px-6 py-24 bg-white relative z-10">
-          <div className="mx-auto max-w-7xl">
+        <section className="py-24 bg-white relative z-10">
+          <div className="w-full px-6 md:px-12 lg:px-20">
             <div className="mb-16 text-center">
               <h2 className="text-4xl font-black mb-4 text-black">Apa Kata Mereka?</h2>
               <p className="text-lg font-medium text-[#666]">Pengalaman nyata dari pelanggan setia FixIt.</p>

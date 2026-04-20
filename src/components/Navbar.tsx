@@ -20,9 +20,17 @@ export default function Navbar() {
     setUserRole(role);
   }, [pathname]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Panggil API logout untuk menghapus HttpOnly cookie di backend
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+
     localStorage.removeItem("token");
     localStorage.removeItem("user_role");
+    localStorage.removeItem("profile_id");
     setIsLoggedIn(false);
     setUserRole(null);
     router.push("/home");
@@ -60,7 +68,7 @@ export default function Navbar() {
       </div>
 
       <nav className="fixed top-6 left-0 right-0 z-50 flex flex-col items-center px-4 pointer-events-none">
-        <div className="flex w-full max-w-7xl items-center justify-between rounded-3xl bg-transparent border border-black/5 shadow-xl px-4 md:px-10 py-4 backdrop-blur-md pointer-events-auto">
+        <div className="flex w-full max-w-7xl items-center justify-between rounded-xl bg-white border border-black/5 shadow-xl px-4 md:px-10 py-2 backdrop-blur-md pointer-events-auto">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <motion.div
@@ -75,21 +83,43 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-10 text-sm font-bold text-[#666] ">
+          <div className="hidden md:flex items-center gap-10 text-sm font-bold text-[#666]">
             {[
               { label: "Home", href: "/home" },
-              { label: "Services", href: "#" },
+              { label: "Services", href: "/services" },
               { label: "About", href: "/about" },
-              { label: "Contact", href: "#" },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="transition-all hover:text-black hover:scale-105"
-              >
-                {item.label}
-              </Link>
-            ))}
+              { label: "Contact", href: "/contact" },
+            ].map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="relative group py-2"
+                >
+                  <motion.div
+                    whileTap={{ 
+                      skewX: -15, 
+                      scaleX: 1.2, 
+                      scaleY: 0.8,
+                      transition: { type: "spring", stiffness: 400, damping: 10 }
+                    }}
+                    animate={isActive ? { x: [0, 12, 0, 6, 0, 3, 0] } : { x: 0 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    className={`transition-[transform,color] duration-300 ${isActive ? 'text-black italic font-bold' : 'hover:text-black hover:scale-105'}`}
+                  >
+                    {item.label}
+                  </motion.div>
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-underline"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-full"
+                      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Action Buttons */}

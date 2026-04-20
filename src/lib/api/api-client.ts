@@ -23,19 +23,12 @@ export async function apiClient<T = any>(
     ...customConfig.headers 
   };
 
-  // Inject Bearer Token automatically if available and valid
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token && token !== 'undefined' && token !== 'null') {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-  }
-
   const config: RequestInit = {
     ...customConfig,
     method: customConfig.method || (body ? 'POST' : 'GET'),
     headers,
     mode: 'cors',
+    credentials: 'include', // Penting agar cookie session dikirim
   };
 
   if (body) {

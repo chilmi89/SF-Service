@@ -53,7 +53,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Background Decorations (Joined with Navbar as requested) */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <motion.div
           variants={blobVariants}
@@ -68,7 +67,7 @@ export default function Navbar() {
       </div>
 
       <nav className="fixed top-6 left-0 right-0 z-50 flex flex-col items-center px-4 pointer-events-none">
-        <div className="flex w-full max-w-7xl items-center justify-between rounded-xl bg-white border border-black/5 shadow-xl px-4 md:px-10 py-2 backdrop-blur-md pointer-events-auto">
+        <div className="flex w-full max-w-7xl items-center justify-between rounded-xl bg-transparent border border-black/5 shadow-xl px-4 md:px-10 py-2 backdrop-blur-sm pointer-events-auto">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <motion.div

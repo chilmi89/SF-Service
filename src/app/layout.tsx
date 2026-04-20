@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: "SF-Service System Documentation",
 };
 
+import SentryInit from "@/components/SentryInit";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,6 +24,7 @@ export default function RootLayout({
       <body
         className={`${outfit.className} antialiased`}
       >
+        <SentryInit />
         {children}
       </body>
     </html>

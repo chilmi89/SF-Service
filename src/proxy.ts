@@ -1,11 +1,10 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/request';
+import { NextResponse, NextRequest } from 'next/server';
 
 /**
  * Middleware untuk mengizinkan CORS (sementara).
  * Berguna agar laptop lain bisa mengakses API ini melalui IP.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Lewati middleware jika ini adalah halaman dokumentasi (agar render HTML tdk rusak)
@@ -24,9 +23,9 @@ export function middleware(request: NextRequest) {
 
     // Handle preflight request (OPTIONS)
     if (request.method === 'OPTIONS') {
-      return new NextResponse(null, { 
-        status: 204, 
-        headers: response.headers 
+      return new NextResponse(null, {
+        status: 204,
+        headers: response.headers
       });
     }
 

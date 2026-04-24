@@ -20,8 +20,6 @@ import cloudinary from '@/lib/cloudinary';
  *         description: Berhasil
  *   put:
  *     summary: Memperbarui data tenant (Mendukung upload gambar toko)
- *     security:
- *       - CookieAuth: []
  *     tags: [Tenants]
  *     requestBody:
  *       required: true
@@ -56,8 +54,6 @@ import cloudinary from '@/lib/cloudinary';
  *         description: Berhasil diperbarui
  *   delete:
  *     summary: Menghapus tenant
- *     security:
- *       - CookieAuth: []
  *     tags: [Tenants]
  *     responses:
  *       204:

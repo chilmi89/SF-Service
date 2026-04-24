@@ -13,7 +13,6 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  *   post:
  *     summary: Membuat profil baru secara manual
  *     tags: [Profiles]
- *     security:
  *       - BearerAuth: []
  *     requestBody:
  *       required: true

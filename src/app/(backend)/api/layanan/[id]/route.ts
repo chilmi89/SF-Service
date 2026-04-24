@@ -19,8 +19,6 @@ import { verifySessionToken } from '@/lib/session';
  *         description: Berhasil
  *   put:
  *     summary: Memperbarui data layanan
- *     security:
- *       - CookieAuth: []
  *     tags: [Layanan]
  *     requestBody:
  *       required: true
@@ -36,8 +34,6 @@ import { verifySessionToken } from '@/lib/session';
  *         description: Berhasil diperbarui
  *   delete:
  *     summary: Menghapus layanan
- *     security:
- *       - CookieAuth: []
  *     tags: [Layanan]
  *     responses:
  *       204:

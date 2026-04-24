@@ -19,8 +19,6 @@ import { verifySessionToken } from '@/lib/session';
  *         description: Berhasil
  *   post:
  *     summary: Menambah layanan baru
- *     security:
- *       - CookieAuth: []
  *     tags: [Layanan]
  *     requestBody:
  *       required: true

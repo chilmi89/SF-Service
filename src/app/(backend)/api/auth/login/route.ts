@@ -98,13 +98,13 @@ export async function POST(request: Request) {
 
     // Logika Redirect (Diprioritaskan dari yang paling spesifik)
     if (roleName === 'super admin') {
-      redirectPath = '/super-admin';
+      redirectPath = '/dashboard/superadmin';
     } else if (roleName === 'owner tunggal') {
-      redirectPath = '/owner-tunggal';
+      redirectPath =  '/dashboard/owner_tunggal';
     } else if (roleName === 'admin tenant' || roleName === 'owner') {
-      redirectPath = '/admin';
+      redirectPath = '/dashboard/admin';
     } else if (roleName === 'teknisi') {
-      redirectPath = '/teknisi';
+      redirectPath = '/dashboard/teknisi';
     } else if (roleName === 'user biasa') {
       redirectPath = '/home';
     }

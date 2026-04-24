@@ -4,32 +4,21 @@ import { withSuperAdmin } from '@/lib/withSuperAdmin';
 
 /**
  * @swagger
- * /api/users:
+ * /api/super-admin/roles:
  *   get:
- *     summary: Ambil semua daftar user beserta profile dan role-nya
- *     tags: [Users]
+ *     summary: Ambil semua daftar role
+ *     description: Mengembalikan daftar semua role yang ada di sistem (Role statis/manual dari DB)
+ *     tags: [Super Admin]
+ *     responses:
+ *       200:
+ *         description: Berhasil mengambil data roles
  */
 
 export const GET = withSuperAdmin(async () => {
   const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .select(`
-      id,
-      full_name,
-      phone,
-      address,
-      avatar_url,
-      kode_tenant,
-      auth_users (
-        id,
-        email,
-        created_at
-      ),
-      roles (
-        id,
-        name
-      )
-    `);
+    .from('roles')
+    .select('*')
+    .order('name');
 
   if (error) throw error;
   return NextResponse.json({ data }, { status: 200 });

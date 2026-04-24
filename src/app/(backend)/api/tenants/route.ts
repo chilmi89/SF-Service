@@ -13,8 +13,6 @@ import { verifySessionToken } from '@/lib/session';
  *         description: Berhasil mengambil data
  *   post:
  *     summary: Membuat tenant baru
- *     security:
- *       - CookieAuth: []
  *     tags: [Tenants]
  *     requestBody:
  *       required: true

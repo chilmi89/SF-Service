@@ -127,14 +127,14 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-6 py-2.5 text-sm font-bold text-black transition-all hover:bg-gray-50 active:scale-95"
+                  className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-bold text-black transition-all hover:bg-gray-50 active:scale-95"
                 >
                   <User className="h-4 w-4" />
                   Masuk
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-full bg-black px-8 py-3 text-sm font-black text-white transition-all hover:bg-black/90 hover:shadow-xl active:scale-95"
+                  className="rounded-full bg-black px-5 py-2 text-sm font-bold text-white transition-all hover:bg-black/90 hover:shadow-xl active:scale-95"
                 >
                   Daftar
                 </Link>
@@ -144,7 +144,7 @@ export default function Navbar() {
                 {userRole && !userRole.includes("user") && (
                   <Link
                     href="/dashboard/superadmin"
-                    className="flex items-center gap-2 rounded-full bg-black px-8 py-3 text-sm font-black text-white transition-all hover:bg-black/90 hover:shadow-xl active:scale-95 shadow-lg"
+                    className="flex items-center gap-2 rounded-full bg-black px-8 py-3 text-sm font-bold text-white transition-all hover:bg-black/90 hover:shadow-xl active:scale-95 shadow-lg"
                   >
                     Dashboard
                     <ArrowUpRight className="h-4 w-4" />

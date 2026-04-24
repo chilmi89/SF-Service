@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -25,11 +26,29 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const [activeCategory, setActiveCategory] = useState("Semua");
+
+  const services = [
+    { title: "Servis & Cuci AC", category: "Servis AC", img: "ac", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k" },
+    { title: "Instalasi Pipa Air", category: "Pipa Air", img: "plumbing", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 54, views: "5.4k" },
+    { title: "Reparasi Elektronik", category: "Elektronik", img: "hero", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 164, views: "10.2k" },
+    { title: "Servis Mesin Cuci", category: "Elektronik", img: "feature", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 47, views: "3.3k" },
+    { title: "Pasang Tandon Air", category: "Pipa Air", img: "card", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 58, views: "1.1k" },
+    { title: "Perbaikan Atap", category: "Pertukangan", img: "feature", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 92, views: "4.5k" },
+    { title: "Instalasi Listrik", category: "Listrik", img: "hero", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 120, views: "7.8k" },
+    { title: "Servis Pompa Air", category: "Pipa Air", img: "plumbing", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 43, views: "2.1k" },
+    { title: "Perbaikan Kulkas", category: "Elektronik", img: "ac", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 76, views: "5.9k" },
+    { title: "Pembersihan Tandon", category: "Pipa Air", img: "card", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k" },
+  ];
+
+  const filteredServices = activeCategory === "Semua" 
+    ? services 
+    : services.filter(service => service.category === activeCategory);
+
   return (
     <div className="min-h-screen bg-transparent text-black">
       <main className="relative z-10">
-        
-        {/* HERO SECTION */}
+
         <section className="px-8 lg:px-24 pt-44 pb-16 relative overflow-hidden">
           <div className="w-full">
             <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
@@ -50,28 +69,6 @@ export default function Home() {
                 </motion.div>
 
                 <div className="space-y-8">
-                  {/* Category Pill Tabs */}
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-2 rounded-full border border-black/5 bg-white px-6 py-3 text-sm font-bold shadow-sm transition-all hover:border-black cursor-pointer">
-                      <LayoutGrid className="h-4 w-4" />
-                      Semua
-                    </div>
-                    {[
-                      { name: "Pipa Air", icon: <Droplets className="h-4 w-4" /> },
-                      { name: "Listrik", icon: <Zap className="h-4 w-4" /> },
-                      { name: "Elektronik", icon: <Monitor className="h-4 w-4" /> },
-                    ].map((item, i) => (
-                      <button 
-                        key={i}
-                        className="group flex items-center gap-2 rounded-full border border-black/5 bg-white px-6 py-3 text-sm font-bold text-[#666] transition-all hover:bg-black hover:text-white"
-                      >
-                        <span className="text-[#a1a1a1] transition-transform group-hover:scale-110 group-hover:text-white">{item.icon}</span>
-                        {item.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Search Bar (Image Match) */}
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -92,21 +89,6 @@ export default function Home() {
                       </button>
                     </div>
                   </motion.div>
-
-                  {/* Popular Tags */}
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="font-bold text-black">Popular:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {["cuci ac", "pipa bocor", "instalasi listrik", "servis kulkas", "kunci pintu"].map((tag, i) => (
-                        <button 
-                          key={tag} 
-                          className={`rounded-full border px-5 py-2 text-xs font-medium transition-all ${i === 1 ? "border-black bg-white text-[#213547]" : "border-black/10 bg-white text-[#5d6d7e] hover:border-black hover:text-black"}`}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -127,57 +109,37 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent" />
                 </div>
                 
-                {/* Decorative blob */}
                 <div className="absolute -z-10 -top-20 -right-20 h-96 w-96 rounded-full bg-black/[0.02] blur-[100px]" />
               </motion.div>
             </div>
           </div>
         </section>
-
-        {/* SERVICE GALLERY SECTION (Dribbble Style) */}
+        
         <section className="px-8 lg:px-24 py-16 border-t border-black/[0.05]">
           <div className="w-full">
-            {/* Gallery Header / Filters */}
             <div className="mb-12 flex items-center justify-between">
-              {/* Popular Dropdown */}
               <button className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition-all hover:border-black">
                 Popular <ChevronDown className="h-4 w-4" />
               </button>
-
-              {/* Centered Discovery Tabs */}
               <div className="hidden items-center gap-8 lg:flex">
-                {["Semua", "Servis AC", "Pipa Air", "Listrik", "Elektronik", "Pertukangan"].map((tab, i) => (
+                {["Semua", "Servis AC", "Pipa Air", "Listrik", "Elektronik", "Pertukangan"].map((tab) => (
                   <button 
                     key={tab} 
-                    className={`text-sm font-bold transition-all hover:text-black ${i === 0 ? "text-black border-b-2 border-black pb-1" : "text-[#a1a1a1]"}`}
+                    onClick={() => setActiveCategory(tab)}
+                    className={`text-sm font-bold transition-all hover:text-black ${activeCategory === tab ? "text-black border-b-2 border-black pb-1" : "text-[#a1a1a1]"}`}
                   >
                     {tab}
                   </button>
                 ))}
               </div>
-
-              {/* Filters Button */}
               <button className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition-all hover:border-black">
                 <SlidersHorizontal className="h-4 w-4" /> Filters
               </button>
             </div>
-
-            {/* Gallery Grid */}
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] gap-x-8 gap-y-12">
-              {[
-                { title: "Servis & Cuci AC", img: "ac", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k" },
-                { title: "Instalasi Pipa Air", img: "plumbing", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 54, views: "5.4k" },
-                { title: "Reparasi Elektronik", img: "hero", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 164, views: "10.2k" },
-                { title: "Servis Mesin Cuci", img: "feature", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 47, views: "3.3k" },
-                { title: "Pasang Tandon Air", img: "card", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 58, views: "1.1k" },
-                { title: "Perbaikan Atap", img: "feature", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 92, views: "4.5k" },
-                { title: "Instalasi Listrik", img: "hero", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 120, views: "7.8k" },
-                { title: "Servis Pompa Air", img: "plumbing", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 43, views: "2.1k" },
-                { title: "Perbaikan Kulkas", img: "ac", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 76, views: "5.9k" },
-                { title: "Pembersihan Tandon", img: "card", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k" },
-              ].map((item, i) => (
+              {filteredServices.map((item, i) => (
                 <motion.div 
-                  key={i}
+                  key={`${activeCategory}-${i}`}
                   initial={{ opacity: 0, scale: 0.95 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
@@ -191,7 +153,6 @@ export default function Home() {
                       fill 
                       className="object-cover grayscale transition-transform duration-700 group-hover:scale-110"
                     />
-                    {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 flex items-end p-4">
                       <div className="flex w-full items-center justify-between text-white">
                         <span className="text-xs font-bold truncate pr-2">{item.title}</span>
@@ -201,8 +162,6 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Info Bar */}
                   <div className="mt-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="relative h-6 w-6 overflow-hidden rounded-full border border-black/10">
@@ -226,21 +185,21 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
-            {/* Show More Button */}
-            <div className="mt-20 flex justify-center">
-              <button className="rounded-2xl border border-black/10 bg-black px-8 py-3 text-sm text-white font-medium shadow-sm transition-all hover:border-black active:scale-95">
-                Show more
-              </button>
-            </div>
+            {filteredServices.length > 20 && (
+              <div className="mt-20 flex justify-center">
+                <button className="rounded-2xl border border-black/10 bg-black px-8 py-3 text-sm text-white font-medium shadow-sm transition-all hover:border-black active:scale-95">
+                  Show more
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* KEUNGGULAN SECTION (Marquee Gallery Style) */}
         <section className="py-24 bg-white overflow-hidden border-t border-black/[0.05]">
           <div className="flex relative">
             <motion.div 
               className="flex gap-8 px-6"
-              animate={{ x: [0, -1650] }} // Adjust based on content width
+              animate={{ x: [0, -1650] }} 
               transition={{ 
                 duration: 35, 
                 repeat: Infinity, 
@@ -260,7 +219,7 @@ export default function Home() {
                   ].map((item, i) => (
                     <div 
                       key={i}
-                      className="group cursor-pointer w-[280px] shrink-0"
+                      className="group cursor-pointer w-[220px] shrink-0"
                     >
                       <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-black/[0.05] bg-gray-50 flex items-center justify-center">
                         <Image 

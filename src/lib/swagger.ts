@@ -22,20 +22,6 @@ export const getApiDocs = () => {
                      '}\n' +
                      '```',
       },
-      components: {
-        securitySchemes: {
-          CookieAuth: {
-            type: 'apiKey',
-            in: 'cookie',
-            name: 'token',
-          },
-        },
-      },
-      security: [
-        {
-          CookieAuth: [],
-        },
-      ],
     },
   });
   return spec;

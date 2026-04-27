@@ -22,8 +22,6 @@ import cloudinary from '@/lib/cloudinary';
  *   put:
  *     summary: Memperbarui data profil (Mendukung upload file avatar)
  *     tags: [Profiles]
- *     security:
- *       - CookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -56,8 +54,6 @@ import cloudinary from '@/lib/cloudinary';
  *   delete:
  *     summary: Menghapus profil
  *     tags: [Profiles]
- *     security:
- *       - CookieAuth: []
  *     responses:
  *       204:
  *         description: Berhasil dihapus

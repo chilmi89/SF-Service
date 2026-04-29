@@ -53,28 +53,6 @@ export default function SuperAdminLayout({
         {/* Navigation */}
         <SidebarMenu role="superadmin" />
 
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-gray-300 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between rounded-2xl bg-black/[0.03] p-4 transition-all hover:bg-black/[0.06] cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full border border-black/10 bg-white overflow-hidden">
-                <Image src="/images/budi.png" alt="Admin" width={40} height={40} className="object-cover" />
-              </div>
-              <div>
-                <p className="text-xs font-black">Rizky Admin</p>
-                <p className="text-[10px] font-bold text-[#666]">Super Admin</p>
-              </div>
-            </div>
-            <LogOut 
-              size={16} 
-              className="text-[#a1a1a1] hover:text-black transition-colors cursor-pointer" 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLogout();
-              }}
-            />
-          </div>
-        </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}

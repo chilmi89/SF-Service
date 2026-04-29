@@ -18,12 +18,12 @@ import {
 } from "lucide-react";
 import { Toast, ToastType } from "@/components/toast";
 
-import { useDashboard } from "@/app/hooks";
-import { Role, Permission } from "@/app/types/dashboard";
-
 export default function PermissionsPage() {
   const [selectedRole, setSelectedRole] = useState("");
+  const [roles, setRoles] = useState<{ id: string, name: string }[]>([]);
+  const [permissions, setPermissions] = useState<any[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -33,9 +33,9 @@ export default function PermissionsPage() {
   // Data States for Modals
   const [newPermName, setNewPermName] = useState("");
   const [targetRoleIds, setTargetRoleIds] = useState<string[]>([]);
-  const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
+  const [editingPermission, setEditingPermission] = useState<any>(null);
   const [editPermName, setEditPermName] = useState("");
-  const [permissionToDelete, setPermissionToDelete] = useState<Permission | null>(null);
+  const [permissionToDelete, setPermissionToDelete] = useState<any>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,15 +46,6 @@ export default function PermissionsPage() {
     title: '',
     message: ''
   });
-
-  const { 
-    roles: rolesHook, 
-    permissions: permissionsHook, 
-    updatePermissions, 
-    addPermission, 
-    updatePermission, 
-    deletePermission 
-  } = useDashboard();
 
   const showToast = (type: ToastType, title: string, message: string) => {
     setToast({ show: true, type, title, message });
@@ -73,55 +64,102 @@ export default function PermissionsPage() {
     setIsDropdownOpen(false);
   };
 
-  useEffect(() => {
-    rolesHook.execute();
-  }, [rolesHook.execute]);
+  const fetchRoles = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/super-admin/roles', {
+        headers: { 'accept': '*/*' }
+      });
+      const result = await response.json();
+      const rolesData = result.data || (Array.isArray(result) ? result : []);
+      setRoles(rolesData);
+      
+      if (rolesData.length > 0 && !selectedRole && !localStorage.getItem("selected_role_management")) {
+        handleRoleChange(rolesData[0].name);
+      }
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+    }
+  }, [selectedRole]);
 
   useEffect(() => {
-    const rolesData = (rolesHook.data as any) || [];
-    if (rolesData.length > 0 && !selectedRole && !localStorage.getItem("selected_role_management")) {
-      handleRoleChange(rolesData[0].name);
+    fetchRoles();
+  }, [fetchRoles]);
+
+  const loadPermissions = useCallback(async () => {
+    if (!selectedRole || roles.length === 0) return;
+
+    const currentRole = roles.find(r => r.name.toLowerCase() === selectedRole.toLowerCase());
+    if (!currentRole) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/api/super-admin/role-permissions?role_id=${currentRole.id}`, {
+        headers: { 'accept': '*/*' }
+      });
+      const result = await response.json();
+      
+      const rawData = result.permissions || result.data || result || [];
+      const formattedData = Array.isArray(rawData) ? rawData.map((p: any) => ({
+        ...p,
+        label: p.label || p.name.replace(/_/g, ' ').replace(/\b\w/g, (l: any) => l.toUpperCase()),
+        desc: p.desc || `Izin untuk fitur ${p.name.replace(/_/g, ' ')}`,
+        assigned: p.assigned ?? false 
+      })) : [];
+
+      const initiallyOwned = formattedData.filter((p: any) => p.assigned === true);
+      setPermissions(initiallyOwned);
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      showToast('error', 'Gagal Memuat', 'Tidak dapat mengambil data hak akses.');
+      setPermissions([]);
+    } finally {
+      setIsLoading(false);
     }
-  }, [rolesHook.data, selectedRole]);
+  }, [selectedRole, roles]);
 
   useEffect(() => {
-    if (!selectedRole || !rolesHook.data) return;
-    const currentRole = (rolesHook.data as any[]).find((r: Role) => r.name.toLowerCase() === selectedRole.toLowerCase());
-    if (currentRole) {
-      permissionsHook.execute(currentRole.id);
-    }
-  }, [selectedRole, rolesHook.data, permissionsHook.execute]);
+    loadPermissions();
+  }, [loadPermissions]);
 
   const togglePermission = (id: string) => {
-    if (!permissionsHook.data) return;
-    const updated = (permissionsHook.data as any[]).map((p: Permission) => 
+    setPermissions(prev => prev.map(p => 
       p.id === id ? { ...p, assigned: !p.assigned } : p
-    );
-    permissionsHook.setData(updated);
+    ));
   };
 
   const handleSave = async () => {
-    const currentRole = (rolesHook.data as any[])?.find((r: Role) => r.name.toLowerCase() === selectedRole.toLowerCase());
-    if (!currentRole || !permissionsHook.data) return;
+    const currentRole = roles.find(r => r.name.toLowerCase() === selectedRole.toLowerCase());
+    if (!currentRole) return;
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     try {
-      const payload = (permissionsHook.data as any[]).map((p: Permission) => ({
-        id: p.id,
-        assigned: p.assigned
-      }));
+      const payload = {
+        role_id: currentRole.id,
+        permissions: permissions.map(p => ({
+          id: p.id,
+          assigned: p.assigned
+        }))
+      };
 
-      const { error } = await updatePermissions(currentRole.id, payload);
+      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify(payload)
+      });
 
-      if (!error) {
+      if (response.ok) {
         showToast('success', 'Berhasil Disimpan', `Perubahan hak akses untuk ${selectedRole} telah diperbarui.`);
       } else {
-        showToast('error', 'Gagal Menyimpan', error);
+        showToast('error', 'Gagal Menyimpan', 'Terjadi kesalahan saat menyimpan perubahan.');
       }
     } catch (error) {
+      console.error("Error saving permissions:", error);
       showToast('error', 'Kesalahan Koneksi', 'Tidak dapat terhubung ke server.');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -133,18 +171,31 @@ export default function PermissionsPage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await addPermission(newPermName, targetRoleIds);
+      const payload = {
+        name: newPermName,
+        role_ids: targetRoleIds
+      };
 
-      if (!error) {
+      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
         showToast('success', 'Berhasil Ditambahkan', 'Permission baru berhasil didaftarkan ke sistem.');
         setIsAddModalOpen(false);
         setNewPermName("");
         setTargetRoleIds([]);
-        permissionsHook.execute(); // Refresh
+        loadPermissions(); 
       } else {
-        showToast('error', 'Gagal', error);
+        showToast('error', 'Gagal', 'Sistem gagal menambahkan permission baru.');
       }
     } catch (error) {
+      console.error("Error adding permission:", error);
       showToast('error', 'Kesalahan', 'Terjadi gangguan koneksi saat menambah data.');
     } finally {
       setIsSubmitting(false);
@@ -156,18 +207,31 @@ export default function PermissionsPage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await updatePermission(editingPermission.id, editPermName);
+      const payload = {
+        permission_id: editingPermission.id,
+        name: editPermName
+      };
 
-      if (!error) {
+      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
         showToast('success', 'Berhasil Diperbarui', 'Nama permission telah berhasil diubah.');
         setIsEditModalOpen(false);
         setEditingPermission(null);
         setEditPermName("");
-        permissionsHook.execute();
+        loadPermissions();
       } else {
-        showToast('error', 'Gagal Perbarui', error);
+        showToast('error', 'Gagal Perbarui', 'Sistem gagal memperbarui nama permission.');
       }
     } catch (error) {
+      console.error("Error updating permission:", error);
       showToast('error', 'Kesalahan', 'Terjadi gangguan koneksi saat memperbarui data.');
     } finally {
       setIsSubmitting(false);
@@ -179,30 +243,36 @@ export default function PermissionsPage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await deletePermission(permissionToDelete.id);
+      const response = await fetch(`http://localhost:3000/api/super-admin/role-permissions?permission_id=${permissionToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'accept': '*/*'
+        }
+      });
 
-      if (!error) {
+      if (response.ok) {
         showToast('success', 'Berhasil Dihapus', 'Permission telah dihapus dari sistem.');
         setIsDeleteModalOpen(false);
         setPermissionToDelete(null);
-        permissionsHook.execute();
+        loadPermissions();
       } else {
-        showToast('error', 'Gagal Menghapus', error);
+        showToast('error', 'Gagal Menghapus', 'Sistem tidak dapat menghapus permission ini.');
       }
     } catch (error) {
+      console.error("Error deleting permission:", error);
       showToast('error', 'Kesalahan', 'Terjadi gangguan koneksi saat menghapus data.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const openEditModal = (perm: Permission) => {
+  const openEditModal = (perm: any) => {
     setEditingPermission(perm);
     setEditPermName(perm.name);
     setIsEditModalOpen(true);
   };
 
-  const openDeleteModal = (perm: Permission) => {
+  const openDeleteModal = (perm: any) => {
     setPermissionToDelete(perm);
     setIsDeleteModalOpen(true);
   };
@@ -212,10 +282,6 @@ export default function PermissionsPage() {
       prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]
     );
   };
-
-  const roles = (rolesHook.data as any[]) || [];
-  const permissions = (permissionsHook.data as any[]) || [];
-  const isLoading = rolesHook.isLoading || permissionsHook.isLoading;
 
   return (
     <div className="p-8 md:p-12 space-y-10 max-w-[1600px] mx-auto pb-32">

@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { withSuperAdmin } from '@/lib/withSuperAdmin';
 
 /**
  * @swagger
@@ -77,7 +76,7 @@ import { withSuperAdmin } from '@/lib/withSuperAdmin';
  */
 
 // 1. GET: Semua permission atau filter per role
-export const GET = withSuperAdmin(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const roleId = searchParams.get('role_id');
 
@@ -119,10 +118,10 @@ export const GET = withSuperAdmin(async (request: NextRequest) => {
   }));
 
   return NextResponse.json({ role, permissions }, { status: 200 });
-});
+}
 
 // 2. POST: Tambah permission baru (sekalian pilih role mana yg langsung dapat)
-export const POST = withSuperAdmin(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   const body = await request.json();
   const { name, role_ids } = body;
 
@@ -156,10 +155,10 @@ export const POST = withSuperAdmin(async (request: NextRequest) => {
     message: 'Permission berhasil dibuat dan di-assign',
     data: newPermission
   }, { status: 201 });
-});
+}
 
 // 3. PUT: Update nama permission
-export const PUT = withSuperAdmin(async (request: NextRequest) => {
+export async function PUT(request: NextRequest) {
   const { permission_id, name } = await request.json();
 
   if (!permission_id || !name || typeof name !== 'string' || !name.trim()) {
@@ -177,10 +176,10 @@ export const PUT = withSuperAdmin(async (request: NextRequest) => {
   }
 
   return NextResponse.json({ message: 'Nama permission berhasil diupdate' }, { status: 200 });
-});
+}
 
 // 4. DELETE: Hapus permission permanen dari DB berdasarkan ID
-export const DELETE = withSuperAdmin(async (request: NextRequest) => {
+export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const permissionId = searchParams.get('permission_id');
 
@@ -192,4 +191,4 @@ export const DELETE = withSuperAdmin(async (request: NextRequest) => {
   if (error) throw error;
 
   return NextResponse.json({ message: 'Permission berhasil dihapus dari sistem' }, { status: 200 });
-});
+}

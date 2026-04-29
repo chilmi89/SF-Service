@@ -55,4 +55,13 @@ export const authService = {
       body: data,
     });
   },
+
+  /**
+   * Logout the user
+   */
+  async logout() {
+    return apiClient('/api/auth/logout', {
+      method: 'POST',
+    });
+  },
 };

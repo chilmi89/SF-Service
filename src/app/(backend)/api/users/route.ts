@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { withSuperAdmin } from '@/lib/withSuperAdmin';
 
 /**
  * @swagger
@@ -10,7 +9,7 @@ import { withSuperAdmin } from '@/lib/withSuperAdmin';
  *     tags: [Users]
  */
 
-export const GET = withSuperAdmin(async () => {
+export async function GET(request: NextRequest) {
   const { data, error } = await supabaseAdmin
     .from('profiles')
     .select(`
@@ -33,4 +32,4 @@ export const GET = withSuperAdmin(async () => {
 
   if (error) throw error;
   return NextResponse.json({ data }, { status: 200 });
-});
+}

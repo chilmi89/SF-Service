@@ -85,7 +85,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-10 text-sm font-bold text-[#666]">
             {[
               { label: "Home", href: "/home" },
-              { label: "Services", href: "/services" },
+              { label: "Services", href: "/service" },
               { label: "About", href: "/about" },
               { label: "Contact", href: "/contact" },
             ].map((item) => {

@@ -17,7 +17,6 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { Toast, ToastType } from "@/components/toast";
-import { superAdminService } from "@/lib/api/super-admin.service";
 
 export default function PermissionsPage() {
   const [selectedRole, setSelectedRole] = useState("");
@@ -67,15 +66,14 @@ export default function PermissionsPage() {
 
   const fetchRoles = useCallback(async () => {
     try {
-      const { data: rolesData, error } = await superAdminService.getRoles();
-      if (error) {
-        console.error("Error fetching roles:", error);
-        return;
-      }
+      const response = await fetch('http://localhost:3000/api/super-admin/roles', {
+        headers: { 'accept': '*/*' }
+      });
+      const result = await response.json();
+      const rolesData = result.data || (Array.isArray(result) ? result : []);
+      setRoles(rolesData);
       
-      setRoles(rolesData || []);
-      
-      if (rolesData && rolesData.length > 0 && !selectedRole && !localStorage.getItem("selected_role_management")) {
+      if (rolesData.length > 0 && !selectedRole && !localStorage.getItem("selected_role_management")) {
         handleRoleChange(rolesData[0].name);
       }
     } catch (error) {
@@ -95,10 +93,12 @@ export default function PermissionsPage() {
 
     setIsLoading(true);
     try {
-      const { data: result, error } = await superAdminService.getRolePermissions(currentRole.id);
-      if (error) throw new Error(error);
+      const response = await fetch(`http://localhost:3000/api/super-admin/role-permissions?role_id=${currentRole.id}`, {
+        headers: { 'accept': '*/*' }
+      });
+      const result = await response.json();
       
-      const rawData = result?.permissions || result?.data || result || [];
+      const rawData = result.permissions || result.data || result || [];
       const formattedData = Array.isArray(rawData) ? rawData.map((p: any) => ({
         ...p,
         label: p.label || p.name.replace(/_/g, ' ').replace(/\b\w/g, (l: any) => l.toUpperCase()),
@@ -141,9 +141,16 @@ export default function PermissionsPage() {
         }))
       };
 
-      const { error } = await superAdminService.saveRolePermissions(payload);
+      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify(payload)
+      });
 
-      if (!error) {
+      if (response.ok) {
         showToast('success', 'Berhasil Disimpan', `Perubahan hak akses untuk ${selectedRole} telah diperbarui.`);
       } else {
         showToast('error', 'Gagal Menyimpan', 'Terjadi kesalahan saat menyimpan perubahan.');
@@ -169,9 +176,16 @@ export default function PermissionsPage() {
         role_ids: targetRoleIds
       };
 
-      const { error } = await superAdminService.addPermission(payload);
+      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify(payload)
+      });
 
-      if (!error) {
+      if (response.ok) {
         showToast('success', 'Berhasil Ditambahkan', 'Permission baru berhasil didaftarkan ke sistem.');
         setIsAddModalOpen(false);
         setNewPermName("");
@@ -198,9 +212,16 @@ export default function PermissionsPage() {
         name: editPermName
       };
 
-      const { error } = await superAdminService.updatePermission(payload);
+      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify(payload)
+      });
 
-      if (!error) {
+      if (response.ok) {
         showToast('success', 'Berhasil Diperbarui', 'Nama permission telah berhasil diubah.');
         setIsEditModalOpen(false);
         setEditingPermission(null);
@@ -222,9 +243,14 @@ export default function PermissionsPage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await superAdminService.deletePermission(permissionToDelete.id);
+      const response = await fetch(`http://localhost:3000/api/super-admin/role-permissions?permission_id=${permissionToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'accept': '*/*'
+        }
+      });
 
-      if (!error) {
+      if (response.ok) {
         showToast('success', 'Berhasil Dihapus', 'Permission telah dihapus dari sistem.');
         setIsDeleteModalOpen(false);
         setPermissionToDelete(null);
@@ -617,7 +643,6 @@ export default function PermissionsPage() {
         )}
       </AnimatePresence>
 
-      {/* MODAL DELETE CONFIRMATION */}
       <AnimatePresence>
         {isDeleteModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">

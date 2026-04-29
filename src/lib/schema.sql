@@ -60,7 +60,7 @@ CREATE TABLE public.layanan (
     harga_dasar DECIMAL(12,2)
 );
 
--- 8. Table: transactions
+-- 8. Table: transaction
 CREATE TABLE public.transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,

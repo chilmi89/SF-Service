@@ -15,10 +15,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    outputFileTracingIncludes: {
-      '/api/swagger': ['./src/app/(backend)/api/**/*.ts'],
-    },
+  outputFileTracingIncludes: {
+    '/api/swagger': ['./src/app/(backend)/api/**/*.ts'],
   },
 };
 

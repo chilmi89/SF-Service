@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { withSuperAdmin } from '@/lib/withSuperAdmin';
 
 /**
  * @swagger
@@ -16,7 +15,7 @@ import { withSuperAdmin } from '@/lib/withSuperAdmin';
  *     tags: [Users]
  */
 
-export const GET = withSuperAdmin(async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   const segments = request.nextUrl.pathname.split('/');
   const id = segments[segments.length - 1]; // id profile
 
@@ -47,9 +46,9 @@ export const GET = withSuperAdmin(async (request: NextRequest) => {
   }
 
   return NextResponse.json({ data }, { status: 200 });
-});
+}
 
-export const PUT = withSuperAdmin(async (request: NextRequest) => {
+export async function PUT(request: NextRequest) {
   const segments = request.nextUrl.pathname.split('/');
   const id = segments[segments.length - 1]; // id profile
   const { role_id } = await request.json();
@@ -67,9 +66,9 @@ export const PUT = withSuperAdmin(async (request: NextRequest) => {
 
   if (error) throw error;
   return NextResponse.json({ data, message: 'Role user berhasil diperbarui' }, { status: 200 });
-});
+}
 
-export const DELETE = withSuperAdmin(async (request: NextRequest) => {
+export async function DELETE(request: NextRequest) {
   const segments = request.nextUrl.pathname.split('/');
   const id = segments[segments.length - 1]; // id profile
 
@@ -93,4 +92,4 @@ export const DELETE = withSuperAdmin(async (request: NextRequest) => {
   }
 
   return NextResponse.json({ message: 'User berhasil dihapus' }, { status: 200 });
-});
+}

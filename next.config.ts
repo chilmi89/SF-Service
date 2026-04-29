@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/swagger': ['./src/app/(backend)/api/**/*.ts'],
+    },
+  },
 };
 
 export default withSentryConfig(nextConfig, {

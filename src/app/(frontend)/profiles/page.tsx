@@ -21,8 +21,9 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { authService } from "@/lib/api/auth.service";
-import { profileService } from "@/lib/api/profile.service";
+import { authService } from "@/app/services/authService";
+import { userService } from "@/app/services/userService";
+import { STORAGE_KEYS } from "@/app/lib/constants";
 import { Toast } from "@/components/toast";
 
 interface UserProfile {
@@ -66,11 +67,11 @@ export default function ProfilePage() {
   // Password State
   const [passwords, setPasswords] = useState({
     new: "",
-    confirm: ""
+    confirm: "",
   });
   const [showPasswords, setShowPasswords] = useState({
     new: false,
-    confirm: false
+    confirm: false,
   });
 
   const handleTriggerUpload = (e?: React.MouseEvent) => {
@@ -126,7 +127,7 @@ export default function ProfilePage() {
         setFormData((prev) => ({ ...prev, email: storedEmail }));
       }
 
-      const { data, error } = await profileService.getById(
+      const { data, error } = await userService.getProfileById(
         storedProfileId || "",
       );
 
@@ -159,7 +160,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setIsSaving(true);
     setApiError(null);
-    
+
     // Construct the data to update
     const updateData: any = {
       full_name: formData.fullName,
@@ -171,43 +172,52 @@ export default function ProfilePage() {
     // If user is trying to change password
     if (passwords.new) {
       if (passwords.new !== passwords.confirm) {
-        setToast({ title: "Password Tidak Cocok", message: "Konfirmasi password baru tidak sesuai.", type: "warning" });
+        setToast({
+          title: "Password Tidak Cocok",
+          message: "Konfirmasi password baru tidak sesuai.",
+          type: "warning",
+        });
         setIsSaving(false);
         return;
       }
       if (passwords.new.length < 8) {
-        setToast({ title: "Terlalu Pendek", message: "Password baru minimal 8 karakter.", type: "warning" });
+        setToast({
+          title: "Terlalu Pendek",
+          message: "Password baru minimal 8 karakter.",
+          type: "warning",
+        });
         setIsSaving(false);
         return;
       }
       updateData.password = passwords.new;
     }
 
-    const storedProfileId = typeof window !== "undefined" ? localStorage.getItem("profile_id") : null;
-    
+    const storedProfileId =
+      typeof window !== "undefined" ? localStorage.getItem("profile_id") : null;
+
     if (!storedProfileId) {
       setToast({
         title: "Sesi Berakhir",
         message: "ID Profil tidak ditemukan. Silakan login kembali.",
-        type: "warning"
+        type: "warning",
       });
       setIsSaving(false);
       return;
     }
 
-    const { data, error } = await profileService.update(storedProfileId, {
+    const { data, error } = await userService.updateProfile(storedProfileId, {
       ...updateData,
-      avatar_url: avatarPreview || profile?.avatar_url || undefined
+      avatar_url: avatarPreview || profile?.avatar_url || undefined,
     });
-    
+
     setIsSaving(false);
-    
+
     if (error) {
       console.error("Save Error:", error);
       setToast({
         title: "Gagal Menghubungi Server",
         message: error || "Terjadi kesalahan saat memperbarui profil.",
-        type: "error"
+        type: "error",
       });
       return;
     }
@@ -215,7 +225,7 @@ export default function ProfilePage() {
     setToast({
       title: "Update Berhasil",
       message: "Profil dan keamanan Anda telah sukses diperbarui.",
-      type: "success"
+      type: "success",
     });
 
     // Reset password fields if updated
@@ -225,10 +235,10 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user_role");
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
     localStorage.removeItem("user_email");
-    localStorage.removeItem("profile_id");
+    localStorage.removeItem(STORAGE_KEYS.PROFILE_ID);
     router.push("/");
   };
 
@@ -403,7 +413,9 @@ export default function ProfilePage() {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium transition-all focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                   placeholder="email@example.com"
                 />
@@ -493,7 +505,6 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                 {/* New Password */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-black">
@@ -562,7 +573,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-
             </section>
 
             {/* Linked Accounts */}

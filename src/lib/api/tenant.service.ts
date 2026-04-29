@@ -16,7 +16,7 @@ export const tenantService = {
 
   /**
    * Membuat tenant baru
-   * Syarat: User harus memiliki profil yang lengkap.
+   * Syarat: User harus memiliki profil yang lengkapp.
    */
   async createTenant(tenantData: {
     name: string;

@@ -21,9 +21,9 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { authService } from "@/app/services/authService";
-import { userService } from "@/app/services/userService";
-import { STORAGE_KEYS } from "@/app/lib/constants";
+import { profileService } from "@/lib/api/profile.service";
+import { authService } from "@/lib/api/auth.service";
+import { useAuth } from "@/hooks/useAuth";
 import { Toast } from "@/components/toast";
 
 interface UserProfile {
@@ -39,6 +39,7 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -127,7 +128,7 @@ export default function ProfilePage() {
         setFormData((prev) => ({ ...prev, email: storedEmail }));
       }
 
-      const { data, error } = await userService.getProfileById(
+      const { data, error } = await profileService.getById(
         storedProfileId || "",
       );
 
@@ -205,7 +206,7 @@ export default function ProfilePage() {
       return;
     }
 
-    const { data, error } = await userService.updateProfile(storedProfileId, {
+    const { data, error } = await profileService.update(storedProfileId, {
       ...updateData,
       avatar_url: avatarPreview || profile?.avatar_url || undefined,
     });
@@ -234,11 +235,8 @@ export default function ProfilePage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
-    localStorage.removeItem("user_email");
-    localStorage.removeItem(STORAGE_KEYS.PROFILE_ID);
+  const handleLogout = async () => {
+    await logout();
     router.push("/");
   };
 

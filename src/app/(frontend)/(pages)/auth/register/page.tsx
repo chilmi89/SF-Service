@@ -102,7 +102,7 @@ export default function RegisterPage() {
       toast?.type === "success" && toast.title === "Berhasil Daftar";
     setToast(null);
     if (wasSuccess) {
-      router.push("/login?registered=true");
+      router.push("/auth/login?registered=true");
     }
   };
 
@@ -399,7 +399,7 @@ export default function RegisterPage() {
               >
                 Sudah punya akun?{" "}
                 <Link
-                  href="/login"
+                  href="/auth/login"
                   className="font-black text-black hover:underline"
                 >
                   Masuk

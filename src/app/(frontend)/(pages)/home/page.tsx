@@ -24,21 +24,23 @@ import {
   SlidersHorizontal,
   LayoutGrid
 } from "lucide-react";
+import LiquidEther from "@/components/LiquidEther";
+import Masonry from "@/components/Masonry";
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState("Semua");
 
   const services = [
-    { title: "Servis & Cuci AC", category: "Servis AC", img: "ac", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k" },
-    { title: "Instalasi Pipa Air", category: "Pipa Air", img: "plumbing", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 54, views: "5.4k" },
-    { title: "Reparasi Elektronik", category: "Elektronik", img: "hero", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 164, views: "10.2k" },
-    { title: "Servis Mesin Cuci", category: "Elektronik", img: "feature", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 47, views: "3.3k" },
-    { title: "Pasang Tandon Air", category: "Pipa Air", img: "card", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 58, views: "1.1k" },
-    { title: "Perbaikan Atap", category: "Pertukangan", img: "feature", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 92, views: "4.5k" },
-    { title: "Instalasi Listrik", category: "Listrik", img: "hero", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 120, views: "7.8k" },
-    { title: "Servis Pompa Air", category: "Pipa Air", img: "plumbing", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 43, views: "2.1k" },
-    { title: "Perbaikan Kulkas", category: "Elektronik", img: "ac", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 76, views: "5.9k" },
-    { title: "Pembersihan Tandon", category: "Pipa Air", img: "card", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k" },
+    { id: "1", title: "Servis & Cuci AC", category: "Servis AC", img: "/images/ac.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k", height: 450 },
+    { id: "2", title: "Instalasi Pipa Air", category: "Pipa Air", img: "/images/plumbing.png", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 54, views: "5.4k", height: 300 },
+    { id: "3", title: "Reparasi Elektronik", category: "Elektronik", img: "/images/hero.png", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 164, views: "10.2k", height: 380 },
+    { id: "4", title: "Servis Mesin Cuci", category: "Elektronik", img: "/images/feature.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 47, views: "3.3k", height: 350 },
+    { id: "5", title: "Pasang Tandon Air", category: "Pipa Air", img: "/images/card.png", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 58, views: "1.1k", height: 420 },
+    { id: "6", title: "Perbaikan Atap", category: "Pertukangan", img: "/images/feature.png", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 92, views: "4.5k", height: 340 },
+    { id: "7", title: "Instalasi Listrik", category: "Listrik", img: "/images/hero.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 120, views: "7.8k", height: 400 },
+    { id: "8", title: "Servis Pompa Air", category: "Pipa Air", img: "/images/plumbing.png", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 43, views: "2.1k", height: 320 },
+    { id: "9", title: "Perbaikan Kulkas", category: "Elektronik", img: "/images/ac.png", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 76, views: "5.9k", height: 360 },
+    { id: "10", title: "Pembersihan Tandon", category: "Pipa Air", img: "/images/card.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k", height: 410 },
   ];
 
   const filteredServices = activeCategory === "Semua" 
@@ -49,8 +51,21 @@ export default function Home() {
     <div className="min-h-screen bg-transparent text-black">
       <main className="relative z-10">
 
-        <section className="px-8 lg:px-24 pt-44 pb-16 relative overflow-hidden">
-          <div className="w-full">
+        <section className="px-8 lg:px-24 pt-20 pb-16 relative overflow-hidden min-h-screen flex items-center">
+          {/* Background Liquid Ether */}
+          <div className="absolute inset-0 -z-10 bg-white">
+            <LiquidEther
+              colors={["#000000", "#111111", "#222222", "#333333"]}
+              mouseForce={15}
+              cursorSize={120}
+              autoDemo={true}
+              autoSpeed={0.3}
+              autoIntensity={1.5}
+              resolution={0.6}
+            />
+          </div>
+          
+          <div className="w-full relative z-10 pt-10">
             <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
               <div className="space-y-12">
                 <motion.div
@@ -64,7 +79,7 @@ export default function Home() {
                     <span className="text-[#a1a1a1]"> bersama FixIt.</span>
                   </h1>
                   <p className="max-w-2xl text-md font-medium text-[#666]">
-                    Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum quasi doloribus quos velit quibusdam ullam eveniet? A quisquam ex libero, harum ratione iure accusamus reprehenderit rerum excepturi nulla amet ipsum?
+                    Solusi terpercaya untuk segala kebutuhan perbaikan rumah Anda. Dari instalasi listrik hingga perbaikan pipa, teknisi ahli kami siap membantu dengan layanan berkualitas dan harga transparan.
                   </p>
                 </motion.div>
 
@@ -96,7 +111,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="relative aspect-square w-120 max-w-xl lg:ml-auto"
+                className="relative aspect-square w-96 max-w-lg lg:ml-auto"
               >
                 <div className="relative h-full w-full overflow-hidden rounded-2xl bg-gray-50 shadow-[0_40px_100px_rgba(0,0,0,0.08)]">
                   <Image 
@@ -136,54 +151,13 @@ export default function Home() {
                 <SlidersHorizontal className="h-4 w-4" /> Filters
               </button>
             </div>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] gap-x-8 gap-y-12">
-              {filteredServices.map((item, i) => (
-                <motion.div 
-                  key={`${activeCategory}-${i}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group cursor-pointer"
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-black/[0.05] bg-gray-50">
-                    <Image 
-                      src={`/images/${item.img}.png`} 
-                      alt={item.title} 
-                      fill 
-                      className="object-cover grayscale transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 flex items-end p-4">
-                      <div className="flex w-full items-center justify-between text-white">
-                        <span className="text-xs font-bold truncate pr-2">{item.title}</span>
-                        <div className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                          <ArrowUpRight className="h-4 w-4" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="relative h-6 w-6 overflow-hidden rounded-full border border-black/10">
-                        <Image src={item.avatar} alt={item.tech} fill className="object-cover" />
-                      </div>
-                      <span className="text-sm font-bold truncate max-w-[80px]">{item.tech.split(' ')[0]}</span>
-                      <span className="rounded bg-black px-1.5 py-0.5 text-[8px] font-black text-white">PRO</span>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-black">
-                      <div className="flex items-center gap-1 hover:text-red-500 transition-colors">
-                        <Heart className="h-3 w-3 fill-current" />
-                        <span className="text-sm font-medium">{item.likes}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        <span className="text-sm font-medium">{item.views}</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+            <div className="min-h-[1000px]">
+              <Masonry 
+                items={filteredServices} 
+                animateFrom="bottom"
+                stagger={0.03}
+                duration={0.7}
+              />
             </div>
             {filteredServices.length > 20 && (
               <div className="mt-20 flex justify-center">
@@ -219,9 +193,9 @@ export default function Home() {
                   ].map((item, i) => (
                     <div 
                       key={i}
-                      className="group cursor-pointer w-[220px] shrink-0"
+                      className="group cursor-pointer w-[180px] shrink-0"
                     >
-                      <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-black/[0.05] bg-gray-50 flex items-center justify-center">
+                      <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-black/[0.05] bg-gray-50">
                         <Image 
                           src={item.image}
                           alt={item.label}
@@ -230,34 +204,32 @@ export default function Home() {
                           className="object-cover grayscale transition-all duration-700 group-hover:scale-110 group-hover:grayscale-0"
                         />
                         {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 flex items-end p-4">
-                          <div className="flex w-full items-center justify-between text-white">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-all duration-500 group-hover:opacity-100 flex flex-col justify-between p-4 text-white">
+                          <div className="flex w-full items-center justify-between transform translate-y-[-10px] group-hover:translate-y-0 transition-transform duration-500">
                             <span className="text-xs font-bold truncate pr-2">{item.label}</span>
-                            <div className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                            <div className="h-7 w-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
                               <ArrowUpRight className="h-4 w-4" />
                             </div>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Info Bar */}
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded-full bg-black flex items-center justify-center text-[10px] font-black text-white">
-                            F
-                          </div>
-                          <span className="text-xs font-bold truncate max-w-[80px]">{item.tech}</span>
-                          <span className="rounded bg-black/[0.05] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-[#a1a1a1]">PRO</span>
-                        </div>
+                          <div className="flex items-center justify-between transform translate-y-[10px] group-hover:translate-y-0 transition-transform duration-500">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-[10px] font-black text-white">
+                                F
+                              </div>
+                              <span className="text-[10px] font-bold truncate max-w-[70px]">{item.tech}</span>
+                            </div>
 
-                        <div className="flex items-center gap-3 text-[#a1a1a1]">
-                          <div className="flex items-center gap-1">
-                            <Heart className="h-3 w-3 fill-current" />
-                            <span className="text-[10px] font-bold">{item.likes}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            <span className="text-[10px] font-bold">{item.views}</span>
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex items-center gap-1">
+                                <Heart className="h-3 w-3 fill-white" />
+                                <span className="text-[9px] font-bold">{item.likes}</span>
+                              </div>
+                              <div className="flex items-center gap-1 opacity-70">
+                                <Eye className="h-3 w-3" />
+                                <span className="text-[9px] font-bold">{item.views}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

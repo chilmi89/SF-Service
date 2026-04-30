@@ -14,6 +14,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { authService } from "@/lib/api/auth.service";
+import { apiClient } from "@/lib/api/api-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Toast, ToastType } from "@/components/toast";
@@ -27,7 +28,11 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [toast, setToast] = useState<{ title: string; message: string; type: ToastType } | null>(null);
+  const [toast, setToast] = useState<{
+    title: string;
+    message: string;
+    type: ToastType;
+  } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -36,7 +41,7 @@ function LoginContent() {
       setToast({
         title: "Pemberitahuan",
         message: message,
-        type: "success"
+        type: "success",
       });
     }
   }, [searchParams]);
@@ -52,7 +57,7 @@ function LoginContent() {
       setToast({
         title: "Login Gagal",
         message: apiError || "Email atau password mungkin salah.",
-        type: "error"
+        type: "error",
       });
       setIsLoading(false);
       return;
@@ -60,47 +65,48 @@ function LoginContent() {
 
     // Login Berhasil (Token sudah ada di HttpOnly Cookie)
     try {
-      // Simpan informasi dasar jika diperlukan (opsional, karena sisa data ada di session)
       if (data.profile_id) {
         localStorage.setItem("profile_id", data.profile_id);
+        
+        // Fetch actual profile from /api/users because it includes role information
+        const { data: userRes } = await apiClient(`/api/users/${data.profile_id}`);
+        const userData = userRes?.data || userRes;
+        
+        if (userData && userData.role_name) {
+          localStorage.setItem("user_role", userData.role_name.toLowerCase());
+        } else {
+          localStorage.setItem("user_role", "user biasa");
+        }
       }
-      
-      // Infer role from redirect path (since backend uses HttpOnly cookies)
-      const redirectPath = data.redirectPath || "/";
-      let role = "user biasa";
-      if (redirectPath.startsWith("/super-admin")) role = "super admin";
-      else if (redirectPath.startsWith("/owner-tunggal")) role = "owner tunggal";
-      else if (redirectPath.startsWith("/admin")) role = "admin";
-      else if (redirectPath.startsWith("/teknisi")) role = "teknisi";
-      else if (redirectPath.startsWith("/home")) role = "user biasa";
 
       localStorage.setItem("token", "true"); // UI flag for Navbar
-      localStorage.setItem("user_role", role);
       
+      const nextPath = data.redirectPath || "/home";
+
       setToast({
         title: "Berhasil Masuk",
         message: "Selamat datang kembali! Menyiapkan dashboard Anda...",
-        type: "success"
+        type: "success",
       });
 
       // Simpan path redirect untuk digunakan setelah toast ditutup
       (window as any)._nextRedirectPath = data.redirectPath || "/";
-      
     } catch (err) {
       console.error("Login handling error:", err);
       setToast({
         title: "Error Sistem",
         message: "Gagal memproses data login.",
-        type: "error"
+        type: "error",
       });
       setIsLoading(false);
     }
   };
 
   const handleToastClose = () => {
-    const wasSuccess = toast?.type === 'success' && toast.title === "Berhasil Masuk";
+    const wasSuccess =
+      toast?.type === "success" && toast.title === "Berhasil Masuk";
     const nextPath = (window as any)._nextRedirectPath || "/";
-    
+
     setToast(null);
     if (wasSuccess) {
       router.push(nextPath);
@@ -152,11 +158,10 @@ function LoginContent() {
   return (
     <div className="flex min-h-screen flex-col bg-white text-black selection:bg-black selection:text-white">
       <div className="flex flex-1 flex-col lg:flex-row">
-        
         {/* LEFT COLUMN: CURATED IMAGE FULL */}
         <div className="w-full lg:w-1/2 h-48 sm:h-64 lg:h-auto relative overflow-hidden">
-          <Image 
-            src="/images/card.png" 
+          <Image
+            src="/images/card.png"
             alt="Architecture"
             fill
             priority
@@ -167,7 +172,6 @@ function LoginContent() {
 
         {/* RIGHT COLUMN: LOGIN FORM (FixIt Style) */}
         <div className="relative flex flex-1 flex-col justify-center px-6 py-12 lg:px-24 overflow-hidden bg-white lg:-ml-12 z-10">
-          
           {/* Background Decorations */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <motion.div
@@ -199,7 +203,7 @@ function LoginContent() {
                 F
               </motion.div>
               <h1 className="text-xs font-bold text-black sm:text-4xl">
-               Welcome!
+                Welcome!
               </h1>
               <p className="mt-3 text-sm font-semibold text-[#666]">
                 Masuk ke akun FixIt Anda
@@ -207,10 +211,7 @@ function LoginContent() {
             </motion.div>
 
             {/* Login Card */}
-            <motion.div
-              variants={itemVariants}
-              className="p-2"
-            >
+            <motion.div variants={itemVariants} className="p-2">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <motion.div variants={itemVariants}>
                   <label
@@ -285,12 +286,14 @@ function LoginContent() {
                     ) : (
                       <>
                         <div className="flex h-full items-center justify-center gap-2 text-black transition duration-500 group-hover:-translate-y-[160%]">
-                          Masuk Sekarang <ArrowRight className="h-4 w-4 stroke-[3px]" />
+                          Masuk Sekarang{" "}
+                          <ArrowRight className="h-4 w-4 stroke-[3px]" />
                         </div>
                         <div className="absolute flex h-full w-full translate-y-[100%] items-center justify-center transition duration-500 group-hover:translate-y-0">
                           <span className="absolute h-full w-full translate-y-full scale-y-0 skew-y-12 bg-black transition duration-500 group-hover:translate-y-0 group-hover:scale-[2.5]"></span>
                           <span className="z-10 flex items-center gap-2 text-white">
-                            Masuk Sekarang <ArrowRight className="h-4 w-4 stroke-[3px]" />
+                            Masuk Sekarang{" "}
+                            <ArrowRight className="h-4 w-4 stroke-[3px]" />
                           </span>
                         </div>
                       </>
@@ -332,7 +335,10 @@ function LoginContent() {
                 className="mt-5 text-center text-sm font-bold text-[#666]"
               >
                 Belum punya akun?{" "}
-                <Link href="/register" className="font-black text-black hover:underline">
+                <Link
+                  href="/auth/register"
+                  className="font-black text-black hover:underline"
+                >
                   Daftar sekarang
                 </Link>
               </motion.p>
@@ -341,12 +347,12 @@ function LoginContent() {
         </div>
       </div>
 
-      <Toast 
+      <Toast
         show={!!toast}
         title={toast?.title}
         message={toast?.message || ""}
         type={toast?.type}
-        duration={toast?.type === 'success' ? 2000 : 5000}
+        duration={toast?.type === "success" ? 2000 : 5000}
         onClose={handleToastClose}
       />
     </div>
@@ -355,11 +361,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <Loader2 className="h-10 w-10 animate-spin text-black" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-white">
+          <Loader2 className="h-10 w-10 animate-spin text-black" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

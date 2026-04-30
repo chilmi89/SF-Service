@@ -7,12 +7,70 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  *   get:
  *     summary: Detail user beserta profile dan role
  *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID profil user
+ *     responses:
+ *       200:
+ *         description: Berhasil mengambil detail user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string, format: uuid }
+ *                     full_name: { type: string }
+ *                     phone: { type: string }
+ *                     address: { type: string }
+ *                     avatar_url: { type: string }
+ *                     kode_tenant: { type: string }
+ *                     email: { type: string }
+ *                     created_at: { type: string, format: date-time }
+ *                     role_id: { type: string }
+ *                     role_name: { type: string }
+ *       404:
+ *         description: User tidak ditemukan
  *   put:
  *     summary: Update role user
  *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role_id: { type: string }
+ *     responses:
+ *       200:
+ *         description: Role berhasil diperbarui
+ *       400:
+ *         description: Role ID wajib diisi
  *   delete:
  *     summary: Hapus user permanen
  *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User berhasil dihapus
  */
 
 export async function GET(request: NextRequest) {
@@ -45,7 +103,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
   }
 
-  return NextResponse.json({ data }, { status: 200 });
+  // Flatten the response
+  const flattenedData = {
+    id: data.id,
+    full_name: data.full_name,
+    phone: data.phone,
+    address: data.address,
+    avatar_url: data.avatar_url,
+    kode_tenant: data.kode_tenant,
+    email: (data.auth_users as any)?.email || null,
+    created_at: (data.auth_users as any)?.created_at || null,
+    role_id: (data.roles as any)?.id || null,
+    role_name: (data.roles as any)?.name || null
+  };
+
+  return NextResponse.json({ data: flattenedData }, { status: 200 });
 }
 
 export async function PUT(request: NextRequest) {

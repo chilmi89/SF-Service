@@ -93,21 +93,11 @@ export async function POST(request: Request) {
       .eq('user_id', user.id)
       .single();
 
-    let redirectPath = '/';
     const roleName = (profile?.roles as any)?.name;
 
-    // Logika Redirect (Diprioritaskan dari yang paling spesifik)
-    if (roleName === 'super admin') {
-      redirectPath = '/dashboard/superadmin';
-    } else if (roleName === 'owner tunggal') {
-      redirectPath =  '/dashboard/owner_tunggal';
-    } else if (roleName === 'admin tenant' || roleName === 'owner') {
-      redirectPath = '/dashboard/admin';
-    } else if (roleName === 'teknisi') {
-      redirectPath = '/dashboard/teknisi';
-    } else if (roleName === 'user biasa') {
-      redirectPath = '/home';
-    }
+    // Logika Redirect: Semua user diarahkan ke /home setelah login
+    // User bisa memilih untuk masuk ke dashboard secara manual nanti
+    let redirectPath = '/home';
 
     // 4. Buat Token Sesi (Session)
     const token = await createSessionToken({

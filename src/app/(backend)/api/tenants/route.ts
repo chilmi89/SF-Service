@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySessionToken } from '@/lib/session';
-import { checkProfileCompletion } from '@/lib/profile';
+import cloudinary from '@/lib/cloudinary';
 
 /**
  * @swagger
@@ -19,7 +19,9 @@ import { checkProfileCompletion } from '@/lib/profile';
  *   post:
  *     summary: Membuat tenant baru
  *     tags: [Tenants]
- *     description: Slug dan Kode Tenant akan di-generate otomatis oleh sistem.
+ *     description: |
+ *       Slug dan Kode Tenant akan di-generate otomatis oleh sistem.
+ *       Mendukung upload file (multipart/form-data) atau Base64 (application/json).
  *     requestBody:
  *       required: true
  *       content:
@@ -31,7 +33,19 @@ import { checkProfileCompletion } from '@/lib/profile';
  *               name: { type: string, description: "Nama Bisnis/Tenant" }
  *               address: { type: string }
  *               phone: { type: string }
- *               image_url: { type: string, description: "URL Gambar (Opsional)" }
+ *               image_url: { type: string, description: "URL Gambar atau Base64" }
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name: { type: string }
+ *               address: { type: string }
+ *               phone: { type: string }
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Gambar tenant (Cloudinary)
  *     responses:
  *       201:
  *         description: Tenant berhasil dibuat
@@ -88,7 +102,7 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // 4. Cek kelengkapan profile (Nama & Telepon tidak boleh kosong/hanya spasi)
+    // 4. Cek kelengkapan profile
     const isProfileComplete = 
       currentProfile?.full_name && currentProfile.full_name.trim() !== "" &&
       currentProfile?.phone && currentProfile.phone.trim() !== "";
@@ -100,15 +114,69 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { name, address, phone, image_url } = body;
+    const contentType = request.headers.get('content-type') || '';
+    let name: string | undefined, address: string | undefined, phone: string | undefined, image_url: string | undefined;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      name = formData.get('name') as string;
+      address = formData.get('address') as string;
+      phone = formData.get('phone') as string;
+
+      // Handle File Upload to Cloudinary
+      const file = formData.get('file') as File;
+      if (file && file.size > 0) {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const uploadResult = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream(
+            { 
+              folder: 'sf-service/tenants', 
+              format: 'webp',
+              use_filename: true,
+              unique_filename: true
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          ).end(buffer);
+        });
+        image_url = (uploadResult as any).secure_url;
+      }
+    } else {
+      const body = await request.json();
+      name = body.name;
+      address = body.address;
+      phone = body.phone;
+      image_url = body.image_url;
+
+      // Detect Base64 and upload to Cloudinary
+      if (image_url && image_url.startsWith('data:image')) {
+        const uploadResult = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload(
+            image_url as string,
+            { 
+              folder: 'sf-service/tenants', 
+              format: 'webp' 
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+        });
+        image_url = (uploadResult as any).secure_url;
+      }
+    }
 
     if (!name) {
       return NextResponse.json({ error: 'Nama Tenant wajib diisi' }, { status: 400 });
     }
 
     // 5. Otomasi Slug dan Kode Tenant
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug = (name as string).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const generatedKode = Math.random().toString(36).substring(2, 6).toUpperCase();
 
     // 6. Masukkan data tenant baru
@@ -133,7 +201,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. Update Profile User: Set kode_tenant dan ubah role menjadi 'owner tunggal'
-    // Mencari role ID untuk 'owner tunggal'
     const { data: ownerRole, error: roleError } = await supabaseAdmin
       .from('roles')
       .select('id')
@@ -157,6 +224,7 @@ export async function POST(request: NextRequest) {
       message: `Selamat! Tenant berhasil dibuat dengan Kode: ${generatedKode}. Akun Anda kini telah menjadi Owner.` 
     }, { status: 201 });
   } catch (error: any) {
+    console.error('Tenant Creation Error:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan internal saat mendaftarkan tenant baru.' }, { status: 500 });
   }
 }

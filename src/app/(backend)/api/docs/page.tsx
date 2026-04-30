@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'swagger-ui-react/swagger-ui.css';
 import { motion } from 'framer-motion';
@@ -15,8 +16,23 @@ const SwaggerUI = dynamic(() => import('swagger-ui-react'), {
 });
 
 export default function ApiDocsPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Return a consistent loading state during hydration to avoid mismatches
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-slate-50 transition-colors duration-300 relative">
+    <main suppressHydrationWarning className="min-h-screen bg-slate-50 transition-colors duration-300 relative">
       {/* Decorative Background Elements (Lighter) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-sky-200/20 blur-[120px] rounded-full" />
@@ -84,16 +100,20 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="bg-white rounded-[2.5rem] border border-slate-200 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.1)] p-4 md:p-10"
         >
-          <SwaggerUI url="/api/swagger" />
+          <SwaggerUI 
+          url="/api/swagger" 
+          defaultModelsExpandDepth={-1}
+        />
         </motion.div>
       </section>
 
       {/* Footer Decoration */}
       <footer className="py-12 border-t border-slate-200 dark:border-slate-800 text-center">
-        <p className="text-sm text-slate-500">
+        <p suppressHydrationWarning className="text-sm text-slate-500">
            &copy; {new Date().getFullYear()} SF-Service. Handcrafted for performance.
         </p>
       </footer>
     </main>
   );
 }
+

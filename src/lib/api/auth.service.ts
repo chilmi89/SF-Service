@@ -29,7 +29,7 @@ export const authService = {
    * Get user profile details
    */
   async getProfile(id?: string) {
-    const endpoint = id ? `/api/profile/${id}` : '/api/profile';
+    const endpoint = id ? `/api/profiles/${id}` : '/api/profiles';
     return apiClient(endpoint, {
       method: 'GET',
     });
@@ -39,7 +39,7 @@ export const authService = {
    * Update user profile details
    */
   async updateProfile(id: string | null, profileData: any) {
-    const endpoint = id ? `/api/profile/${id}` : '/api/profile';
+    const endpoint = id ? `/api/profiles/${id}` : '/api/profiles';
     return apiClient(endpoint, {
       method: 'PUT',
       body: profileData,

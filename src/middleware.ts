@@ -16,9 +16,60 @@ export async function middleware(request: NextRequest) {
     // Verifikasi token
     const session = await verifySessionToken(token);
 
-    // Jika token tidak valid atau role-nya bukan 'super admin'
-    if (!session || session.role !== 'super admin') {
+    // Jika token tidak valid
+    if (!session) {
       return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Jika role-nya bukan 'super admin'
+    if (session.role !== 'super admin') {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
+  }
+
+  // 1.1 Route Protection untuk Admin (Tenants)
+  if (pathname.startsWith('/dashboard/admin')) {
+    const token = request.cookies.get('token')?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    const session = await verifySessionToken(token);
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (session.role !== 'admin') {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
+  }
+
+  // 1.2 Route Protection untuk Teknisi
+  if (pathname.startsWith('/dashboard/teknisi')) {
+    const token = request.cookies.get('token')?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    const session = await verifySessionToken(token);
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (session.role !== 'teknisi') {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
+  }
+
+  // 1.3 Route Protection untuk Owner Tunggal
+  if (pathname.startsWith('/dashboard/owner_tunggal')) {
+    const token = request.cookies.get('token')?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    const session = await verifySessionToken(token);
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    // Mencocokkan dengan nama role di database ('owner tunggal')
+    if (session.role !== 'owner tunggal') {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
     }
   }
 
@@ -48,8 +99,10 @@ export async function middleware(request: NextRequest) {
 // Konfigurasi matcher untuk rute mana saja yang akan dicegat middleware
 export const config = {
   matcher: [
-    '/dashboard/superadmin',
     '/dashboard/superadmin/:path*',
+    '/dashboard/admin/:path*',
+    '/dashboard/teknisi/:path*',
+    '/dashboard/owner_tunggal/:path*',
     '/api/:path*'
   ],
 };

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, 
@@ -16,272 +15,42 @@ import {
   Settings2,
   AlertTriangle
 } from "lucide-react";
-import { Toast, ToastType } from "@/components/toast";
+import { Toast } from "@/components/toast";
+import { usePermissionsManagement } from "@/hooks/usePermissionsManagement";
 
 export default function PermissionsPage() {
-  const [selectedRole, setSelectedRole] = useState("");
-  const [roles, setRoles] = useState<{ id: string, name: string }[]>([]);
-  const [permissions, setPermissions] = useState<any[]>([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Modal States
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  // Data States for Modals
-  const [newPermName, setNewPermName] = useState("");
-  const [targetRoleIds, setTargetRoleIds] = useState<string[]>([]);
-  const [editingPermission, setEditingPermission] = useState<any>(null);
-  const [editPermName, setEditPermName] = useState("");
-  const [permissionToDelete, setPermissionToDelete] = useState<any>(null);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Toast State
-  const [toast, setToast] = useState({
-    show: false,
-    type: 'success' as ToastType,
-    title: '',
-    message: ''
-  });
-
-  const showToast = (type: ToastType, title: string, message: string) => {
-    setToast({ show: true, type, title, message });
-  };
-
-  useEffect(() => {
-    const savedRole = localStorage.getItem("selected_role_management");
-    if (savedRole) {
-      setSelectedRole(savedRole);
-    }
-  }, []);
-
-  const handleRoleChange = (roleName: string) => {
-    setSelectedRole(roleName);
-    localStorage.setItem("selected_role_management", roleName);
-    setIsDropdownOpen(false);
-  };
-
-  const fetchRoles = useCallback(async () => {
-    try {
-      const response = await fetch('http://localhost:3000/api/super-admin/roles', {
-        headers: { 'accept': '*/*' }
-      });
-      const result = await response.json();
-      const rolesData = result.data || (Array.isArray(result) ? result : []);
-      setRoles(rolesData);
-      
-      if (rolesData.length > 0 && !selectedRole && !localStorage.getItem("selected_role_management")) {
-        handleRoleChange(rolesData[0].name);
-      }
-    } catch (error) {
-      console.error("Error fetching roles:", error);
-    }
-  }, [selectedRole]);
-
-  useEffect(() => {
-    fetchRoles();
-  }, [fetchRoles]);
-
-  const loadPermissions = useCallback(async () => {
-    if (!selectedRole || roles.length === 0) return;
-
-    const currentRole = roles.find(r => r.name.toLowerCase() === selectedRole.toLowerCase());
-    if (!currentRole) return;
-
-    setIsLoading(true);
-    try {
-      const response = await fetch(`http://localhost:3000/api/super-admin/role-permissions?role_id=${currentRole.id}`, {
-        headers: { 'accept': '*/*' }
-      });
-      const result = await response.json();
-      
-      const rawData = result.permissions || result.data || result || [];
-      const formattedData = Array.isArray(rawData) ? rawData.map((p: any) => ({
-        ...p,
-        label: p.label || p.name.replace(/_/g, ' ').replace(/\b\w/g, (l: any) => l.toUpperCase()),
-        desc: p.desc || `Izin untuk fitur ${p.name.replace(/_/g, ' ')}`,
-        assigned: p.assigned ?? false 
-      })) : [];
-
-      const initiallyOwned = formattedData.filter((p: any) => p.assigned === true);
-      setPermissions(initiallyOwned);
-    } catch (error) {
-      console.error("Error fetching permissions:", error);
-      showToast('error', 'Gagal Memuat', 'Tidak dapat mengambil data hak akses.');
-      setPermissions([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedRole, roles]);
-
-  useEffect(() => {
-    loadPermissions();
-  }, [loadPermissions]);
-
-  const togglePermission = (id: string) => {
-    setPermissions(prev => prev.map(p => 
-      p.id === id ? { ...p, assigned: !p.assigned } : p
-    ));
-  };
-
-  const handleSave = async () => {
-    const currentRole = roles.find(r => r.name.toLowerCase() === selectedRole.toLowerCase());
-    if (!currentRole) return;
-
-    setIsLoading(true);
-    try {
-      const payload = {
-        role_id: currentRole.id,
-        permissions: permissions.map(p => ({
-          id: p.id,
-          assigned: p.assigned
-        }))
-      };
-
-      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': '*/*'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        showToast('success', 'Berhasil Disimpan', `Perubahan hak akses untuk ${selectedRole} telah diperbarui.`);
-      } else {
-        showToast('error', 'Gagal Menyimpan', 'Terjadi kesalahan saat menyimpan perubahan.');
-      }
-    } catch (error) {
-      console.error("Error saving permissions:", error);
-      showToast('error', 'Kesalahan Koneksi', 'Tidak dapat terhubung ke server.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAddPermission = async () => {
-    if (!newPermName || targetRoleIds.length === 0) {
-      showToast('warning', 'Input Tidak Lengkap', 'Harap isi nama permission dan pilih minimal satu role.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        name: newPermName,
-        role_ids: targetRoleIds
-      };
-
-      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': '*/*'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        showToast('success', 'Berhasil Ditambahkan', 'Permission baru berhasil didaftarkan ke sistem.');
-        setIsAddModalOpen(false);
-        setNewPermName("");
-        setTargetRoleIds([]);
-        loadPermissions(); 
-      } else {
-        showToast('error', 'Gagal', 'Sistem gagal menambahkan permission baru.');
-      }
-    } catch (error) {
-      console.error("Error adding permission:", error);
-      showToast('error', 'Kesalahan', 'Terjadi gangguan koneksi saat menambah data.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdatePermission = async () => {
-    if (!editPermName || !editingPermission) return;
-
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        permission_id: editingPermission.id,
-        name: editPermName
-      };
-
-      const response = await fetch('http://localhost:3000/api/super-admin/role-permissions', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': '*/*'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        showToast('success', 'Berhasil Diperbarui', 'Nama permission telah berhasil diubah.');
-        setIsEditModalOpen(false);
-        setEditingPermission(null);
-        setEditPermName("");
-        loadPermissions();
-      } else {
-        showToast('error', 'Gagal Perbarui', 'Sistem gagal memperbarui nama permission.');
-      }
-    } catch (error) {
-      console.error("Error updating permission:", error);
-      showToast('error', 'Kesalahan', 'Terjadi gangguan koneksi saat memperbarui data.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeletePermission = async () => {
-    if (!permissionToDelete) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(`http://localhost:3000/api/super-admin/role-permissions?permission_id=${permissionToDelete.id}`, {
-        method: 'DELETE',
-        headers: {
-          'accept': '*/*'
-        }
-      });
-
-      if (response.ok) {
-        showToast('success', 'Berhasil Dihapus', 'Permission telah dihapus dari sistem.');
-        setIsDeleteModalOpen(false);
-        setPermissionToDelete(null);
-        loadPermissions();
-      } else {
-        showToast('error', 'Gagal Menghapus', 'Sistem tidak dapat menghapus permission ini.');
-      }
-    } catch (error) {
-      console.error("Error deleting permission:", error);
-      showToast('error', 'Kesalahan', 'Terjadi gangguan koneksi saat menghapus data.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const openEditModal = (perm: any) => {
-    setEditingPermission(perm);
-    setEditPermName(perm.name);
-    setIsEditModalOpen(true);
-  };
-
-  const openDeleteModal = (perm: any) => {
-    setPermissionToDelete(perm);
-    setIsDeleteModalOpen(true);
-  };
-
-  const toggleRoleSelection = (roleId: string) => {
-    setTargetRoleIds(prev => 
-      prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]
-    );
-  };
+  const {
+    // Data
+    selectedRole,
+    roles,
+    permissions,
+    // UI Status
+    isLoading,
+    isSubmitting,
+    isDropdownOpen,
+    modals,
+    toast,
+    // Form States
+    newPermData,
+    editingPermission,
+    editPermName,
+    permissionToDelete,
+    // Actions
+    setIsDropdownOpen,
+    setModals,
+    setToast,
+    setNewPermData,
+    setEditPermName,
+    handleRoleChange,
+    togglePermission,
+    handleSave,
+    handleAddPermission,
+    handleUpdatePermission,
+    handleDeletePermission,
+    openEditModal,
+    openDeleteModal,
+    toggleRoleSelection
+  } = usePermissionsManagement();
 
   return (
     <div className="p-8 md:p-12 space-y-10 max-w-[1600px] mx-auto pb-32">
@@ -352,7 +121,7 @@ export default function PermissionsPage() {
              />
           </div>
           <button 
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => setModals(prev => ({ ...prev, add: true }))}
             className="flex h-11 items-center gap-2 rounded-xl bg-black px-6 text-sm font-bold text-white shadow-xl transition-all hover:bg-black/90 active:scale-95"
           >
             <Plus size={18} />
@@ -455,13 +224,13 @@ export default function PermissionsPage() {
 
       {/* MODAL TAMBAH PERMISSION */}
       <AnimatePresence>
-        {isAddModalOpen && (
+        {modals.add && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={() => setModals(prev => ({ ...prev, add: false }))}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
             
@@ -483,7 +252,7 @@ export default function PermissionsPage() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => setIsAddModalOpen(false)}
+                    onClick={() => setModals(prev => ({ ...prev, add: false }))}
                     className="h-10 w-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
                   >
                     <X size={20} />
@@ -495,8 +264,8 @@ export default function PermissionsPage() {
                     <label className="text-sm font-bold text-[#a1a1a1] ml-2">Nama Teknis Permission</label>
                     <input 
                       type="text" 
-                      value={newPermName}
-                      onChange={(e) => setNewPermName(e.target.value)}
+                      value={newPermData.name}
+                      onChange={(e) => setNewPermData(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Contoh: download_laporan"
                       className="w-full h-14 px-6 rounded-2xl border border-gray-200 bg-gray-50/30 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                     />
@@ -510,15 +279,15 @@ export default function PermissionsPage() {
                           key={role.id}
                           onClick={() => toggleRoleSelection(role.id)}
                           className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                            targetRoleIds.includes(role.id)
+                            newPermData.roleIds.includes(role.id)
                               ? "border-black bg-black text-white shadow-lg"
                               : "border-gray-200 bg-white text-gray-500 hover:border-gray-400"
                           }`}
                         >
                           <div className={`h-4 w-4 rounded-md border flex items-center justify-center ${
-                             targetRoleIds.includes(role.id) ? "border-white bg-white" : "border-gray-300"
+                             newPermData.roleIds.includes(role.id) ? "border-white bg-white" : "border-gray-300"
                           }`}>
-                            {targetRoleIds.includes(role.id) && <Check size={10} className="text-black" strokeWidth={4} />}
+                            {newPermData.roleIds.includes(role.id) && <Check size={10} className="text-black" strokeWidth={4} />}
                           </div>
                           <span className="text-xs font-bold capitalize">{role.name}</span>
                         </button>
@@ -529,14 +298,14 @@ export default function PermissionsPage() {
 
                 <div className="pt-4 flex gap-3">
                   <button 
-                    onClick={() => setIsAddModalOpen(false)}
+                    onClick={() => setModals(prev => ({ ...prev, add: false }))}
                     className="flex-1 h-14 rounded-2xl border border-gray-200 text-sm font-bold hover:bg-gray-50 transition-all"
                   >
                     Batal
                   </button>
                   <button 
                     onClick={handleAddPermission}
-                    disabled={isSubmitting || !newPermName || targetRoleIds.length === 0}
+                    disabled={isSubmitting || !newPermData.name || newPermData.roleIds.length === 0}
                     className="flex-[2] h-14 rounded-2xl bg-black text-white text-sm font-bold shadow-xl hover:bg-black/90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
@@ -557,15 +326,15 @@ export default function PermissionsPage() {
 
       {/* MODAL EDIT PERMISSION */}
       <AnimatePresence>
-        {isEditModalOpen && (
+        {modals.edit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => {
-                setIsEditModalOpen(false);
-                setEditingPermission(null);
+                setModals(prev => ({ ...prev, edit: false }));
+                setNewPermData({ name: "", roleIds: [] }); // Reset if needed
               }}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
@@ -588,7 +357,7 @@ export default function PermissionsPage() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => setIsEditModalOpen(false)}
+                    onClick={() => setModals(prev => ({ ...prev, edit: false }))}
                     className="h-10 w-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
                   >
                     <X size={20} />
@@ -617,7 +386,7 @@ export default function PermissionsPage() {
 
                 <div className="pt-4 flex gap-3">
                   <button 
-                    onClick={() => setIsEditModalOpen(false)}
+                    onClick={() => setModals(prev => ({ ...prev, edit: false }))}
                     className="flex-1 h-14 rounded-2xl border border-gray-200 text-sm font-bold hover:bg-gray-50 transition-all"
                   >
                     Batal
@@ -644,13 +413,13 @@ export default function PermissionsPage() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {isDeleteModalOpen && (
+        {modals.delete && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsDeleteModalOpen(false)}
+              onClick={() => setModals(prev => ({ ...prev, delete: false }))}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
             
@@ -675,7 +444,7 @@ export default function PermissionsPage() {
 
                 <div className="flex gap-3 pt-2">
                   <button 
-                    onClick={() => setIsDeleteModalOpen(false)}
+                    onClick={() => setModals(prev => ({ ...prev, delete: false }))}
                     className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-bold shadow-sm hover:bg-gray-50 transition-all"
                   >
                     Batal

@@ -4,36 +4,100 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, Variants } from "framer-motion";
-import { User, Menu, X, ArrowUpRight, LogOut } from "lucide-react";
+import { User, Menu, X, ArrowUpRight, LogOut, AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { authService } from "@/lib/api/auth.service";
+import { apiClient } from "@/lib/api/api-client";
+import { Toast, ToastType } from "@/components/toast";
 
 export default function Navbar() {
+  const { isLoggedIn, userRole, logout, hasRole } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [toast, setToast] = useState<{ show: boolean; title: string; message: string; type: ToastType } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("user_role")?.toLowerCase().trim() || null;
-    setIsLoggedIn(!!token);
-    setUserRole(role);
-  }, [pathname]);
+    if (isLoggedIn) {
+      const fetchProfile = async () => {
+        try {
+          const profileId = localStorage.getItem("profile_id");
+          if (!profileId) return;
 
-  const handleLogout = async () => {
+          // Use /api/users instead of /api/profiles because it includes role information
+          const { data: userRes } = await apiClient(`/api/users/${profileId}`);
+          const userData = userRes?.data || userRes;
+          
+          if (userData) {
+            setProfile(userData);
+            
+            // Sync role if inconsistent with localStorage
+            const dbRole = userData.role_name?.toLowerCase();
+            const localRole = localStorage.getItem("user_role")?.toLowerCase();
+            
+            if (dbRole && dbRole !== localRole) {
+              localStorage.setItem("user_role", dbRole);
+              // Trigger event to update other hooks (like useAuth)
+              window.dispatchEvent(new Event("auth-change"));
+            }
+          }
+        } catch (err) {
+          console.error("Gagal mengambil data profil di Navbar:", err);
+        }
+      };
+      fetchProfile();
+    } else {
+      setProfile(null);
+    }
+  }, [isLoggedIn]);
+
+  const handleTenantRegisterClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Re-fetch profile to get latest data
+    let latestProfile = profile;
     try {
-      // Panggil API logout untuk menghapus HttpOnly cookie di backend
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch (error) {
-      console.error("Logout error:", error);
+      const profileId = localStorage.getItem("profile_id");
+      if (profileId) {
+        const { data } = await authService.getProfile(profileId);
+        const actualProfile = data?.data || data;
+        if (actualProfile) {
+          setProfile(actualProfile);
+          latestProfile = actualProfile;
+        }
+      }
+    } catch (err) {
+      console.error("Gagal refresh profil:", err);
     }
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user_role");
-    localStorage.removeItem("profile_id");
-    setIsLoggedIn(false);
-    setUserRole(null);
-    router.push("/home");
+    // Syarat kelengkapan profil: Nama, No HP, dan Alamat
+    // Cek di tingkat utama atau di dalam properti data (antisipasi nesting)
+    const isProfileComplete = 
+      (latestProfile?.full_name && latestProfile?.phone && latestProfile?.address) ||
+      (latestProfile?.data?.full_name && latestProfile?.data?.phone && latestProfile?.data?.address);
+
+    if (!isProfileComplete) {
+      setToast({
+        show: true,
+        title: "Profil Belum Lengkap",
+        message: "Silakan lengkapi profil Anda (Nama, No HP, dan Alamat) terlebih dahulu sebelum mendaftar Tenant.",
+        type: "warning"
+      });
+    } else {
+      router.push("/auth/tenant-register");
+    }
+  };
+
+  const getDashboardLink = () => {
+    if (!userRole) return "/home";
+    const role = userRole.toLowerCase();
+    if (role === "super admin" || role === "superadmin") return "/dashboard/superadmin";
+    if (role === "admin") return "/dashboard/admin";
+    if (role === "teknisi") return "/dashboard/teknisi";
+    if (role === "owner tunggal" || role === "owner_tunggal") return "/dashboard/owner_tunggal";
+    if (role === "admin tenant") return "/dashboard/admin"; // Or specify a dedicated path if needed
+    return "/home";
   };
 
   const blobVariants: Variants = {
@@ -126,14 +190,14 @@ export default function Navbar() {
             {!isLoggedIn ? (
               <>
                 <Link
-                  href="/login"
+                  href="/auth/login"
                   className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-bold text-black transition-all hover:bg-gray-50 active:scale-95"
                 >
                   <User className="h-4 w-4" />
                   Masuk
                 </Link>
                 <Link
-                  href="/register"
+                  href="/auth/register"
                   className="rounded-full bg-black px-5 py-2 text-sm font-bold text-white transition-all hover:bg-black/90 hover:shadow-xl active:scale-95"
                 >
                   Daftar
@@ -141,9 +205,17 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-4">
-                {userRole && !userRole.includes("user") && (
+                {userRole?.toLowerCase() === "user biasa" ? (
+                  <button
+                    onClick={handleTenantRegisterClick}
+                    className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-2 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-200/50"
+                  >
+                    Buka Tenant
+                    <ArrowUpRight className="h-4 w-4" />
+                  </button>
+                ) : (
                   <Link
-                    href="/dashboard/superadmin"
+                    href={getDashboardLink()}
                     className="flex items-center gap-2 rounded-full bg-black px-8 py-3 text-sm font-bold text-white transition-all hover:bg-black/90 hover:shadow-xl active:scale-95 shadow-lg"
                   >
                     Dashboard
@@ -208,9 +280,22 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {userRole && !userRole.includes("user") && (
+                  {userRole?.toLowerCase() === "user biasa" ? (
+                    <button 
+                      onClick={(e) => {
+                        handleTenantRegisterClick(e);
+                        if (profile?.full_name && profile?.phone && profile?.address) {
+                          setIsMenuOpen(false);
+                        }
+                      }} 
+                      className="rounded-full bg-gradient-to-r from-orange-500 to-rose-500 py-4 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-200/50"
+                    >
+                      Buka Tenant
+                      <ArrowUpRight className="h-4 w-4" />
+                    </button>
+                  ) : (
                     <Link 
-                      href="/dashboard/superadmin" 
+                      href={getDashboardLink()} 
                       className="rounded-full bg-black py-4 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-lg" 
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -219,7 +304,7 @@ export default function Navbar() {
                     </Link>
                   )}
                   <Link 
-                    href="/profile" 
+                    href="/profiles" 
                     className="rounded-full border border-black/10 bg-white py-4 text-black font-bold flex items-center justify-center gap-2 transition-all" 
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -228,7 +313,7 @@ export default function Navbar() {
                   </Link>
                   <button 
                     onClick={() => {
-                      handleLogout();
+                      logout();
                       setIsMenuOpen(false);
                     }} 
                     className="rounded-full border border-red-100 bg-red-50/50 py-4 text-red-600 font-bold flex items-center justify-center gap-2 transition-all"
@@ -242,6 +327,16 @@ export default function Navbar() {
           </motion.div>
         )}
       </nav>
+
+      {toast && (
+        <Toast
+          show={toast.show}
+          title={toast.title}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </>
   );
 }

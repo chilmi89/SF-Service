@@ -269,14 +269,14 @@ export default function Navbar() {
               {!isLoggedIn ? (
                 <>
                   <Link 
-                    href="/login" 
+                    href="/auth/login" 
                     className="flex items-center justify-center gap-2 py-3 text-black bg-white border border-black/10 rounded-full hover:bg-gray-50 transition-all font-bold" 
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="h-4 w-4" />
                     Masuk
                   </Link>
-                  <Link href="/register" className="rounded-full bg-black py-3 text-white font-bold flex items-center justify-center transition-all hover:bg-black/90 shadow-lg" onClick={() => setIsMenuOpen(false)}>Daftar</Link>
+                  <Link href="/auth/register" className="rounded-full bg-black py-3 text-white font-bold flex items-center justify-center transition-all hover:bg-black/90 shadow-lg" onClick={() => setIsMenuOpen(false)}>Daftar</Link>
                 </>
               ) : (
                 <div className="flex flex-col gap-3">

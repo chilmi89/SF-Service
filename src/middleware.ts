@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
 
     // Jika tidak ada token (belum login)
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
 
     // Verifikasi token
@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
 
     // Jika token tidak valid
     if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
 
     // Jika role-nya bukan 'super admin'
@@ -31,11 +31,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/dashboard/admin')) {
     const token = request.cookies.get('token')?.value;
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     const session = await verifySessionToken(token);
     if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     if (session.role !== 'admin') {
       return NextResponse.redirect(new URL('/forbidden', request.url));
@@ -46,11 +46,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/dashboard/teknisi')) {
     const token = request.cookies.get('token')?.value;
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     const session = await verifySessionToken(token);
     if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     if (session.role !== 'teknisi') {
       return NextResponse.redirect(new URL('/forbidden', request.url));
@@ -61,11 +61,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/dashboard/owner_tunggal')) {
     const token = request.cookies.get('token')?.value;
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     const session = await verifySessionToken(token);
     if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     // Mencocokkan dengan nama role di database ('owner tunggal')
     if (session.role !== 'owner tunggal') {

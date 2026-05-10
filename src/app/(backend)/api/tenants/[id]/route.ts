@@ -308,7 +308,10 @@ export async function DELETE(
     if (normalRole) {
       await supabaseAdmin
         .from('profiles')
-        .update({ role_id: normalRole.id })
+        .update({ 
+          role_id: normalRole.id,
+          kode_tenant: null 
+        })
         .eq('kode_tenant', deletedKode);
     }
 

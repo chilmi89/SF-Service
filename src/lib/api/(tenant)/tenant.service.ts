@@ -59,4 +59,28 @@ export const tenantService = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Menambahkan staf (Admin/Teknisi) ke tenant
+   */
+  async addStaff(email: string, role_name: 'admin tenant' | 'teknisi') {
+    return apiClient('/api/tenants/staff', {
+      method: 'POST',
+      body: { email, role_name },
+    });
+  },
+
+  /**
+   * Mengambil daftar staf yang ada di tenant saat ini.
+   * Super Admin dapat menyertakan kode_tenant untuk melihat staf tenant lain.
+   */
+  async getStaff(kode_tenant?: string) {
+    const url = kode_tenant 
+      ? `/api/tenants/staff?kode_tenant=${kode_tenant}` 
+      : '/api/tenants/staff';
+
+    return apiClient(url, {
+      method: 'GET',
+    });
+  },
 };

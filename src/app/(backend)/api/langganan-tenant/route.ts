@@ -109,7 +109,42 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json({ data, message: 'Tenant berhasil didaftarkan ke paket langganan.' }, { status: 201 });
+    // --- LOGIKA UPGRADE ROLE OWNER ---
+    try {
+      // 1. Ambil UUID role 'owner' dan 'owner tunggal'
+      const { data: roles } = await supabaseAdmin
+        .from('roles')
+        .select('id, name')
+        .in('name', ['owner', 'owner tunggal']);
+      
+      const roleOwner = roles?.find(r => r.name === 'owner');
+      const roleOwnerTunggal = roles?.find(r => r.name === 'owner tunggal');
+
+      if (roleOwner && roleOwnerTunggal) {
+        // 2. Cari kode_tenant (string) untuk tenant tersebut
+        const { data: tenantData } = await supabaseAdmin
+          .from('tenants')
+          .select('kode_tenant')
+          .eq('id', targetTenantId)
+          .single();
+        
+        if (tenantData) {
+          // 3. Update profil yang memiliki kode_tenant tersebut dan role 'owner tunggal'
+          await supabaseAdmin
+            .from('profiles')
+            .update({ role_id: roleOwner.id })
+            .eq('kode_tenant', tenantData.kode_tenant)
+            .eq('role_id', roleOwnerTunggal.id);
+          
+          console.log(`Role owner untuk tenant ${tenantData.kode_tenant} berhasil di-upgrade ke 'owner'.`);
+        }
+      }
+    } catch (roleUpdateError) {
+      console.error('Gagal mengupdate role owner setelah langganan:', roleUpdateError);
+      // Kita tidak throw error di sini agar transaksi langganan tetap dianggap berhasil
+    }
+
+    return NextResponse.json({ data, message: 'Tenant berhasil didaftarkan ke paket langganan dan role telah diperbarui.' }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: 'Gagal mendaftarkan langganan tenant.' }, { status: 500 });
   }

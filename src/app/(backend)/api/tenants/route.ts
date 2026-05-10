@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { verifySessionToken } from '@/lib/session';
+import { createSessionToken, verifySessionToken } from '@/lib/session';
 import cloudinary from '@/lib/cloudinary';
 
 /**
@@ -219,10 +219,29 @@ export async function POST(request: NextRequest) {
         .eq('user_id', userId);
     }
 
-    return NextResponse.json({ 
+    // 8. Refresh Token Sesi agar Role user langsung terupdate (dari 'user biasa' -> 'owner tunggal')
+    const newPayload = { 
+      userId: userId, 
+      role: 'owner tunggal', 
+      email: (session as any).email 
+    };
+    const newToken = await createSessionToken(newPayload);
+
+    const response = NextResponse.json({ 
       data: newTenant, 
       message: `Selamat! Tenant berhasil dibuat dengan Kode: ${generatedKode}. Akun Anda kini telah menjadi Owner.` 
     }, { status: 201 });
+
+    // Set cookie baru ke response
+    response.cookies.set('token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24, // 24 jam
+      path: '/',
+    });
+
+    return response;
   } catch (error: any) {
     console.error('Tenant Creation Error:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan internal saat mendaftarkan tenant baru.' }, { status: 500 });

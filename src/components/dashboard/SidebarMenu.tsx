@@ -249,8 +249,8 @@ export default function SidebarMenu({ role }: SidebarMenuProps) {
       </nav>
 
       {/* Profile Card with Logout Icon */}
-      <div className="p-4 border-t border-gray-100">
-        <div className="flex items-center justify-between rounded-2xl bg-black/[0.03] p-4 transition-all hover:bg-black/[0.06] group">
+      <div className="p-2 border-t border-gray-100">
+        <div className="flex items-center justify-between rounded-2xl bg-black/[0.03] p-2 transition-all hover:bg-black/[0.06] group">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full border border-black/10 bg-white overflow-hidden flex-shrink-0">
               <Image 

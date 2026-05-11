@@ -25,6 +25,15 @@ export default function DashboardHeader({ title }: DashboardHeaderProps) {
         if (pathname === "/dashboard/owner_tunggal") return "Dashboard Tenant";
         if (pathname.includes("/layanan")) return "Layanan Saya";
         if (pathname.includes("/pesanan")) return "Daftar Pesanan";
+        if (pathname.includes("/subscription")) return "Langganan";
+        if (pathname.includes("/teknisi")) return "Manajemen Teknisi";
+    }
+
+    if (pathname.includes("/dashboard/owner") && !pathname.includes("/owner_tunggal")) {
+        if (pathname === "/dashboard/owner") return "Dashboard Owner";
+        if (pathname.includes("/layanan")) return "Layanan Saya";
+        if (pathname.includes("/subscription")) return "Langganan";
+        if (pathname.includes("/teknisi")) return "Manajemen Teknisi";
     }
 
     if (pathname.includes("/admin") && !pathname.includes("/superadmin")) return "Dashboard Admin";

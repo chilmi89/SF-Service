@@ -60,14 +60,21 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
   owner_tunggal: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner_tunggal", permission: "dashboard" },
     { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner_tunggal/layanan", permission: "view_layanan" },
-    { name: "Pesanan", icon: <CreditCard size={20} />, href: "/dashboard/owner_tunggal/pesanan", permission: "view_transaksi" },
-    { name: "Teknisi", icon: <Users size={20} />, href: "/dashboard/owner_tunggal/teknisi", permission: "view_pengguna" },
+    { name: "Teknisi", icon: <Users size={20} />, href: "/dashboard/owner/teknisi", permission: "view_pengguna" },
+    { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner_tunggal/subscription", permission: "view_langganan" },
     { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner_tunggal/laporan", permission: "view_laporan" },
+  ],
+  owner: [
+    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner", permission: "dashboard" },
+    { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner/layanan", permission: "view_layanan" },
+    { name: "Teknisi", icon: <Users size={20} />, href: "/dashboard/owner/teknisi", permission: "view_pengguna" },
+    { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner/subscription", permission: "view_langganan" },
+    { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner/laporan", permission: "view_laporan" },
   ]
 };
 
 interface SidebarMenuProps {
-  role: "superadmin" | "admin" | "teknisi" | "owner_tunggal";
+  role: "superadmin" | "admin" | "teknisi" | "owner_tunggal" | "owner";
 }
 
 export default function SidebarMenu({ role }: SidebarMenuProps) {

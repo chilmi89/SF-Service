@@ -35,6 +35,7 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/superadmin", permission: "dashboard" },
     { name: "Layanan", icon: <Briefcase size={20} />, href: "/dashboard/superadmin/layanan", permission: "view_layanan" },
     { name: "Pengguna", icon: <Users size={20} />, href: "/dashboard/superadmin/pengguna", permission: "view_pengguna" },
+    { name: "Paket Langganan", icon: <CreditCard size={20} />, href: "/dashboard/superadmin/subscriptions", permission: "view_paket" },
     { name: "Transaksi", icon: <CreditCard size={20} />, href: "/dashboard/superadmin/transaksi", permission: "view_transaksi" },
     { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/superadmin/laporan", permission: "view_laporan" },
     { 

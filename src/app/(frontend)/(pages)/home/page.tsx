@@ -25,10 +25,10 @@ import {
   LayoutGrid
 } from "lucide-react";
 import LiquidEther from "@/components/LiquidEther";
-import Masonry from "@/components/Masonry";
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState("Semua");
+  const [likedServices, setLikedServices] = useState<Record<string, boolean>>({});
 
   const services = [
     { id: "1", title: "Servis & Cuci AC", category: "Servis AC", img: "/images/ac.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k", height: 450 },
@@ -73,9 +73,9 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   className="space-y-6"
                 >
-                  <h1 className="text-6xl font-bold leading-[1.1] tracking-wighter">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
                     Rumah Nyaman 
-                    Tanpa Beban 
+                    <br className="hidden md:block" /> Tanpa Beban 
                     <span className="text-[#a1a1a1]"> bersama FixIt.</span>
                   </h1>
                   <p className="max-w-2xl text-md font-medium text-[#666]">
@@ -111,7 +111,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="relative aspect-square w-96 max-w-lg lg:ml-auto"
+                className="relative aspect-square w-full max-w-[280px] sm:max-w-[320px] md:max-w-md lg:w-96 lg:max-w-lg mx-auto lg:ml-auto"
               >
                 <div className="relative h-full w-full overflow-hidden rounded-2xl bg-gray-50 shadow-[0_40px_100px_rgba(0,0,0,0.08)]">
                   <Image 
@@ -119,7 +119,7 @@ export default function Home() {
                     alt="Servis Rumah" 
                     fill 
                     priority
-                    className="object-cover grayscale transition-transform duration-700 hover:scale-105"
+                    className="object-cover transition-transform duration-700 hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent" />
                 </div>
@@ -132,32 +132,93 @@ export default function Home() {
         
         <section className="px-8 lg:px-24 py-16 border-t border-black/[0.05]">
           <div className="w-full">
-            <div className="mb-12 flex items-center justify-between">
-              <button className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition-all hover:border-black">
-                Popular <ChevronDown className="h-4 w-4" />
-              </button>
-              <div className="hidden items-center gap-8 lg:flex">
+            <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
+              <div className="flex items-center w-full md:w-auto justify-between gap-2">
+                <button className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition-all hover:border-black">
+                  Popular <ChevronDown className="h-4 w-4" />
+                </button>
+                <button className="md:hidden flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition-all hover:border-black">
+                  <SlidersHorizontal className="h-4 w-4" /> Filters
+                </button>
+              </div>
+              <div className="flex overflow-x-auto items-center gap-6 md:gap-8 w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
                 {["Semua", "Servis AC", "Pipa Air", "Listrik", "Elektronik", "Pertukangan"].map((tab) => (
                   <button 
                     key={tab} 
                     onClick={() => setActiveCategory(tab)}
-                    className={`text-sm font-bold transition-all hover:text-black ${activeCategory === tab ? "text-black border-b-2 border-black pb-1" : "text-[#a1a1a1]"}`}
+                    className={`text-sm whitespace-nowrap font-bold transition-all hover:text-black ${activeCategory === tab ? "text-black border-b-2 border-black pb-1" : "text-[#a1a1a1]"}`}
                   >
                     {tab}
                   </button>
                 ))}
               </div>
-              <button className="flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition-all hover:border-black">
+              <button className="hidden md:flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition-all hover:border-black">
                 <SlidersHorizontal className="h-4 w-4" /> Filters
               </button>
             </div>
-            <div className="min-h-[1000px]">
-              <Masonry 
-                items={filteredServices} 
-                animateFrom="bottom"
-                stagger={0.03}
-                duration={0.7}
-              />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 min-h-[500px]">
+              {filteredServices.map((service, index) => (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.5 }}
+                  className="group flex flex-col bg-white rounded-xl overflow-hidden border border-black/[0.08] hover:border-black hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300"
+                >
+                  <div className="relative h-36 sm:h-40 w-full overflow-hidden bg-[#f8f8f8]">
+                    <Image
+                      src={service.img}
+                      alt={service.title}
+                      fill
+                      className="object-cover transition-all duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[9px] font-bold text-black uppercase tracking-wider shadow-sm">
+                      {service.category}
+                    </div>
+                  </div>
+                  
+                  <div className="p-3.5 sm:p-4 flex flex-col flex-grow">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="font-bold text-sm leading-tight group-hover:text-black/80 transition-colors pr-2">{service.title}</h3>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setLikedServices(prev => ({...prev, [service.id]: !prev[service.id]}));
+                        }}
+                        className={`flex items-center gap-1 border px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs font-bold shrink-0 transition-colors ${
+                          likedServices[service.id] 
+                            ? "bg-red-50 border-red-100 text-red-600" 
+                            : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100"
+                        }`}
+                      >
+                        <Heart className={`h-2.5 w-2.5 sm:h-3 sm:w-3 transition-colors ${
+                          likedServices[service.id] ? "fill-red-500 text-red-500" : "fill-transparent text-gray-400"
+                        }`} />
+                        <span>{likedServices[service.id] ? service.likes + 1 : service.likes}</span>
+                      </button>
+                    </div>
+                    
+                    <div className="mt-auto pt-3 border-t border-black/[0.05] flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="relative h-8 w-8 rounded-full overflow-hidden bg-gray-100 border border-black/10">
+                          <Image src={service.avatar} alt={service.tech} fill className="object-cover transition-all duration-500" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold">{service.tech}</span>
+                          <span className="text-[9px] sm:text-[10px] font-medium text-[#666] flex items-center gap-0.5">
+                            <Shield className="h-2.5 w-2.5 text-black/60" /> Verified
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <button className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-black/10 flex items-center justify-center group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-300">
+                        <ArrowUpRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
             {filteredServices.length > 20 && (
               <div className="mt-20 flex justify-center">
@@ -201,7 +262,7 @@ export default function Home() {
                           alt={item.label}
                           fill
                           unoptimized
-                          className="object-cover grayscale transition-all duration-700 group-hover:scale-110 group-hover:grayscale-0"
+                          className="object-cover transition-all duration-700 group-hover:scale-110"
                         />
                         {/* Hover Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-all duration-500 group-hover:opacity-100 flex flex-col justify-between p-4 text-white">

@@ -56,7 +56,7 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
   ],
   teknisi: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/teknisi", permission: "dashboard" },
-    { name: "Tugas Saya", icon: <Briefcase size={20} />, href: "/dashboard/teknisi/tugas", permission: "view_tugas" },
+    { name: "Tugas Saya", icon: <Briefcase size={20} />, href: "/dashboard/teknisi/tugas" },
   ],
   owner_tunggal: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner_tunggal", permission: "dashboard" },
@@ -76,9 +76,10 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
 
 interface SidebarMenuProps {
   role: "superadmin" | "admin" | "teknisi" | "owner_tunggal" | "owner";
+  onNavigate?: () => void;
 }
 
-export default function SidebarMenu({ role }: SidebarMenuProps) {
+export default function SidebarMenu({ role, onNavigate }: SidebarMenuProps) {
   const { logout } = useAuth();
   const pathname = usePathname();
   const [profile, setProfile] = useState<any>(null);
@@ -207,6 +208,7 @@ export default function SidebarMenu({ role }: SidebarMenuProps) {
               ) : (
                 <Link
                   href={item.href}
+                  onClick={onNavigate}
                   className={`flex w-full items-center gap-4 rounded-xl px-4 py-3.5 text-sm font-bold transition-all ${
                     pathname === item.href
                     ? "bg-black text-white shadow-xl shadow-black/10" 
@@ -234,6 +236,7 @@ export default function SidebarMenu({ role }: SidebarMenuProps) {
                           <Link
                             key={child.name}
                             href={child.href}
+                            onClick={onNavigate}
                             className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-xs font-bold transition-all ${
                               isChildActive
                               ? "text-black bg-black/[0.05]"

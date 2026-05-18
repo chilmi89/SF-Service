@@ -1,53 +1,59 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySessionToken } from '@/lib/session';
+import cloudinary from '@/lib/cloudinary';
 
 /**
  * @swagger
  * /api/layanan:
  *   get:
  *     summary: Mengambil daftar layanan
- *     tags: [Layanan]
- *     parameters:
- *       - in: query
- *         name: tenant_id
- *         schema:
- *           type: string
- *         description: Filter layanan berdasarkan ID Tenant
+ *     tags: [Layanan (User)]
  *     responses:
  *       200:
  *         description: Berhasil
  *   post:
- *     summary: Menambah layanan baru
- *     tags: [Layanan]
+ *     summary: Menambah layanan baru (Khusus Tenant)
+ *     tags: [Layanan (Tenant)]
+ *     description: Endpoint ini otomatis mendeteksi tenant_id dari sesi login pengguna, sehingga tidak perlu lagi dikirim secara manual.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [tenant_id, nama_layanan, harga_dasar]
+ *             required: [nama_layanan, harga_dasar]
  *             properties:
- *               tenant_id: { type: string }
  *               nama_layanan: { type: string }
  *               harga_dasar: { type: number }
+ *               gambar: { type: string, nullable: true }
+ *               descripsi: { type: string, nullable: true }
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [nama_layanan, harga_dasar]
+ *             properties:
+ *               nama_layanan: { type: string }
+ *               harga_dasar: { type: number }
+ *               gambar:
+ *                 type: string
+ *                 format: binary
+ *                 description: Foto layanan untuk diupload (Cloudinary)
+ *               descripsi: { type: string }
  *     responses:
  *       201:
  *         description: Layanan dibuat
+ *       401:
+ *         description: Sesi tidak sah
+ *       403:
+ *         description: Akses ditolak karena user bukan tenant
  */
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenant_id');
-
-    let query = supabaseAdmin.from('layanan').select('*, tenants(name)');
-
-    if (tenantId) {
-      query = query.eq('tenant_id', tenantId);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabaseAdmin
+      .from('layanan')
+      .select('*, tenants(name)');
 
     if (error) throw error;
     return NextResponse.json({ data }, { status: 200 });
@@ -60,20 +66,70 @@ export async function POST(request: NextRequest) {
   try {
     // 1. Verifikasi Identitas dari HttpOnly Cookie
     const token = request.cookies.get('token')?.value;
-    if (!token || !(await verifySessionToken(token))) {
+    const session = token ? await verifySessionToken(token) : null;
+    
+    if (!token || !session) {
       return NextResponse.json({ error: 'Tidak sah' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { tenant_id, nama_layanan, harga_dasar } = body;
+    // Pengecekan Role (Hanya Owner & Owner Tunggal)
+    const allowedRoles = ['owner', 'owner tunggal', 'owner_tunggal'];
+    const userRole = (session.role || '').toLowerCase();
+    
+    if (!allowedRoles.includes(userRole)) {
+      return NextResponse.json({ error: 'Akses ditolak: Hanya Owner yang dapat menambah layanan' }, { status: 403 });
+    }
 
-    if (!tenant_id || !nama_layanan || !harga_dasar) {
-      return NextResponse.json({ error: 'Tenant ID, Nama Layanan, dan Harga Dasar wajib diisi' }, { status: 400 });
+    const tenant_id = session.tenantId;
+
+    if (!tenant_id) {
+      return NextResponse.json({ error: 'Akses ditolak: User bukan bagian dari tenant manapun' }, { status: 403 });
+    }
+
+    const contentType = request.headers.get('content-type') || '';
+    let nama_layanan, harga_dasar, gambar, descripsi;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      nama_layanan = formData.get('nama_layanan') as string;
+      harga_dasar = parseFloat(formData.get('harga_dasar') as string);
+      descripsi = formData.get('descripsi') as string;
+      
+      const file = formData.get('gambar') as File;
+      if (file && file.size > 0) {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const uploadResult = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream({ folder: 'sf-service/layanan', format: 'webp' }, (error, result) => {
+            if (error) reject(error); else resolve(result);
+          }).end(buffer);
+        });
+        gambar = (uploadResult as any).secure_url;
+      }
+    } else {
+      const body = await request.json();
+      nama_layanan = body.nama_layanan;
+      harga_dasar = body.harga_dasar;
+      descripsi = body.descripsi;
+      gambar = body.gambar;
+
+      if (gambar && gambar.startsWith('data:image')) {
+        const uploadResult = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload(gambar, { folder: 'sf-service/layanan', format: 'webp' }, (error, result) => {
+            if (error) reject(error); else resolve(result);
+          });
+        });
+        gambar = (uploadResult as any).secure_url;
+      }
+    }
+
+    if (!nama_layanan || isNaN(harga_dasar)) {
+      return NextResponse.json({ error: 'Nama Layanan dan Harga Dasar wajib diisi' }, { status: 400 });
     }
 
     const { data, error } = await supabaseAdmin
       .from('layanan')
-      .insert([{ tenant_id, nama_layanan, harga_dasar }])
+      .insert([{ tenant_id, nama_layanan, harga_dasar, gambar, descripsi }])
       .select()
       .single();
 

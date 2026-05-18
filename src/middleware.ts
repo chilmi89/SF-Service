@@ -42,20 +42,20 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 1.2 Route Protection untuk Teknisi
-  if (pathname.startsWith('/dashboard/teknisi')) {
-    const token = request.cookies.get('token')?.value;
-    if (!token) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
-    }
-    const session = await verifySessionToken(token);
-    if (!session) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
-    }
-    if (session.role !== 'teknisi') {
-      return NextResponse.redirect(new URL('/forbidden', request.url));
-    }
-  }
+  // // 1.2 Route Protection untuk Teknisi
+  // if (pathname.startsWith('/dashboard/teknisi')) {
+  //   const token = request.cookies.get('token')?.value;
+  //   if (!token) {
+  //     return NextResponse.redirect(new URL('/auth/login', request.url));
+  //   }
+  //   const session = await verifySessionToken(token);
+  //   if (!session) {
+  //     return NextResponse.redirect(new URL('/auth/login', request.url));
+  //   }
+  //   if (session.role !== 'teknisi') {
+  //     return NextResponse.redirect(new URL('/forbidden', request.url));
+  //   }
+  // }
 
   // 1.3 Route Protection untuk Owner Tunggal
   if (pathname.startsWith('/dashboard/owner_tunggal')) {

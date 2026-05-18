@@ -614,11 +614,11 @@ export default function ProfilePage() {
 
           {/* ACTIONS */}
           <div className="pt-8 border-t border-gray-100 flex flex-col gap-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end w-full">
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 rounded-xl bg-black px-10 py-4 text-sm font-bold text-white transition-all hover:bg-black/90 active:scale-95 disabled:bg-gray-400 shadow-xl shadow-black/10"
+                className="flex items-center justify-center gap-2 rounded-xl bg-black px-10 py-4 text-sm font-bold text-white transition-all hover:bg-black/90 active:scale-95 disabled:bg-gray-400 shadow-xl shadow-black/10 w-full sm:w-auto"
               >
                 {isSaving ? (
                   <>

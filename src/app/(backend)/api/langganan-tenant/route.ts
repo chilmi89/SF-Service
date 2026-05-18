@@ -45,20 +45,28 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin
       .from('Langganan_tenant')
-      .select('*, Langganan(*), tenants(name, slug)');
+      .select('*');
 
     // Jika bukan Super Admin, filter berdasarkan tenant milik user
-    if (userRole !== 'super admin') {
+    if (userRole !== 'super admin' && userRole !== 'superadmin') {
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('kode_tenant')
         .eq('user_id', userId)
         .single();
       
-      // Catatan: Jika kode_tenant di profiles adalah string dan di Langganan_tenant adalah int8, 
-      // ini mungkin butuh penyesuaian ID. Untuk sekarang kita asumsikan bisa difilter.
       if (profile?.kode_tenant) {
-        query = query.eq('kode_tenant', profile.kode_tenant);
+        const { data: tenantData } = await supabaseAdmin
+          .from('tenants')
+          .select('id')
+          .eq('kode_tenant', profile.kode_tenant)
+          .single();
+          
+        if (tenantData?.id) {
+            query = query.eq('kode_tenant', tenantData.id);
+        } else {
+            return NextResponse.json({ data: [] }, { status: 200 });
+        }
       } else {
         return NextResponse.json({ data: [] }, { status: 200 });
       }
@@ -66,9 +74,39 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
 
-    if (error) throw error;
-    return NextResponse.json({ data }, { status: 200 });
+    if (error) {
+      console.error('Supabase Error (GET Langganan_tenant):', error);
+      throw error;
+    }
+
+    if (data && data.length > 0) {
+      const tenantIds = [...new Set(data.map(item => item.kode_tenant))].filter(Boolean);
+      const langgananIds = [...new Set(data.map(item => item.id_langganan))].filter(Boolean);
+
+      const { data: tenantsData } = await supabaseAdmin
+        .from('tenants')
+        .select('id, name, slug')
+        .in('id', tenantIds);
+
+      const { data: langganansData } = await supabaseAdmin
+        .from('Langganan')
+        .select('*')
+        .in('id', langgananIds);
+
+      const enrichedData = data.map(item => {
+        return {
+          ...item,
+          Langganan: langganansData?.find(l => l.id === item.id_langganan) || null,
+          tenants: tenantsData?.find(t => t.id === item.kode_tenant) || null
+        };
+      });
+
+      return NextResponse.json({ data: enrichedData }, { status: 200 });
+    }
+
+    return NextResponse.json({ data: [] }, { status: 200 });
   } catch (error: any) {
+    console.error('Error GET Langganan_tenant:', error);
     return NextResponse.json({ error: 'Gagal mengambil data langganan tenant.' }, { status: 500 });
   }
 }

@@ -89,11 +89,24 @@ export async function POST(request: Request) {
     // 3. Ambil Profile dan Role user (Gunakan Admin untuk bypass RLS)
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, full_name, role_id, roles(name)')
+      .select('id, full_name, role_id, kode_tenant, roles(name)')
       .eq('user_id', user.id)
       .single();
 
     const roleName = (profile?.roles as any)?.name;
+
+    // Ambil UUID tenant dari tabel tenants jika user memiliki kode_tenant
+    let tenantId = null;
+    if (profile?.kode_tenant) {
+      const { data: tenant } = await supabaseAdmin
+        .from('tenants')
+        .select('id')
+        .eq('kode_tenant', profile.kode_tenant)
+        .single();
+      if (tenant) {
+        tenantId = tenant.id;
+      }
+    }
 
     // Logika Redirect: Semua user diarahkan ke /home setelah login
     // User bisa memilih untuk masuk ke dashboard secara manual nanti
@@ -104,7 +117,8 @@ export async function POST(request: Request) {
       userId: user.id,
       email: user.email,
       role: roleName,
-      profileId: profile?.id
+      profileId: profile?.id,
+      tenantId: tenantId
     });
 
     // 5. Login berhasil - Set Token di HttpOnly Cookie

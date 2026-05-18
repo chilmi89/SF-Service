@@ -57,7 +57,9 @@ CREATE TABLE public.layanan (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
     nama_layanan VARCHAR(255),
-    harga_dasar DECIMAL(12,2)
+    harga_dasar DECIMAL(12,2),
+    gambar TEXT,
+    descripsi TEXT
 );
 
 -- 8. Table: transaction

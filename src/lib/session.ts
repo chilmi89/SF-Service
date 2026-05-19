@@ -19,7 +19,7 @@ export async function createSessionToken(payload: any) {
 /**
  * Memvalidasi Token Sesi dari Cookie.
  */
-export async function verifySessionToken(token: string) {
+export async function verifySessionToken(token: string): Promise<any> {
   try {
     const { payload } = await jwtVerify(token, secret);
     return payload;

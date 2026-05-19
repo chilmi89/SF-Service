@@ -57,7 +57,9 @@ CREATE TABLE public.layanan (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id UUID REFERENCES public.tenants(id) ON DELETE CASCADE,
     nama_layanan VARCHAR(255),
-    harga_dasar DECIMAL(12,2)
+    harga_dasar DECIMAL(12,2),
+    gambar TEXT,
+    descripsi TEXT
 );
 
 -- 8. Table: transaction
@@ -75,8 +77,9 @@ CREATE TABLE public.orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     transaction_id UUID REFERENCES public.transactions(id) ON DELETE CASCADE,
     layanan_id UUID REFERENCES public.layanan(id) ON DELETE SET NULL,
+    customer_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     customer_name VARCHAR(255),
-    status_order VARCHAR(50),
+    status_order VARCHAR(50) DEFAULT 'Menunggu Konfirmasi',
     catatan TEXT,
     created_at TIMESTAMP DEFAULT now()
 );

@@ -3,7 +3,7 @@ import { apiClient } from './api-client';
 /**
  * Order Service Library (Global/User & Tenant)
  * Menghubungkan frontend ke API /api/orders untuk pembuatan, pengambilan,
- * dan pembaruan status pesanan.
+ * dan pembaruan status pesanan..
  */
 export const orderService = {
   /**

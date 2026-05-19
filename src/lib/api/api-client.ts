@@ -19,9 +19,15 @@ export async function apiClient<T = any>(
   const fullUrl = endpoint.startsWith('http') ? endpoint : `${baseUrl}${cleanEndpoint}`;
 
   const headers: any = { 
-    'Content-Type': 'application/json', 
     ...customConfig.headers 
   };
+
+  // Jangan set Content-Type ke application/json jika body adalah FormData
+  if (body && typeof FormData !== 'undefined' && body instanceof FormData) {
+    // Browser akan otomatis set Content-Type ke multipart/form-data beserta boundary-nya
+  } else {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
 
   const config: RequestInit = {
     ...customConfig,
@@ -32,7 +38,7 @@ export async function apiClient<T = any>(
   };
 
   if (body) {
-    config.body = JSON.stringify(body);
+    config.body = (typeof FormData !== 'undefined' && body instanceof FormData) ? body : JSON.stringify(body);
   }
 
   try {

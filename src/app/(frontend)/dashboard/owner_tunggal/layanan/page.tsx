@@ -101,7 +101,7 @@ export default function LayananOwnerPage() {
 
       {/* STATS SUMMARY */}
       <div className="max-w-5xl">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: "Total Layanan", value: services.length, icon: <Briefcase size={16} />, color: "text-blue-600", bg: "bg-blue-50" },
             { label: "Layanan Aktif", value: services.filter(s => s.status === "Aktif").length, icon: <CheckCircle2 size={16} />, color: "text-emerald-600", bg: "bg-emerald-50" },
@@ -113,14 +113,14 @@ export default function LayananOwnerPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center gap-4"
+              className="p-3 sm:p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
             >
-              <div className={`h-10 w-10 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
+              <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-xl ${stat.bg} ${stat.color} flex shrink-0 items-center justify-center`}>
                 {stat.icon}
               </div>
-              <div>
-                <p className="text-[9px] font-medium uppercase  text-gray-400">{stat.label}</p>
-                <h3 className="text-xl font-black text-black leading-none">{stat.value}</h3>
+              <div className="min-w-0">
+                <p className="text-[8px] sm:text-[9px] font-medium uppercase text-gray-400 truncate">{stat.label}</p>
+                <h3 className="text-lg sm:text-xl font-black text-black leading-none mt-1 sm:mt-0">{stat.value}</h3>
               </div>
             </motion.div>
           ))}
@@ -128,40 +128,43 @@ export default function LayananOwnerPage() {
       </div>
 
       {/* FILTER & SEARCH */}
-      <section className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => {
-            setEditingService(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-black text-white h-11 px-6 rounded-xl font-black text-xs shadow-lg shadow-black/10 transition-all hover:bg-zinc-800"
-        >
-          <Plus size={16} />
-          Tambah Layanan Baru
-        </motion.button>
+      <section className="flex flex-row justify-between items-center gap-2 sm:gap-4 w-full">
+        {/* Search Bar */}
+        <div className="relative flex-1 group">
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" size={16} />
+          <input 
+            type="text" 
+            placeholder="Cari layanan..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-11 pl-9 sm:pl-11 pr-3 sm:pr-4 bg-white border border-gray-100 rounded-xl text-xs font-medium focus:ring-4 focus:ring-black/5 focus:border-black outline-none transition-all shadow-sm"
+          />
+        </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-          <div className="relative w-full md:w-80 lg:w-96 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" size={16} />
-            <input 
-              type="text" 
-              placeholder="Cari nama layanan..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-11 pl-11 pr-4 bg-white border border-gray-100 rounded-xl text-xs font-medium focus:ring-4 focus:ring-black/5 focus:border-black outline-none transition-all shadow-sm"
-            />
-          </div>
-          <button className="w-full md:w-auto h-11 px-5 rounded-xl border border-gray-100 bg-white text-gray-400 hover:text-black hover:border-black transition-all flex items-center justify-center gap-2 font-bold text-[11px] shadow-sm">
-            <Filter size={14} />
-            Filter Kategori
+        {/* Action Buttons */}
+        <div className="flex flex-row items-center gap-2 sm:gap-3 flex-none">
+          <button className="h-11 px-3 sm:px-5 rounded-xl border border-gray-100 bg-white text-gray-400 hover:text-black hover:border-black transition-all flex items-center justify-center gap-2 font-bold text-[11px] shadow-sm">
+            <Filter size={16} />
+            <span className="hidden sm:inline">Filter Kategori</span>
           </button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setEditingService(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center justify-center gap-2 bg-black text-white h-11 px-3 sm:px-6 rounded-xl font-black text-xs shadow-lg shadow-black/10 transition-all hover:bg-zinc-800"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Tambah Layanan Baru</span>
+          </motion.button>
         </div>
       </section>
 
       {/* SERVICE LIST */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         <AnimatePresence mode="popLayout">
           {isLoading ? (
             <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-400 gap-4">
@@ -180,15 +183,15 @@ export default function LayananOwnerPage() {
                   className="group bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden hover:shadow-md transition-all flex flex-col"
                 >
                 {/* Image */}
-                <div className="relative h-32 overflow-hidden bg-gray-100">
+                <div className="relative h-24 sm:h-32 overflow-hidden bg-gray-100 shrink-0">
                   <Image 
                     src={service.image} 
                     alt={service.name}
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute top-3 left-3">
-                    <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm ${
+                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                    <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-sm ${
                       service.status === 'Aktif' 
                       ? 'bg-emerald-500 text-white' 
                       : 'bg-gray-500 text-white'
@@ -199,42 +202,42 @@ export default function LayananOwnerPage() {
                 </div>
 
                 {/* Content */}
-                <div className="p-5 flex-1 flex flex-col">
-                  <div className="space-y-3 flex-1">
-                    <div className="flex flex-col gap-1">
-                      <h3 className="text-sm font-bold text-black leading-tight group-hover:text-blue-600 transition-colors">{service.name}</h3>
-                      <div className="flex items-center justify-between">
-                        <p className="text-[9px] font-bold text-gray-400 uppercase">{service.id}</p>
-                        <p className="text-sm font-bold text-black">{service.price}</p>
+                <div className="p-3 sm:p-5 flex-1 flex flex-col">
+                  <div className="space-y-2 sm:space-y-3 flex-1">
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
+                      <h3 className="text-[11px] sm:text-sm font-bold text-black leading-tight group-hover:text-blue-600 transition-colors line-clamp-1">{service.name}</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
+                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase">{service.id}</p>
+                        <p className="text-[11px] sm:text-sm font-black text-black">{service.price}</p>
                       </div>
                     </div>
 
-                    <p className="text-[11px] font-medium text-gray-500 line-clamp-2 leading-relaxed">
+                    <p className="text-[9px] sm:text-[11px] font-medium text-gray-500 line-clamp-2 leading-relaxed hidden sm:block">
                       {service.description}
                     </p>
                   </div>
 
-                  <div className="pt-4 flex items-center gap-2">
-                     <div className="flex gap-2">
+                  <div className="pt-3 sm:pt-4 flex flex-col xl:flex-row xl:items-center gap-2">
+                     <div className="flex gap-2 w-full xl:w-auto">
                         <button 
                           onClick={() => {
                             setEditingService(service);
                             setIsModalOpen(true);
                           }}
-                          className="h-9 w-9 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-all"
+                          className="flex-1 xl:flex-none h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-all"
                         >
-                          <Edit3 size={16} />
+                          <Edit3 size={14} className="sm:w-4 sm:h-4" />
                         </button>
                         <button 
                           onClick={() => handleDelete(service.id)}
-                          className="h-9 w-9 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                          className="flex-1 xl:flex-none h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} className="sm:w-4 sm:h-4" />
                         </button>
                      </div>
                      <button 
                        onClick={() => handleToggleStatus(service.id)}
-                       className={`flex-1 h-9 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                       className={`w-full xl:flex-1 h-8 sm:h-9 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-all ${
                          service.status === 'Aktif' 
                          ? 'border border-gray-100 text-gray-400 hover:bg-gray-50' 
                          : 'bg-black text-white shadow-lg shadow-black/10'

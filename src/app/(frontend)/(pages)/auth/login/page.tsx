@@ -12,6 +12,7 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  ArrowLeft,
 } from "lucide-react";
 import { authService } from "@/lib/api/auth.service";
 import { apiClient } from "@/lib/api/api-client";
@@ -171,7 +172,7 @@ function LoginContent() {
         </div>
 
         {/* RIGHT COLUMN: LOGIN FORM (FixIt Style) */}
-        <div className="relative flex flex-1 flex-col justify-center px-6 py-12 lg:px-24 overflow-hidden bg-white lg:-ml-12 z-10">
+        <div className="relative flex flex-1 flex-col justify-center rounded-t-[30px] lg:rounded-t-none lg:rounded-l-[40px] px-6 py-12 lg:px-24 overflow-hidden bg-white lg:-ml-12 z-10 shadow-[-20px_0_50px_rgba(0,0,0,0.05)] border-t lg:border-t-0 lg:border-l border-black/[0.05]">
           {/* Background Decorations */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <motion.div
@@ -186,6 +187,22 @@ function LoginContent() {
             />
           </div>
 
+          {/* Back Button - Fixed at top left of the form section */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="absolute top-8 left-8 lg:top-12 lg:left-12 z-20"
+          >
+            <Link
+              href="/home"
+              className="group flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Kembali ke Beranda
+            </Link>
+          </motion.div>
+
           <motion.div
             initial="hidden"
             animate="visible"
@@ -198,7 +215,7 @@ function LoginContent() {
                 whileHover={{ scale: 1.15, rotate: 12 }}
                 whileTap={{ scale: 0.85 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                className="mx-auto mb-6 flex h-16 w-16 cursor-pointer items-center justify-center bg-black text-3xl font-black text-white shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
+                className="mx-auto mb-6 flex h-16 w-16 cursor-pointer items-center justify-center rounded-2xl bg-black text-3xl font-black text-white shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
               >
                 F
               </motion.div>

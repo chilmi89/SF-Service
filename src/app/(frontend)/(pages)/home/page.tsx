@@ -25,10 +25,19 @@ import {
   LayoutGrid
 } from "lucide-react";
 import LiquidEther from "@/components/LiquidEther";
+import BookingModal from "@/components/BookingModal";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { Toast } from "@/components/toast";
 
 export default function Home() {
+  const { isLoggedIn, isLoading } = useAuth();
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [likedServices, setLikedServices] = useState<Record<string, boolean>>({});
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "warning" } | null>(null);
 
   const services = [
     { id: "1", title: "Servis & Cuci AC", category: "Servis AC", img: "/images/ac.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k", height: 450 },
@@ -51,8 +60,7 @@ export default function Home() {
     <div className="min-h-screen bg-transparent text-black">
       <main className="relative z-10">
 
-        <section className="px-8 lg:px-24 pt-20 pb-16 relative overflow-hidden min-h-screen flex items-center">
-          {/* Background Liquid Ether */}
+        <section className="px-8 lg:px-24 pt-32 lg:pt-0 relative overflow-hidden min-h-[80vh] lg:min-h-screen flex items-center justify-center">
           <div className="absolute inset-0 -z-10 bg-white">
             <LiquidEther
               colors={["#000000", "#111111", "#222222", "#333333"]}
@@ -64,69 +72,79 @@ export default function Home() {
               resolution={0.6}
             />
           </div>
-          
-          <div className="w-full relative z-10 pt-10">
-            <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
-              <div className="space-y-12">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-6"
-                >
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
-                    Rumah Nyaman 
-                    <br className="hidden md:block" /> Tanpa Beban 
-                    <span className="text-[#a1a1a1]"> bersama FixIt.</span>
-                  </h1>
-                  <p className="max-w-2xl text-md font-medium text-[#666]">
-                    Solusi terpercaya untuk segala kebutuhan perbaikan rumah Anda. Dari instalasi listrik hingga perbaikan pipa, teknisi ahli kami siap membantu dengan layanan berkualitas dan harga transparan.
-                  </p>
-                </motion.div>
 
-                <div className="space-y-8">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="relative flex w-full max-w-2xl items-center"
-                  >
-                    <div className="flex w-full items-center rounded-full bg-[rgb(242,242,245)] pl-3 pr-2 shadow-sm transition-all focus-within:ring-2 focus-within:ring-black/5">
-                      <div className="flex w-full items-center px-4">
-                        <Search className="h-5 w-5 text-[#a1a1a1]" />
-                        <input 
-                          type="text" 
-                          placeholder="Cari jasa servis (misal: AC, perbaikan pipa...)" 
-                          className="w-full bg-transparent px-4 py-4 text-md font-small text-black outline-none placeholder:text-[#a1a1a1]"
-                        />
-                      </div>
-                      <button className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg transition-all hover:scale-105 active:scale-95">
-                        <Search className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
+          <div className="w-full relative z-10 flex flex-col items-center text-center mt-8 lg:mt-0 max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="space-y-8 flex flex-col items-center"
+            >
+              {/* Premium Badge */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.03] border border-black/10 text-xs font-bold text-black uppercase tracking-widest backdrop-blur-md"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-40"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-black"></span>
+                </span>
+                FixIt Platform Layanan
+              </motion.div>
 
+              {/* Minimalist Heading */}
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black leading-[1.05] tracking-tighter text-black">
+                Rumah Nyaman <br /> 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-black via-gray-600 to-black">
+                  Tanpa Beban.
+                </span>
+              </h1>
+
+              {/* Refined Subtitle */}
+              <p className="max-w-2xl text-base sm:text-lg lg:text-xl font-medium text-gray-600 leading-relaxed px-4">
+                Solusi cerdas untuk segala kebutuhan perbaikan rumah Anda. Dari instalasi hingga perbaikan dengan teknisi ahli & harga transparan.
+              </p>
+
+              {/* Elegant Search Bar */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="relative aspect-square w-full max-w-[280px] sm:max-w-[320px] md:max-w-md lg:w-96 lg:max-w-lg mx-auto lg:ml-auto"
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="w-full max-w-2xl pt-6 px-4 sm:px-0"
               >
-                <div className="relative h-full w-full overflow-hidden rounded-2xl bg-gray-50 shadow-[0_40px_100px_rgba(0,0,0,0.08)]">
-                  <Image 
-                    src="/images/hero.png" 
-                    alt="Servis Rumah" 
-                    fill 
-                    priority
-                    className="object-cover transition-transform duration-700 hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent" />
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-black/5 rounded-full blur-xl group-hover:bg-black/10 transition-all duration-500" />
+                  <div className="relative flex w-full items-center rounded-full bg-white/80 backdrop-blur-xl border border-white/50 pl-6 pr-2 shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all focus-within:ring-4 focus-within:ring-black/5 focus-within:border-black/20 focus-within:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
+                    <Search className="h-5 w-5 text-gray-400 shrink-0" />
+                    <input 
+                      type="text" 
+                      placeholder="Cari layanan servis (misal: AC, Pipa)..." 
+                      className="w-full bg-transparent px-4 py-4 sm:py-5 text-sm sm:text-base font-semibold text-black outline-none placeholder:text-gray-400"
+                    />
+                    <button className="grid h-12 w-12 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
+                      <Search className="h-5 w-5 sm:h-6 sm:w-6" />
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="absolute -z-10 -top-20 -right-20 h-96 w-96 rounded-full bg-black/[0.02] blur-[100px]" />
               </motion.div>
-            </div>
+
+              {/* Quick Tags */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="flex flex-wrap justify-center items-center gap-2 pt-2"
+              >
+                <span className="text-xs font-semibold text-gray-500 mr-2">Populer:</span>
+                {["Servis AC", "Pipa Bocor", "Instalasi Listrik"].map((tag, i) => (
+                  <button key={i} className="px-4 py-1.5 rounded-full bg-black/5 text-xs font-bold text-gray-600 hover:bg-black hover:text-white transition-all hover:shadow-md hover:-translate-y-0.5">
+                    {tag}
+                  </button>
+                ))}
+              </motion.div>
+            </motion.div>
           </div>
         </section>
         
@@ -160,17 +178,33 @@ export default function Home() {
               {filteredServices.map((service, index) => (
                 <motion.div
                   key={service.id}
+                  onClick={() => {
+                    if (isLoading) return; // tunggu status auth selesai
+                    if (!isLoggedIn) {
+                      setToast({
+                        title: "Login Diperlukan",
+                        message: "Silakan login atau daftar sebagai user untuk memesan layanan ini.",
+                        type: "warning"
+                      });
+                      setTimeout(() => {
+                        router.push("/auth/login");
+                      }, 2500);
+                      return;
+                    }
+                    setSelectedService(service);
+                    setIsBookingModalOpen(true);
+                  }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.5 }}
-                  className="group flex flex-col bg-white rounded-xl overflow-hidden border border-black/[0.08] hover:border-black hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300"
+                  className="group flex flex-col bg-white rounded-xl overflow-hidden border border-black/[0.08] hover:border-black hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 cursor-pointer"
                 >
                   <div className="relative h-36 sm:h-40 w-full overflow-hidden bg-[#f8f8f8]">
                     <Image
                       src={service.img}
                       alt={service.title}
                       fill
-                      className="object-cover transition-all duration-700 group-hover:scale-105"
+                      className="object-cover"
                     />
                     <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[9px] font-bold text-black uppercase tracking-wider shadow-sm">
                       {service.category}
@@ -212,8 +246,12 @@ export default function Home() {
                         </div>
                       </div>
                       
-                      <button className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-black/10 flex items-center justify-center group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-300">
-                        <ArrowUpRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <button className="relative inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-black/10 group-hover:bg-black transition-all duration-150">
+                        <div className="-rotate-45 transition-transform duration-150 group-hover:rotate-0 text-black group-hover:text-white">
+                          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4">
+                            <path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                          </svg>
+                        </div>
                       </button>
                     </div>
                   </div>
@@ -268,9 +306,13 @@ export default function Home() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-all duration-500 group-hover:opacity-100 flex flex-col justify-between p-4 text-white">
                           <div className="flex w-full items-center justify-between transform translate-y-[-10px] group-hover:translate-y-0 transition-transform duration-500">
                             <span className="text-xs font-bold truncate pr-2">{item.label}</span>
-                            <div className="h-7 w-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-                              <ArrowUpRight className="h-4 w-4" />
-                            </div>
+                            <button className="group relative inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-950">
+                              <div className="-rotate-45 transition duration-300 group-hover:rotate-0">
+                                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-neutral-200">
+                                  <path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+                                </svg>
+                              </div>
+                            </button>
                           </div>
 
                           <div className="flex items-center justify-between transform translate-y-[10px] group-hover:translate-y-0 transition-transform duration-500">
@@ -303,6 +345,22 @@ export default function Home() {
         </section>
 
       </main>
+
+      {/* Booking Modal */}
+      <BookingModal 
+        isOpen={isBookingModalOpen} 
+        onClose={() => setIsBookingModalOpen(false)} 
+        service={selectedService} 
+      />
+
+      {/* Toast Notification */}
+      <Toast 
+        show={!!toast} 
+        title={toast?.title} 
+        message={toast?.message || ""} 
+        type={toast?.type} 
+        onClose={() => setToast(null)} 
+      />
     </div>
   );
 }

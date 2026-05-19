@@ -55,7 +55,7 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
     { name: "Transaksi", icon: <CreditCard size={20} />, href: "/dashboard/admin/transaksi", permission: "view_transaksi" },
   ],
   teknisi: [
-    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/teknisi", permission: "dashboard" },
+    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/teknisi" }, // Dashboard teknisi sebaiknya default tampil
     { name: "Tugas Saya", icon: <Briefcase size={20} />, href: "/dashboard/teknisi/tugas" },
   ],
   owner_tunggal: [
@@ -133,7 +133,7 @@ export default function SidebarMenu({ role, onNavigate }: SidebarMenuProps) {
             if (permData && permData.permissions) {
               const assigned = permData.permissions
                 .filter((p: any) => p.assigned)
-                .map((p: any) => p.name);
+                .map((p: any) => p.name.toLowerCase());
               
               setUserPermissions(assigned);
               // Update cache
@@ -166,7 +166,7 @@ export default function SidebarMenu({ role, onNavigate }: SidebarMenuProps) {
   // Helper untuk filter menu berdasarkan permission secara rekursif
   const filterMenuItems = (menuItems: NavItem[]): NavItem[] => {
     return menuItems
-      .filter(item => !item.permission || userPermissions.includes(item.permission))
+      .filter(item => !item.permission || userPermissions.some(p => p === item.permission?.toLowerCase()))
       .map(item => {
         if (item.children) {
           return { ...item, children: filterMenuItems(item.children) };

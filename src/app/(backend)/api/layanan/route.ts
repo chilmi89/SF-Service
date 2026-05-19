@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     const contentType = request.headers.get('content-type') || '';
-    let nama_layanan, harga_dasar, gambar, descripsi;
+    let nama_layanan: any, harga_dasar: any, gambar: any, descripsi: any;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();

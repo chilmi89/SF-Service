@@ -77,8 +77,9 @@ CREATE TABLE public.orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     transaction_id UUID REFERENCES public.transactions(id) ON DELETE CASCADE,
     layanan_id UUID REFERENCES public.layanan(id) ON DELETE SET NULL,
+    customer_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     customer_name VARCHAR(255),
-    status_order VARCHAR(50),
+    status_order VARCHAR(50) DEFAULT 'Menunggu Konfirmasi',
     catatan TEXT,
     created_at TIMESTAMP DEFAULT now()
 );

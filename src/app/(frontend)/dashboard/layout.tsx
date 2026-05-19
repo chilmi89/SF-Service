@@ -16,6 +16,8 @@ export default function RootDashboardLayout({
   const { isLoggedIn, userRole, isLoading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const pathname = usePathname();
+
   // Menampilkan loader saat sedang mengecek status login
   if (isLoading) {
     return (
@@ -29,8 +31,6 @@ export default function RootDashboardLayout({
   // if (!isLoggedIn) {
   //   return null;
   // }
-
-  const pathname = usePathname();
 
   // Normalisasi role untuk Sidebar
   const getNormalizedRole = () : "superadmin" | "admin" | "teknisi" | "owner_tunggal" => {

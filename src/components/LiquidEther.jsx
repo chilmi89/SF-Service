@@ -9,7 +9,7 @@ export default function LiquidEther({
   isViscous = false,
   viscous = 30,
   iterationsViscous = 32,
-  iterationsPoisson = 32,
+  iterationsPoisson = 16, // Optimized from 32
   dt = 0.014,
   BFECC = true,
   resolution = 0.5,
@@ -22,7 +22,8 @@ export default function LiquidEther({
   autoIntensity = 2.2,
   takeoverDuration = 0.25,
   autoResumeDelay = 1000,
-  autoRampDuration = 0.6
+  autoRampDuration = 0.6,
+  maxSimDimension = 256 // Capped grid resolution to prevent lag on high-DPI screens
 }) {
   const mountRef = useRef(null);
   const webglRef = useRef(null);
@@ -31,6 +32,8 @@ export default function LiquidEther({
   const intersectionObserverRef = useRef(null);
   const isVisibleRef = useRef(true);
   const resizeRafRef = useRef(null);
+
+  const colorsSerialized = Array.isArray(colors) ? colors.join(',') : '';
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -520,6 +523,19 @@ export default function LiquidEther({
         Common.renderer.render(this.scene, this.camera);
         Common.renderer.setRenderTarget(null);
       }
+      dispose() {
+        if (this.geometry) {
+          this.geometry.dispose();
+          this.geometry = null;
+        }
+        if (this.material) {
+          this.material.dispose();
+          this.material = null;
+        }
+        this.plane = null;
+        this.scene = null;
+        this.camera = null;
+      }
     }
 
     class Advection extends ShaderPass {
@@ -566,6 +582,14 @@ export default function LiquidEther({
         this.uniforms.isBFECC.value = BFECC;
         super.update();
       }
+      dispose() {
+        super.dispose();
+        if (this.line) {
+          if (this.line.geometry) this.line.geometry.dispose();
+          if (this.line.material) this.line.material.dispose();
+          this.line = null;
+        }
+      }
     }
 
     class ExternalForce extends ShaderPass {
@@ -609,6 +633,14 @@ export default function LiquidEther({
         uniforms.center.value.set(centerX, centerY);
         uniforms.scale.value.set(props.cursor_size, props.cursor_size);
         super.update();
+      }
+      dispose() {
+        super.dispose();
+        if (this.mouse) {
+          if (this.mouse.geometry) this.mouse.geometry.dispose();
+          if (this.mouse.material) this.mouse.material.dispose();
+          this.mouse = null;
+        }
       }
     }
 
@@ -741,7 +773,7 @@ export default function LiquidEther({
     class Simulation {
       constructor(options) {
         this.options = {
-          iterations_poisson: 32,
+          iterations_poisson: 16, // Optimized from 32
           iterations_viscous: 32,
           mouse_force: 20,
           resolution: 0.5,
@@ -751,6 +783,7 @@ export default function LiquidEther({
           dt: 0.014,
           isViscous: false,
           BFECC: true,
+          maxSimDimension: 256,
           ...options
         };
         this.fbos = {
@@ -837,8 +870,21 @@ export default function LiquidEther({
         });
       }
       calcSize() {
-        const width = Math.max(1, Math.round(this.options.resolution * Common.width));
-        const height = Math.max(1, Math.round(this.options.resolution * Common.height));
+        let width = Math.max(1, Math.round(this.options.resolution * Common.width));
+        let height = Math.max(1, Math.round(this.options.resolution * Common.height));
+        
+        const maxDim = this.options.maxSimDimension;
+        if (maxDim && (width > maxDim || height > maxDim)) {
+          const ratio = width / height;
+          if (width > height) {
+            width = maxDim;
+            height = Math.max(1, Math.round(maxDim / ratio));
+          } else {
+            height = maxDim;
+            width = Math.max(1, Math.round(maxDim * ratio));
+          }
+        }
+
         const px_x = 1.0 / width;
         const px_y = 1.0 / height;
         this.cellScale.set(px_x, px_y);
@@ -880,6 +926,19 @@ export default function LiquidEther({
         });
         this.pressure.update({ vel, pressure });
       }
+      dispose() {
+        for (let key in this.fbos) {
+          if (this.fbos[key]) {
+            this.fbos[key].dispose();
+          }
+        }
+        if (this.advection) this.advection.dispose();
+        if (this.externalForce) this.externalForce.dispose();
+        if (this.viscous) this.viscous.dispose();
+        if (this.divergence) this.divergence.dispose();
+        if (this.poisson) this.poisson.dispose();
+        if (this.pressure) this.pressure.dispose();
+      }
     }
 
     class Output {
@@ -920,6 +979,19 @@ export default function LiquidEther({
       update() {
         this.simulation.update();
         this.render();
+      }
+      dispose() {
+        if (this.simulation) {
+          this.simulation.dispose();
+          this.simulation = null;
+        }
+        if (this.output) {
+          if (this.output.geometry) this.output.geometry.dispose();
+          if (this.output.material) this.output.material.dispose();
+          this.output = null;
+        }
+        this.scene = null;
+        this.camera = null;
       }
     }
 
@@ -992,6 +1064,13 @@ export default function LiquidEther({
           window.removeEventListener('resize', this._resize);
           document.removeEventListener('visibilitychange', this._onVisibility);
           Mouse.dispose();
+          if (this.output) {
+            this.output.dispose();
+            this.output = null;
+          }
+          if (paletteTex) {
+            paletteTex.dispose();
+          }
           if (Common.renderer) {
             const canvas = Common.renderer.domElement;
             if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
@@ -1024,6 +1103,7 @@ export default function LiquidEther({
       const sim = webglRef.current.output?.simulation;
       if (!sim) return;
       const prevRes = sim.options.resolution;
+      const prevMax = sim.options.maxSimDimension;
       Object.assign(sim.options, {
         mouse_force: mouseForce,
         cursor_size: cursorSize,
@@ -1034,9 +1114,10 @@ export default function LiquidEther({
         dt,
         BFECC,
         resolution,
-        isBounce
+        isBounce,
+        maxSimDimension
       });
-      if (resolution !== prevRes) {
+      if (resolution !== prevRes || maxSimDimension !== prevMax) {
         sim.resize();
       }
     };
@@ -1105,13 +1186,14 @@ export default function LiquidEther({
     mouseForce,
     resolution,
     viscous,
-    colors,
+    colorsSerialized,
     autoDemo,
     autoSpeed,
     autoIntensity,
     takeoverDuration,
     autoResumeDelay,
-    autoRampDuration
+    autoRampDuration,
+    maxSimDimension
   ]);
 
   useEffect(() => {
@@ -1120,6 +1202,7 @@ export default function LiquidEther({
     const sim = webgl.output?.simulation;
     if (!sim) return;
     const prevRes = sim.options.resolution;
+    const prevMax = sim.options.maxSimDimension;
     Object.assign(sim.options, {
       mouse_force: mouseForce,
       cursor_size: cursorSize,
@@ -1130,7 +1213,8 @@ export default function LiquidEther({
       dt,
       BFECC,
       resolution,
-      isBounce
+      isBounce,
+      maxSimDimension
     });
     if (webgl.autoDriver) {
       webgl.autoDriver.enabled = autoDemo;
@@ -1142,7 +1226,7 @@ export default function LiquidEther({
         webgl.autoDriver.mouse.takeoverDuration = takeoverDuration;
       }
     }
-    if (resolution !== prevRes) {
+    if (resolution !== prevRes || maxSimDimension !== prevMax) {
       sim.resize();
     }
   }, [
@@ -1161,7 +1245,8 @@ export default function LiquidEther({
     autoIntensity,
     takeoverDuration,
     autoResumeDelay,
-    autoRampDuration
+    autoRampDuration,
+    maxSimDimension
   ]);
 
   return (

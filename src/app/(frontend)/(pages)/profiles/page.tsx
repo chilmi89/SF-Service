@@ -258,7 +258,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-32 pt-40 selection:bg-black selection:text-white relative">
+    <div className="min-h-screen bg-white pb-32 pt-28 sm:pt-40 selection:bg-black selection:text-white relative">
       <div className="mx-auto max-w-2xl px-6">
         <motion.div
           initial="hidden"
@@ -269,7 +269,7 @@ export default function ProfilePage() {
           {/* Back Action */}
           <Link
             href="/home"
-            className="group inline-flex items-center gap-2 text-sm font-bold text-[#a1a1a1] transition-all hover:text-black mb-2"
+            className="group inline-flex items-center gap-2 text-sm font-bold text-[#a1a1a1] transition-all hover:text-black mb-6"
           >
             <ArrowLeft
               size={16}
@@ -303,11 +303,11 @@ export default function ProfilePage() {
           )}
 
           {/* MINIMALIST HEADER */}
-          <header className="flex items-center gap-5 border-b border-gray-100 pb-8">
-            <div className="relative">
+          <header className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6 border-b border-gray-100 pb-8 mt-2">
+            <div className="relative shrink-0">
               <div
                 onClick={() => setShowAvatarMenu(!showAvatarMenu)}
-                className="group relative h-16 w-16 md:h-20 md:w-20 cursor-pointer overflow-hidden rounded-full bg-gray-100 border-2 border-white shadow-md transition-all hover:scale-105 active:scale-95"
+                className="group relative h-16 w-16 md:h-20 md:w-20 shrink-0 cursor-pointer overflow-hidden rounded-full bg-gray-100 border-2 border-white shadow-md transition-all hover:scale-105 active:scale-95"
               >
                 {avatarPreview || profile?.avatar_url ? (
                   <Image
@@ -377,7 +377,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xl font-medium tracking-tight">
+              <div className="flex items-center gap-2 text-lg sm:text-xl font-medium tracking-tight flex-wrap">
                 <span className="text-black font-semibold truncate max-w-[200px] md:max-w-none">
                   {formData.username || "User"}
                 </span>
@@ -399,7 +399,7 @@ export default function ProfilePage() {
           />
 
           {/* FORM SECTIONS */}
-          <div className="space-y-8">
+          <div className="space-y-12">
             {/* General Section */}
             <section className="space-y-6">
               <h2 className="text-lg font-semibold text-black">General</h2>

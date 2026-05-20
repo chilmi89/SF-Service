@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Clock, MapPin, AlignLeft, Shield, CheckCircle2, Loader2 } from "lucide-react";
+import { X, Calendar, Clock, MapPin, AlignLeft, Shield, CheckCircle2, Loader2, User } from "lucide-react";
+import { orderService } from "@/lib/api/order.service";
 
 export interface ServiceData {
   id: string;
@@ -25,6 +26,7 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
   const [time, setTime] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -46,25 +48,42 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
       setTime("");
       setAddress("");
       setNotes("");
+      setCustomerName("");
     }
   }, [isOpen]);
 
   if (!service) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulasi proses API
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Menggabungkan data address, date, dan time ke dalam catatan agar informatif bagi teknisi
+      const combinedNotes = `Tgl: ${date} Jam: ${time}\nAlamat: ${address}\nCatatan: ${notes}`;
+      
+      const { data, error } = await orderService.createOrder({
+        layanan_id: service.id,
+        customer_name: customerName,
+        catatan: combinedNotes
+      });
+
+      if (error || !data) {
+        throw new Error(error || "Gagal membuat pesanan");
+      }
+
       setIsSuccess(true);
       
       // Tutup otomatis setelah sukses
       setTimeout(() => {
         onClose();
       }, 2500);
-    }, 1500);
+    } catch (err) {
+      console.error("Booking error:", err);
+      alert("Maaf, terjadi kesalahan saat memproses pesanan Anda.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -147,6 +166,21 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold text-black border-b border-gray-100 pb-2">Detail Pemesanan</h3>
                   
+                  {/* Nama Customer */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 flex items-center gap-1.5">
+                      <User size={14} /> Nama Pemesan
+                    </label>
+                    <input 
+                      type="text" 
+                      required
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Masukkan nama lengkap Anda"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-black focus:bg-white focus:outline-none transition-all"
+                    />
+                  </div>
+
                   {/* Date & Time Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">

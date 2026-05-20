@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -29,6 +29,7 @@ import BookingModal from "@/components/BookingModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { Toast } from "@/components/toast";
+import { layananService } from "@/lib/api/layanan.service";
 
 export default function Home() {
   const { isLoggedIn, isLoading } = useAuth();
@@ -39,18 +40,41 @@ export default function Home() {
   const [selectedService, setSelectedService] = useState<any>(null);
   const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "warning" } | null>(null);
 
-  const services = [
-    { id: "1", title: "Servis & Cuci AC", category: "Servis AC", img: "/images/ac.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k", height: 450 },
-    { id: "2", title: "Instalasi Pipa Air", category: "Pipa Air", img: "/images/plumbing.png", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 54, views: "5.4k", height: 300 },
-    { id: "3", title: "Reparasi Elektronik", category: "Elektronik", img: "/images/hero.png", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 164, views: "10.2k", height: 380 },
-    { id: "4", title: "Servis Mesin Cuci", category: "Elektronik", img: "/images/feature.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 47, views: "3.3k", height: 350 },
-    { id: "5", title: "Pasang Tandon Air", category: "Pipa Air", img: "/images/card.png", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 58, views: "1.1k", height: 420 },
-    { id: "6", title: "Perbaikan Atap", category: "Pertukangan", img: "/images/feature.png", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 92, views: "4.5k", height: 340 },
-    { id: "7", title: "Instalasi Listrik", category: "Listrik", img: "/images/hero.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 120, views: "7.8k", height: 400 },
-    { id: "8", title: "Servis Pompa Air", category: "Pipa Air", img: "/images/plumbing.png", tech: "Maya Kartika", avatar: "/images/maya.png", likes: 43, views: "2.1k", height: 320 },
-    { id: "9", title: "Perbaikan Kulkas", category: "Elektronik", img: "/images/ac.png", tech: "Hendra Wijaya", avatar: "/images/hendra.png", likes: 76, views: "5.9k", height: 360 },
-    { id: "10", title: "Pembersihan Tandon", category: "Pipa Air", img: "/images/card.png", tech: "Budi Santoso", avatar: "/images/budi.png", likes: 88, views: "8.1k", height: 410 },
-  ];
+  const [services, setServices] = useState<any[]>([]);
+  const [isFetchingServices, setIsFetchingServices] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await layananService.getAllLayanan();
+        let rawData = res?.data;
+        if (rawData && !Array.isArray(rawData)) {
+          if (Array.isArray(rawData.data)) rawData = rawData.data;
+          else if (Array.isArray(rawData.layanan)) rawData = rawData.layanan;
+          else rawData = [rawData];
+        }
+        const dataArray = Array.isArray(rawData) ? rawData : [];
+        
+        const mapped = dataArray.map((item: any) => ({
+          id: item.layanan_id || item.id,
+          title: item.nama_layanan || "Layanan",
+          category: item.kategori || "Servis AC",
+          img: item.gambar || "/images/ac.png",
+          tech: item.tenants?.name || "Teknisi FixIt", 
+          avatar: "/images/budi.png",
+          likes: Math.floor(Math.random() * 100),
+          views: `${(Math.random() * 10 + 1).toFixed(1)}k`,
+          price: `Rp ${(item.harga_dasar || 0).toLocaleString('id-ID')}`,
+        }));
+        setServices(mapped);
+      } catch (err) {
+        console.error("Gagal mengambil data layanan beranda:", err);
+      } finally {
+        setIsFetchingServices(false);
+      }
+    };
+    fetchServices();
+  }, []);
 
   const filteredServices = activeCategory === "Semua" 
     ? services 
@@ -174,7 +198,7 @@ export default function Home() {
                 <SlidersHorizontal className="h-4 w-4" /> Filters
               </button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 min-h-[500px]">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
               {filteredServices.map((service, index) => (
                 <motion.div
                   key={service.id}

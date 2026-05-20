@@ -14,7 +14,8 @@ import {
   Shield,
   ChevronDown,
   ChevronRight,
-  LogOut
+  LogOut,
+  Building2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "@/lib/api/auth.service";
@@ -59,16 +60,18 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
     { name: "Tugas Saya", icon: <Briefcase size={20} />, href: "/dashboard/teknisi/tugas" },
   ],
   owner_tunggal: [
-    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner_tunggal", permission: "dashboard" },
-    { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner_tunggal/layanan", permission: "view_layanan" },
-    { name: "Teknisi", icon: <Users size={20} />, href: "/dashboard/owner/teknisi", permission: "view_pengguna" },
-    { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner_tunggal/subscription", permission: "view_langganan" },
-    { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner_tunggal/laporan", permission: "view_laporan" },
+    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner", permission: "dashboard" },
+    { name: "Profil Perusahaan", icon: <Building2 size={20} />, href: "/dashboard/owner/profile-tenant", permission: "view_profile" },
+    { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner/layanan", permission: "view_layanan" },
+    { name: "Kelola Staf", icon: <Users size={20} />, href: "/dashboard/owner/staff", permission: "view_staff" },
+    { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner/subscription", permission: "view_langganan" },
+    { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner/laporan", permission: "view_laporan" },
   ],
   owner: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner", permission: "dashboard" },
+    { name: "Profil Perusahaan", icon: <Building2 size={20} />, href: "/dashboard/owner/profile-tenant", permission: "view_profile" },
     { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner/layanan", permission: "view_layanan" },
-    { name: "Teknisi", icon: <Users size={20} />, href: "/dashboard/owner/teknisi", permission: "view_pengguna" },
+    { name: "Kelola Staf", icon: <Users size={20} />, href: "/dashboard/owner/staff", permission: "view_staff" },
     { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner/subscription", permission: "view_langganan" },
     { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner/laporan", permission: "view_laporan" },
   ]

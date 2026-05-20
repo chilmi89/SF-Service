@@ -133,7 +133,7 @@ export default function TenantRegisterPage() {
       localStorage.setItem("user_role", "owner_tunggal"); // Simulate role change for UI
 
       setTimeout(() => {
-        router.push("/dashboard/owner_tunggal");
+        router.push("/dashboard/owner");
       }, 2000);
 
     } catch (err: any) {

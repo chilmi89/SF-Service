@@ -22,61 +22,36 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Toast, ToastType } from "@/components/toast";
-
-interface Service {
-  id: string;
-  name: string;
-  category: string;
-  price: string;
-  status: "Aktif" | "Nonaktif";
-  image: string;
-  description: string;
-}
+import { useLayananTenant, Service } from "@/hooks/useLayananTenant";
 
 export default function LayananOwnerPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [services, setServices] = useState<Service[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [toast, setToast] = useState<{ show: boolean; title: string; message: string; type: ToastType } | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
-  // Mock initial data
+  const {
+    services,
+    isLoading,
+    isSubmitting,
+    toast,
+    setToast,
+    fetchLayanan,
+    createLayanan,
+    updateLayanan,
+    deleteLayanan,
+    toggleStatusLayanan
+  } = useLayananTenant();
+
   useEffect(() => {
-    const commonImage = "https://images.unsplash.com/photo-1581094288338-2314dddb7ec3?auto=format&fit=crop&q=80&w=400";
-    const timer = setTimeout(() => {
-      setServices([
-        { id: "S-001", name: "Service AC Split", category: "AC", price: "Rp 150.000", status: "Aktif", image: commonImage, description: "Perawatan AC split standard meliputi cuci unit indoo dan outdoor." },
-        { id: "S-002", name: "Cuci AC (Unit Besar)", category: "AC", price: "Rp 250.000", status: "Aktif", image: commonImage, description: "Layanan cuci AC untuk unit PK besar di atas 2 PK." },
-        { id: "S-003", name: "Perbaikan Kelistrikan", category: "Listrik", price: "Rp 200.000", status: "Nonaktif", image: commonImage, description: "Pengecekan dan perbaikan instalasi listrik rumah yang bermasalah." },
-        { id: "S-004", name: "Isi Freon R32", category: "AC", price: "Rp 350.000", status: "Aktif", image: commonImage, description: "Pengisian freon tipe R32 untuk AC yang kurang dingin." },
-      ]);
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    fetchLayanan();
+  }, [fetchLayanan]);
 
-  const handleToggleStatus = (id: string) => {
-    setServices(prev => prev.map(s => 
-      s.id === id ? { ...s, status: s.status === "Aktif" ? "Nonaktif" : "Aktif" } : s
-    ));
-    setToast({
-      show: true,
-      title: "Status Diperbarui",
-      message: "Status layanan berhasil diubah.",
-      type: "success"
-    });
-  };
+  const handleToggleStatus = (id: string) => toggleStatusLayanan(id);
 
   const handleDelete = (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus layanan ini?")) {
-      setServices(prev => prev.filter(s => s.id !== id));
-      setToast({
-        show: true,
-        title: "Layanan Dihapus",
-        message: "Layanan telah dihapus dari daftar.",
-        type: "info"
-      });
+      deleteLayanan(id);
     }
   };
 
@@ -153,6 +128,7 @@ export default function LayananOwnerPage() {
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               setEditingService(null);
+              setImagePreview("");
               setIsModalOpen(true);
             }}
             className="flex items-center justify-center gap-2 bg-black text-white h-11 px-3 sm:px-6 rounded-xl font-black text-xs shadow-lg shadow-black/10 transition-all hover:bg-zinc-800"
@@ -206,9 +182,11 @@ export default function LayananOwnerPage() {
                   <div className="space-y-2 sm:space-y-3 flex-1">
                     <div className="flex flex-col gap-0.5 sm:gap-1">
                       <h3 className="text-[11px] sm:text-sm font-bold text-black leading-tight group-hover:text-blue-600 transition-colors line-clamp-1">{service.name}</h3>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
-                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase">{service.id}</p>
-                        <p className="text-[11px] sm:text-sm font-black text-black">{service.price}</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                        <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase truncate">
+                          ID: {service.id.length > 8 ? service.id.slice(0, 8) : service.id}
+                        </p>
+                        <p className="text-[11px] sm:text-sm font-black text-black shrink-0">{service.price}</p>
                       </div>
                     </div>
 
@@ -222,6 +200,7 @@ export default function LayananOwnerPage() {
                         <button 
                           onClick={() => {
                             setEditingService(service);
+                            setImagePreview("");
                             setIsModalOpen(true);
                           }}
                           className="flex-1 xl:flex-none h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-all"
@@ -298,22 +277,33 @@ export default function LayananOwnerPage() {
                   </button>
                 </div>
 
-                <form className="space-y-4" onSubmit={(e) => {
+                <form className="space-y-4" onSubmit={async (e) => {
                   e.preventDefault();
-                  setIsModalOpen(false);
-                  setToast({
-                    show: true,
-                    title: editingService ? "Perubahan Disimpan" : "Berhasil Ditambah",
-                    message: `Layanan ${editingService ? 'berhasil diperbarui' : 'baru telah tersedia'}.`,
-                    type: "success"
-                  });
+                  const formData = new FormData(e.currentTarget);
+                  const payload = {
+                    nama_layanan: formData.get("nama_layanan") as string,
+                    harga_dasar: Number(formData.get("harga_dasar")),
+                    gambar: imagePreview || editingService?.image || "https://images.unsplash.com/photo-1581094288338-2314dddb7ec3?auto=format&fit=crop&q=80&w=400",
+                    descripsi: formData.get("descripsi") as string,
+                  };
+
+                  let success = false;
+                  if (editingService) {
+                    success = await updateLayanan(editingService.id, payload);
+                  } else {
+                    success = await createLayanan(payload);
+                  }
+                  
+                  if (success) {
+                    setIsModalOpen(false);
+                  }
                 }}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-1">Nama Layanan</label>
                       <div className="relative group">
                         <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={14} />
-                        <input required defaultValue={editingService?.name} type="text" placeholder="Nama layanan..." className="w-full h-11 bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-4 text-xs font-bold outline-none focus:bg-white focus:border-black transition-all" />
+                        <input name="nama_layanan" required defaultValue={editingService?.name} type="text" placeholder="Nama layanan..." className="w-full h-11 bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-4 text-xs font-bold outline-none focus:bg-white focus:border-black transition-all" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
@@ -329,28 +319,55 @@ export default function LayananOwnerPage() {
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-1">Harga Dasar</label>
                       <div className="relative group">
                         <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" size={14} />
-                        <input required defaultValue={editingService?.price.replace('Rp ', '').replace('.', '')} type="number" placeholder="Harga..." className="w-full h-11 bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-4 text-xs font-bold outline-none focus:bg-white focus:border-black transition-all" />
+                        <input name="harga_dasar" required defaultValue={editingService?.rawPrice || ""} type="number" placeholder="Harga..." className="w-full h-11 bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-4 text-xs font-bold outline-none focus:bg-white focus:border-black transition-all" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-1">Foto Layanan</label>
-                      <button type="button" className="w-full h-11 bg-gray-50 border border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold text-gray-400 uppercase hover:border-black hover:text-black transition-all">
-                        <ImageIcon size={14} />
-                        Unggah
-                      </button>
+                      <div className="relative">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setImagePreview(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <div className={`w-full h-11 bg-gray-50 border ${imagePreview ? 'border-emerald-500 text-emerald-600' : 'border-dashed border-gray-300 text-gray-400 hover:border-black hover:text-black'} rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold uppercase transition-all overflow-hidden relative`}>
+                          {imagePreview ? (
+                            <>
+                              <CheckCircle2 size={14} />
+                              Foto Dipilih
+                            </>
+                          ) : (
+                            <>
+                              <ImageIcon size={14} />
+                              Pilih Gambar
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold uppercase text-gray-400 ml-1">Deskripsi Layanan</label>
-                    <textarea required defaultValue={editingService?.description} rows={3} placeholder="Deskripsi layanan..." className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-black transition-all resize-none" />
+                    <textarea name="descripsi" required defaultValue={editingService?.description} rows={3} placeholder="Deskripsi layanan..." className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-black transition-all resize-none" />
                   </div>
 
                   <div className="pt-4 flex gap-3">
                     <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 h-11 rounded-xl border border-gray-300 text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all">
                       Batal
                     </button>
-                    <button type="submit" className="flex-[2] h-11 rounded-xl bg-black text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-black/10 hover:bg-zinc-800 transition-all">
+                    <button disabled={isSubmitting} type="submit" className="flex-[2] h-11 rounded-xl bg-black text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-black/10 hover:bg-zinc-800 transition-all flex justify-center items-center gap-2 disabled:bg-gray-400">
+                      {isSubmitting && <Loader2 size={14} className="animate-spin" />}
                       {editingService ? "Simpan Perubahan" : "Simpan Layanan"}
                     </button>
                   </div>

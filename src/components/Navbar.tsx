@@ -95,7 +95,7 @@ export default function Navbar() {
     if (role === "super admin" || role === "superadmin") return "/dashboard/superadmin";
     if (role === "admin") return "/dashboard/admin";
     if (role === "teknisi") return "/dashboard/teknisi";
-    if (role === "owner tunggal" || role === "owner_tunggal") return "/dashboard/owner_tunggal";
+    if (role === "owner tunggal" || role === "owner_tunggal" || role === "owner") return "/dashboard/owner";
     if (role === "admin tenant") return "/dashboard/admin"; // Or specify a dedicated path if needed
     return "/home";
   };

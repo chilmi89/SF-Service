@@ -14,9 +14,15 @@ interface ActivePlanCardProps {
       durasi: number;
     }
   };
+  onCancel?: () => void;
+  isCancelling?: boolean;
 }
 
-export const ActivePlanCard: React.FC<ActivePlanCardProps> = ({ subscription }) => {
+export const ActivePlanCard: React.FC<ActivePlanCardProps> = ({ 
+  subscription, 
+  onCancel, 
+  isCancelling = false 
+}) => {
   const startDate = new Date(subscription.created_at);
   const durasi = subscription.langganan?.durasi || 30;
   const endDate = new Date(startDate);
@@ -77,10 +83,21 @@ export const ActivePlanCard: React.FC<ActivePlanCardProps> = ({ subscription }) 
           <p className="text-[11px] font-medium text-white/60">
             Ingin menambah durasi atau upgrade paket?
           </p>
-          <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-black px-5 h-11 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all">
-            Kelola Langganan
-            <ArrowRight size={14} />
-          </button>
+          <div className="flex w-full sm:w-auto gap-3">
+            {onCancel && (
+              <button 
+                onClick={onCancel}
+                disabled={isCancelling}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 h-11 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50"
+              >
+                {isCancelling ? "Membatalkan..." : "Batalkan Langganan"}
+              </button>
+            )}
+            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white text-black px-5 h-11 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all">
+              Kelola Langganan
+              <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>

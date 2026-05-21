@@ -22,19 +22,14 @@ export default function DashboardHeader({ title, onMenuClick }: DashboardHeaderP
         if (pathname.includes("/layanan")) return "Manajemen Layanan";
     }
     
-    if (pathname.includes("/owner_tunggal")) {
-        if (pathname === "/dashboard/owner_tunggal") return "Dashboard Tenant";
+    if (pathname.includes("/dashboard/owner")) {
+        if (pathname === "/dashboard/owner") return "Dashboard Tenant";
         if (pathname.includes("/layanan")) return "Layanan Saya";
         if (pathname.includes("/pesanan")) return "Daftar Pesanan";
         if (pathname.includes("/subscription")) return "Langganan";
         if (pathname.includes("/teknisi")) return "Manajemen Teknisi";
-    }
-
-    if (pathname.includes("/dashboard/owner") && !pathname.includes("/owner_tunggal")) {
-        if (pathname === "/dashboard/owner") return "Dashboard Owner";
-        if (pathname.includes("/layanan")) return "Layanan Saya";
-        if (pathname.includes("/subscription")) return "Langganan";
-        if (pathname.includes("/teknisi")) return "Manajemen Teknisi";
+        if (pathname.includes("/staff")) return "Kelola Staf";
+        if (pathname.includes("/profile-tenant")) return "Profil Perusahaan";
     }
 
     if (pathname.includes("/admin") && !pathname.includes("/superadmin")) return "Dashboard Admin";

@@ -24,7 +24,24 @@ export const useSubscription = () => {
           : Array.isArray(plansResponse.data.data) 
             ? plansResponse.data.data 
             : [];
-        setPlans(plansData);
+        
+        // Enrich plans with nama_paket and deskripsi
+        const enrichedPlans = plansData.map((plan: any) => {
+          let nama_paket = "Paket Langganan";
+          let deskripsi = "Buka semua fitur manajemen tim dan kelola teknisi tanpa batas.";
+          if (plan.durasi === 30) {
+            nama_paket = "Paket Bulanan (Starter)";
+            deskripsi = "Cocok untuk usaha rintisan dengan manajemen staf dasar.";
+          } else if (plan.durasi === 120) {
+            nama_paket = "Paket Premium";
+            deskripsi = "Pilihan terpopuler dengan fitur lengkap untuk tim berkembang.";
+          } else if (plan.durasi === 360) {
+            nama_paket = "Paket Tahunan (Enterprise)";
+            deskripsi = "Hemat maksimal untuk perusahaan besar dengan dukungan prioritas.";
+          }
+          return { ...plan, nama_paket, deskripsi };
+        });
+        setPlans(enrichedPlans);
       }
 
       // 2. Fetch tenant active subscription
@@ -37,7 +54,22 @@ export const useSubscription = () => {
             : [];
             
         if (subData.length > 0) {
-          setActiveSubscription(subData[0]);
+          const activeSub = subData[0];
+          const rawPlan = activeSub.Langganan || activeSub.langganan;
+          if (rawPlan) {
+            let nama_paket = "Paket Premium";
+            if (rawPlan.durasi === 30) nama_paket = "Paket Bulanan (Starter)";
+            else if (rawPlan.durasi === 120) nama_paket = "Paket Premium";
+            else if (rawPlan.durasi === 360) nama_paket = "Paket Tahunan (Enterprise)";
+            
+            activeSub.langganan = {
+              ...rawPlan,
+              nama_paket
+            };
+          }
+          setActiveSubscription(activeSub);
+        } else {
+          setActiveSubscription(null);
         }
       }
     } catch (err: any) {
@@ -81,12 +113,29 @@ export const useSubscription = () => {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    try {
+      if (!activeSubscription?.id) {
+        return { success: false, message: "Tidak ada langganan aktif yang ditemukan" };
+      }
+      const response = await subscriptionService.deleteTenantSubscription(activeSubscription.id);
+      if (!response.error) {
+        await fetchSubscriptionData();
+        return { success: true };
+      }
+      return { success: false, message: response.error };
+    } catch (err: any) {
+      return { success: false, message: err.message };
+    }
+  };
+
   return {
     plans,
     activeSubscription,
     isLoading,
     error,
     handleSubscribe,
+    handleCancelSubscription,
     refresh: fetchSubscriptionData,
     isSubscribed: !!activeSubscription,
   };

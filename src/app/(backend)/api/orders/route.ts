@@ -9,8 +9,14 @@ import { verifySessionToken } from '@/lib/session';
  *     summary: Mengambil daftar pesanan
  *     tags: [Orders]
  *     description: |
- *       - Jika login sebagai **User Biasa**: Hanya melihat pesanannya sendiri.
- *       - Jika login sebagai **Owner**: Melihat semua pesanan di tenant miliknya.
+ *       - **Customer**: `GET /api/orders` (Melihat pesanan miliknya sendiri, siapapun bisa pakai).
+ *       - **Owner**: `GET /api/orders?as=tenant` (Melihat semua pesanan yang masuk ke tenant-nya).
+ *     parameters:
+ *       - in: query
+ *         name: as
+ *         schema:
+ *           type: string
+ *         description: Isi dengan `tenant` jika ingin melihat pesanan masuk sebagai Owner/Tenant
  *     responses:
  *       200:
  *         description: Berhasil mengambil data
@@ -29,7 +35,6 @@ import { verifySessionToken } from '@/lib/session';
  *             required: [layanan_id]
  *             properties:
  *               layanan_id: { type: string, description: "ID layanan yang dipesan" }
- *               customer_name: { type: string, description: "Nama pelanggan (opsional, default ambil dari profil)" }
  *               catatan: { type: string, description: "Catatan tambahan untuk pesanan" }
  *               tanggal: { type: string, format: date, description: "Tanggal booking pesanan (contoh: 2024-05-23)" }
  *               jam: { type: string, format: time, description: "Jam booking pesanan (contoh: 14:30)" }
@@ -61,36 +66,47 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Profil tidak ditemukan' }, { status: 404 });
     }
 
-    let query = supabaseAdmin
-      .from('orders')
-      .select(`
-        *,
-        layanan (nama_layanan, harga_dasar, tenant_id),
-        transactions (invoice_number, total_bayar, status_pembayaran)
-      `)
-      .order('created_at', { ascending: false });
+    const asMode = request.nextUrl.searchParams.get('as');
 
-    if (['owner', 'owner tunggal', 'owner_tunggal', 'admin tenant'].includes(role)) {
-      // Jika Owner, ambil semua order di tenant-nya
-      // Kita perlu filter berdasarkan tenant_id dari tabel layanan atau transactions
-      // Supabase tidak mendukung filter top-level untuk relasi dengan mudah jika tak ada tenant_id di orders
-      // Sebagai workaround, kita ambil tenant_id yang sesuai dari tabel profiles (harus resolve layanan.tenant_id)
-      
+    let query;
+
+    if (asMode === 'tenant') {
+      if (!['owner', 'owner tunggal', 'owner_tunggal', 'admin tenant'].includes(role)) {
+         return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
+      }
+
       const { data: targetTenant } = await supabaseAdmin.from('tenants').select('id').eq('kode_tenant', profile.kode_tenant).single();
       
-      if(targetTenant) {
-        // Filter via transactions
-        query = query.eq('transactions.tenant_id', targetTenant.id).not('transactions', 'is', null);
+      // Pakai !inner agar bisa difilter berdasarkan kolom di dalam transactions
+      query = supabaseAdmin
+        .from('orders')
+        .select(`
+          *,
+          layanan (nama_layanan, harga_dasar, tenant_id),
+          transactions!inner (invoice_number, total_bayar, status_pembayaran, tenant_id)
+        `)
+        .order('tanggal_order', { ascending: false });
+
+      if (targetTenant) {
+        query = query.eq('transactions.tenant_id', targetTenant.id);
       }
     } else {
-      // Jika User Biasa, ambil order miliknya saja
-      query = query.eq('customer_id', profile.id);
+      // Default: Sebagai Customer Biasa (Lihat pesanan sendiri)
+      query = supabaseAdmin
+        .from('orders')
+        .select(`
+          *,
+          layanan (nama_layanan, harga_dasar, tenant_id),
+          transactions (invoice_number, total_bayar, status_pembayaran)
+        `)
+        .order('tanggal_order', { ascending: false })
+        .eq('id_customer', profile.id);
     }
 
     const { data, error } = await query;
 
     if (error) throw error;
-    
+
     // Rapikan data karena filter not() bisa menyisakan struktur aneh jika relasi gagal
     const validData = data?.filter(d => d.transactions !== null) || [];
 
@@ -114,7 +130,7 @@ export async function POST(request: NextRequest) {
     // Dapatkan profil pemesan
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('id, full_name')
+      .select('id, full_name, phone, address')
       .eq('user_id', userId)
       .single();
 
@@ -122,8 +138,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profil tidak ditemukan' }, { status: 404 });
     }
 
+    // Validasi kelengkapan profil (Nama Lengkap, Nomor HP, Alamat)
+    if (!profile.full_name || !profile.phone || !profile.address) {
+      return NextResponse.json({ 
+        error: 'Profil Anda belum lengkap. Silakan lengkapi Nama Lengkap, Nomor HP, dan Alamat di pengaturan profil sebelum membuat pesanan.' 
+      }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { layanan_id, catatan, customer_name, tanggal, jam } = body;
+    const { layanan_id, catatan, tanggal, jam } = body;
 
     if (!layanan_id) {
       return NextResponse.json({ error: 'ID Layanan wajib diisi' }, { status: 400 });
@@ -140,30 +163,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Layanan tidak ditemukan' }, { status: 404 });
     }
 
-    // 2. Buat Transaksi
-    const invoiceNumber = `INV-${Date.now()}`;
-    const { data: transaction, error: transactionError } = await supabaseAdmin
-      .from('transactions')
-      .insert([{
-        tenant_id: layanan.tenant_id,
-        invoice_number: invoiceNumber,
-        total_bayar: layanan.harga_dasar,
-        status_pembayaran: 'Belum Lunas'
-      }])
-      .select()
-      .single();
-
-    if (transactionError) throw transactionError;
-
-    // 3. Buat Order
+    // 2. Buat Order (Terlebih dahulu agar bisa di-link ke transaction)
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert([{
-        transaction_id: transaction.id,
         layanan_id: layanan.id,
-        customer_id: profile.id,
-        customer_name: customer_name || profile.full_name,
-        status_order: 'Menunggu Konfirmasi',
+        id_customer: profile.id,
+        status: 2, // ID 2 = "proses" di tabel status
         catatan: catatan || '',
         tanggal_order: tanggal || null,
         jam: jam || null
@@ -171,10 +177,26 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (orderError) {
-      // Rollback transaction jika order gagal (manual)
-      await supabaseAdmin.from('transactions').delete().eq('id', transaction.id);
-      throw orderError;
+    if (orderError) throw orderError;
+
+    // 3. Buat Transaksi
+    const invoiceNumber = `INV-${Date.now()}`;
+    const { data: transaction, error: transactionError } = await supabaseAdmin
+      .from('transactions')
+      .insert([{
+        tenant_id: layanan.tenant_id,
+        id_order: order.id, // Di-link ke order yang baru dibuat
+        invoice_number: invoiceNumber,
+        total_bayar: layanan.harga_dasar,
+        status_pembayaran: 1 // Asumsi ID 1 adalah "Belum Lunas" di tabel status
+      }])
+      .select()
+      .single();
+
+    if (transactionError) {
+      // Rollback order jika transaksi gagal
+      await supabaseAdmin.from('orders').delete().eq('id', order.id);
+      throw transactionError;
     }
 
     return NextResponse.json({ 

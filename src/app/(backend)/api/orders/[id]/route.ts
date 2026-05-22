@@ -27,7 +27,7 @@ import { verifySessionToken } from '@/lib/session';
  *           schema:
  *             type: object
  *             properties:
- *               status_order: { type: string, description: "Status pesanan (contoh: Diterima, Ditolak)" }
+ *               status: { type: integer, description: "ID Status pesanan (contoh: 2 = proses, 4 = selesai, 5 = disetujui)" }
  *     responses:
  *       200:
  *         description: Berhasil diperbarui
@@ -84,7 +84,7 @@ export async function PUT(
 
     const { data, error } = await supabaseAdmin
       .from('orders')
-      .update({ status_order: body.status_order })
+      .update({ status: body.status })
       .eq('id', id)
       .select()
       .single();

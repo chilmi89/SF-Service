@@ -9,6 +9,12 @@ import cloudinary from '@/lib/cloudinary';
  *   get:
  *     summary: Mengambil daftar layanan
  *     tags: [Layanan (User)]
+ *     parameters:
+ *       - in: query
+ *         name: id_kategori
+ *         schema:
+ *           type: integer
+ *         description: Filter layanan berdasarkan ID Kategori (opsional)
  *     responses:
  *       200:
  *         description: Berhasil
@@ -22,19 +28,21 @@ import cloudinary from '@/lib/cloudinary';
  *         application/json:
  *           schema:
  *             type: object
- *             required: [nama_layanan, harga_dasar]
+ *             required: [nama_layanan, harga_dasar, id_kategori]
  *             properties:
  *               nama_layanan: { type: string }
  *               harga_dasar: { type: number }
+ *               id_kategori: { type: number, description: "ID Kategori Layanan" }
  *               gambar: { type: string, nullable: true }
  *               descripsi: { type: string, nullable: true }
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [nama_layanan, harga_dasar]
+ *             required: [nama_layanan, harga_dasar, id_kategori]
  *             properties:
  *               nama_layanan: { type: string }
  *               harga_dasar: { type: number }
+ *               id_kategori: { type: number, description: "ID Kategori Layanan" }
  *               gambar:
  *                 type: string
  *                 format: binary
@@ -51,9 +59,18 @@ import cloudinary from '@/lib/cloudinary';
 
 export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await supabaseAdmin
+    const { searchParams } = new URL(request.url);
+    const id_kategori = searchParams.get('id_kategori');
+
+    let query = supabaseAdmin
       .from('layanan')
       .select('*, tenants(name)');
+
+    if (id_kategori) {
+      query = query.eq('id_kategori', parseInt(id_kategori));
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return NextResponse.json({ data }, { status: 200 });
@@ -87,12 +104,13 @@ export async function POST(request: NextRequest) {
     }
 
     const contentType = request.headers.get('content-type') || '';
-    let nama_layanan: any, harga_dasar: any, gambar: any, descripsi: any;
+    let nama_layanan: any, harga_dasar: any, id_kategori: any, gambar: any, descripsi: any;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
       nama_layanan = formData.get('nama_layanan') as string;
       harga_dasar = parseFloat(formData.get('harga_dasar') as string);
+      id_kategori = parseInt(formData.get('id_kategori') as string);
       descripsi = formData.get('descripsi') as string;
       
       const file = formData.get('gambar') as File;
@@ -110,6 +128,7 @@ export async function POST(request: NextRequest) {
       const body = await request.json();
       nama_layanan = body.nama_layanan;
       harga_dasar = body.harga_dasar;
+      id_kategori = parseInt(body.id_kategori);
       descripsi = body.descripsi;
       gambar = body.gambar;
 
@@ -123,13 +142,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!nama_layanan || isNaN(harga_dasar)) {
-      return NextResponse.json({ error: 'Nama Layanan dan Harga Dasar wajib diisi' }, { status: 400 });
+    if (!nama_layanan || isNaN(harga_dasar) || !id_kategori || isNaN(id_kategori)) {
+      return NextResponse.json({ error: 'Nama Layanan, Harga Dasar, dan Kategori wajib diisi' }, { status: 400 });
     }
 
     const { data, error } = await supabaseAdmin
       .from('layanan')
-      .insert([{ tenant_id, nama_layanan, harga_dasar, gambar, descripsi }])
+      .insert([{ tenant_id, nama_layanan, harga_dasar, id_kategori, gambar, descripsi }])
       .select()
       .single();
 

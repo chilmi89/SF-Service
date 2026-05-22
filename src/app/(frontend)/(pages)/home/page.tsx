@@ -46,6 +46,18 @@ export default function Home() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
+        // Ambil data kategori untuk dipetakan ke id_kategori
+        const catRes = await layananService.getAllKategori();
+        const catData = catRes?.data || catRes;
+        const categoriesList = Array.isArray(catData) ? catData : (Array.isArray(catData.data) ? catData.data : []);
+        
+        const categoryMap: Record<number, string> = {};
+        categoriesList.forEach((c: any) => {
+          if (c.id && c.nama) {
+            categoryMap[c.id] = c.nama;
+          }
+        });
+
         const res = await layananService.getAllLayanan();
         let rawData = res?.data;
         if (rawData && !Array.isArray(rawData)) {
@@ -58,7 +70,7 @@ export default function Home() {
         const mapped = dataArray.map((item: any) => ({
           id: item.layanan_id || item.id,
           title: item.nama_layanan || "Layanan",
-          category: item.kategori || "Servis AC",
+          category: (item.id_kategori && categoryMap[item.id_kategori]) || item.kategori || "Servis AC",
           img: item.gambar || "/images/ac.png",
           tech: item.tenants?.name || "Teknisi FixIt", 
           avatar: "/images/budi.png",
@@ -238,23 +250,9 @@ export default function Home() {
                   <div className="p-3.5 sm:p-4 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-bold text-sm leading-tight group-hover:text-black/80 transition-colors pr-2">{service.title}</h3>
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setLikedServices(prev => ({...prev, [service.id]: !prev[service.id]}));
-                        }}
-                        className={`flex items-center gap-1 border px-1.5 py-0.5 rounded-md text-[10px] sm:text-xs font-bold shrink-0 transition-colors ${
-                          likedServices[service.id] 
-                            ? "bg-red-50 border-red-100 text-red-600" 
-                            : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100"
-                        }`}
-                      >
-                        <Heart className={`h-2.5 w-2.5 sm:h-3 sm:w-3 transition-colors ${
-                          likedServices[service.id] ? "fill-red-500 text-red-500" : "fill-transparent text-gray-400"
-                        }`} />
-                        <span>{likedServices[service.id] ? service.likes + 1 : service.likes}</span>
-                      </button>
+                      <span className="text-xs sm:text-sm font-black text-black shrink-0 whitespace-nowrap">
+                        {service.price}
+                      </span>
                     </div>
                     
                     <div className="mt-auto pt-3 border-t border-black/[0.05] flex items-center justify-between">

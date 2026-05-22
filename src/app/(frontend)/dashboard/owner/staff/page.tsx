@@ -6,6 +6,7 @@ import { Users, UserPlus, Trash2, Mail, Phone, Search, Loader2, ShieldAlert, Cop
 import Image from "next/image";
 import { tenantService } from "@/lib/api/(tenant)/tenant.service";
 import { authService } from "@/lib/api/auth.service";
+import { apiClient } from "@/lib/api/api-client";
 import { Toast } from "@/components/toast";
 
 export default function ManageStaffPage() {
@@ -92,7 +93,12 @@ export default function ManageStaffPage() {
       setIsSubmitting(true);
       const res = await tenantService.addStaff(emailInput, roleInput);
       if (res.error) {
-        throw new Error(res.error);
+        showToast(
+          "Gagal",
+          res.error || "Gagal menambahkan staf. Pastikan email terdaftar di FixIt dan belum bergabung di tenant lain.",
+          "error"
+        );
+        return;
       }
 
       showToast("Berhasil", `Staf dengan email ${emailInput} berhasil ditambahkan sebagai ${roleInput === "admin tenant" ? "Admin Tenant" : "Teknisi"}.`, "success");
@@ -107,10 +113,10 @@ export default function ManageStaffPage() {
         window.location.reload();
       }, 1000);
     } catch (error: any) {
-      console.error("Gagal menambahkan staf:", error);
+      console.error("Gagal menambahkan staf (Unexpected):", error);
       showToast(
         "Gagal",
-        error.message || "Gagal menambahkan staf. Pastikan email terdaftar di FixIt dan belum bergabung di tenant lain.",
+        "Terjadi kesalahan koneksi atau kesalahan sistem. Silakan coba lagi.",
         "error"
       );
     } finally {
@@ -118,21 +124,31 @@ export default function ManageStaffPage() {
     }
   };
 
-  // Mocked Delete Handler (Sesuai instruksi: tidak disambungkan ke API dulu)
+  // Delete Handler dengan API
   const handleDeleteStaff = async () => {
     if (!selectedStaff) return;
     try {
       setIsDeleting(true);
-      // Simulasi delay pengerjaan
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      // Hapus hanya dari visual state
+      
+      // Panggil API DELETE staf sesungguhnya secara inline
+      const res = await apiClient(`/api/tenants/staff/${selectedStaff.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.error) {
+        showToast("Gagal", res.error || "Terjadi kesalahan saat menghapus staf.", "error");
+        return;
+      }
+      
+      // Hapus dari state visual
       setStaffList(prev => prev.filter(item => item.id !== selectedStaff.id));
       
-      showToast("Berhasil (Mock)", `Staf ${selectedStaff.full_name || selectedStaff.email} berhasil dihapus dari tampilan visual.`, "success");
+      showToast("Berhasil", `Staf ${selectedStaff.full_name || selectedStaff.email} berhasil dihapus dari tenant.`, "success");
       setShowDeleteModal(false);
       setSelectedStaff(null);
     } catch (error: any) {
-      showToast("Gagal", "Terjadi kesalahan saat menghapus staf.", "error");
+      console.error("Gagal menghapus staf (Unexpected):", error);
+      showToast("Gagal", "Terjadi kesalahan koneksi atau kesalahan sistem. Silakan coba lagi.", "error");
     } finally {
       setIsDeleting(false);
     }
@@ -425,9 +441,8 @@ export default function ManageStaffPage() {
               <h3 className="text-xl font-black text-black mb-3">Hapus Staf dari Tenant</h3>
               <p className="text-sm font-medium text-gray-600 mb-6 leading-relaxed">
                 Apakah Anda yakin ingin menghapus <span className="font-bold text-black px-1.5 py-0.5 bg-gray-100 rounded">"{selectedStaff?.full_name || selectedStaff?.email}"</span> dari daftar staf Anda?
-                <br /><br />
-                <span className="text-red-600 font-bold block bg-red-50 p-3 rounded-xl border border-red-100 mt-1 text-xs">
-                  Tindakan ini akan melepaskan asosiasi staf tersebut dari organisasi Anda di sistem. (Penghapusan ke API sedang dinonaktifkan sementara).
+                <br /><br />                <span className="text-red-600 font-medium block bg-red-50 p-3 rounded-xl border border-red-100 mt-1 text-xs">
+                  Staf ini akan dikeluarkan dari organisasi Anda dan perannya akan otomatis kembali menjadi <strong>user biasa</strong>.
                 </span>
               </p>
               <div className="flex justify-end gap-3">

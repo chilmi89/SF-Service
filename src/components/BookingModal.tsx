@@ -5,6 +5,8 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, MapPin, AlignLeft, Shield, CheckCircle2, Loader2, User } from "lucide-react";
 import { orderService } from "@/lib/api/order.service";
+import { useAuth } from "@/hooks/useAuth";
+import { profileService } from "@/lib/api/profile.service";
 
 export interface ServiceData {
   id: string;
@@ -22,11 +24,13 @@ interface BookingModalProps {
 }
 
 export default function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
+  const { profileId } = useAuth();
+  const [profileName, setProfileName] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
-  const [customerName, setCustomerName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -40,15 +44,32 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
+  // Fetch profile when modal opens
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isOpen && profileId) {
+        try {
+          const { data } = await profileService.getById(profileId);
+          if (data) {
+            const p = data.data || data;
+            setProfileName(p.full_name || "");
+            setProfileAddress(p.address || "");
+          }
+        } catch (err) {
+          console.error("Failed to fetch profile in booking modal:", err);
+        }
+      }
+    };
+    fetchProfile();
+  }, [isOpen, profileId]);
+
   // Reset state ketika modal dibuka kembali
   useEffect(() => {
     if (isOpen) {
       setIsSuccess(false);
       setDate("");
       setTime("");
-      setAddress("");
       setNotes("");
-      setCustomerName("");
     }
   }, [isOpen]);
 
@@ -60,12 +81,16 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
     
     try {
       // Menggabungkan data address, date, dan time ke dalam catatan agar informatif bagi teknisi
-      const combinedNotes = `Tgl: ${date} Jam: ${time}\nAlamat: ${address}\nCatatan: ${notes}`;
+      const combinedNotes = `Tgl: ${date} Jam: ${time}\nAlamat: ${profileAddress}\nCatatan: ${notes}`;
       
       const { data, error } = await orderService.createOrder({
         layanan_id: service.id,
-        customer_name: customerName,
-        catatan: combinedNotes
+        customer_name: profileName,
+        catatan: combinedNotes,
+        ...({
+          tanggal: date,
+          jam: time
+        } as any)
       });
 
       if (error || !data) {
@@ -78,9 +103,9 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
       setTimeout(() => {
         onClose();
       }, 2500);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Booking error:", err);
-      alert("Maaf, terjadi kesalahan saat memproses pesanan Anda.");
+      alert(err.message || "Maaf, terjadi kesalahan saat memproses pesanan Anda.");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,21 +190,6 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
               <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex-1 space-y-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold text-black border-b border-gray-100 pb-2">Detail Pemesanan</h3>
-                  
-                  {/* Nama Customer */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 flex items-center gap-1.5">
-                      <User size={14} /> Nama Pemesan
-                    </label>
-                    <input 
-                      type="text" 
-                      required
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Masukkan nama lengkap Anda"
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-black focus:bg-white focus:outline-none transition-all"
-                    />
-                  </div>
 
                   {/* Date & Time Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -207,21 +217,6 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
                         className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-black focus:bg-white focus:outline-none transition-all"
                       />
                     </div>
-                  </div>
-
-                  {/* Address */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 flex items-center gap-1.5">
-                      <MapPin size={14} /> Alamat Lengkap
-                    </label>
-                    <textarea 
-                      required
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Contoh: Jl. Sudirman No. 123, RT 01/RW 02 (Patokan: Depan Masjid)"
-                      rows={3}
-                      className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-black focus:bg-white focus:outline-none transition-all"
-                    />
                   </div>
 
                   {/* Notes */}

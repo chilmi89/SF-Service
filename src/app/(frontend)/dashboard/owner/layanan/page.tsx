@@ -23,12 +23,14 @@ import {
 import Image from "next/image";
 import { Toast, ToastType } from "@/components/toast";
 import { useLayananTenant, Service } from "@/hooks/useLayananTenant";
+import { layananService } from "@/lib/api/layanan.service";
 
 export default function LayananOwnerPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [categories, setCategories] = useState<{ id: number; nama: string }[]>([]);
 
   const {
     services,
@@ -46,6 +48,20 @@ export default function LayananOwnerPage() {
   useEffect(() => {
     fetchLayanan();
   }, [fetchLayanan]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await layananService.getAllKategori();
+        const rawData = res?.data || res;
+        const dataArray = Array.isArray(rawData) ? rawData : (Array.isArray(rawData.data) ? rawData.data : []);
+        setCategories(dataArray);
+      } catch (err) {
+        console.error("Gagal mengambil data kategori:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleToggleStatus = (id: string) => toggleStatusLayanan(id);
 
@@ -283,6 +299,7 @@ export default function LayananOwnerPage() {
                   const payload = {
                     nama_layanan: formData.get("nama_layanan") as string,
                     harga_dasar: Number(formData.get("harga_dasar")),
+                    id_kategori: Number(formData.get("id_kategori")),
                     gambar: imagePreview || editingService?.image || "https://images.unsplash.com/photo-1581094288338-2314dddb7ec3?auto=format&fit=crop&q=80&w=400",
                     descripsi: formData.get("descripsi") as string,
                   };
@@ -308,11 +325,11 @@ export default function LayananOwnerPage() {
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold uppercase text-gray-400 ml-1">Kategori</label>
-                      <select required defaultValue={editingService?.category} className="w-full h-11 bg-gray-50 border border-gray-300 rounded-xl px-4 text-xs font-bold outline-none focus:bg-white focus:border-black transition-all appearance-none">
-                        <option value="AC">AC</option>
-                        <option value="Listrik">Listrik</option>
-                        <option value="Air">Air</option>
-                        <option value="Lainnya">Lainnya</option>
+                      <select name="id_kategori" required defaultValue={editingService?.id_kategori} className="w-full h-11 bg-gray-50 border border-gray-300 rounded-xl px-4 text-xs font-bold outline-none focus:bg-white focus:border-black transition-all appearance-none">
+                        <option value="">Pilih Kategori</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>{c.nama}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="space-y-1.5">

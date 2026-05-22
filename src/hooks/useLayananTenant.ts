@@ -11,6 +11,7 @@ export interface Service {
   image: string;
   description: string;
   rawPrice: number;
+  id_kategori?: number;
 }
 
 export function useLayananTenant() {
@@ -47,6 +48,7 @@ export function useLayananTenant() {
         image: item.gambar || "https://images.unsplash.com/photo-1581094288338-2314dddb7ec3?auto=format&fit=crop&q=80&w=400",
         description: item.descripsi || "",
         rawPrice: item.harga_dasar || 0,
+        id_kategori: item.id_kategori,
       }));
       setServices(mapped);
     } catch (err) {

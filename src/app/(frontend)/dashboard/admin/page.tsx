@@ -91,27 +91,32 @@ export default function AdminDashboard() {
         {stats.map((stat, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all group"
+            transition={{ delay: i * 0.05 }}
+            className="p-6 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{stat.label}</span>
+                <h3 className="text-3xl font-extrabold text-black tracking-tight mt-1">{stat.value}</h3>
+              </div>
+              <div className={`p-2.5 rounded-xl bg-gray-50 ${stat.color} flex items-center justify-center`}>
                 {stat.icon}
               </div>
-              <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-tighter ${
-                stat.trend.startsWith('+') || stat.trend === 'Aktif' 
-                ? 'bg-emerald-50 text-emerald-600' 
-                : 'bg-amber-50 text-amber-600'
-              }`}>
-                {stat.trend}
-              </span>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{stat.label}</p>
-              <h3 className="text-2xl font-black text-black">{stat.value}</h3>
-            </div>
+            {stat.trend && (
+              <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-tighter ${
+                  stat.trend.startsWith('+') || stat.trend === 'Aktif' 
+                  ? 'bg-emerald-50/70 text-emerald-600' 
+                  : 'bg-amber-50/70 text-amber-600'
+                }`}>
+                  {stat.trend}
+                </span>
+                <span className="text-[10px] font-medium text-gray-400">Hari ini</span>
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
@@ -183,36 +188,6 @@ export default function AdminDashboard() {
 
         {/* SIDE PANELS */}
         <div className="space-y-8">
-          {/* PERFORMANCE CARD */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-black rounded-3xl p-8 text-white relative overflow-hidden group"
-          >
-            <div className="relative z-10 space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-                  <TrendingUp size={20} className="text-emerald-400" />
-                </div>
-                <button className="text-[10px] font-black uppercase tracking-widest bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition-colors">
-                  Detail
-                </button>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimasi Pendapatan</p>
-                <h2 className="text-3xl font-black">Rp 12.450.000</h2>
-              </div>
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between text-[10px] font-bold">
-                <span className="text-emerald-400">+14.2% dari kemarin</span>
-                <span className="text-gray-500">Target: 15jt</span>
-              </div>
-            </div>
-            {/* Background Decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/20 transition-all duration-700" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 group-hover:bg-blue-500/20 transition-all duration-700" />
-          </motion.div>
-
           {/* TECHNICIANS STATUS */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}

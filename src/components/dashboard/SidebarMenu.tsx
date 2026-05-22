@@ -15,7 +15,8 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
-  Building2
+  Building2,
+  ClipboardCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "@/lib/api/auth.service";
@@ -52,6 +53,7 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
   ],
   admin: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/admin", permission: "dashboard" },
+    { name: "Verifikasi Order", icon: <ClipboardCheck size={20} />, href: "/dashboard/admin/verifikasi-order", permission: "verifikasi_order" },
     { name: "Layanan", icon: <Briefcase size={20} />, href: "/dashboard/admin/layanan", permission: "view_layanan" },
     { name: "Transaksi", icon: <CreditCard size={20} />, href: "/dashboard/admin/transaksi", permission: "view_transaksi" },
   ],
@@ -61,6 +63,7 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
   ],
   owner_tunggal: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner", permission: "dashboard" },
+    { name: "Verifikasi Order", icon: <ClipboardCheck size={20} />, href: "/dashboard/admin/verifikasi-order" },
     { name: "Profil Perusahaan", icon: <Building2 size={20} />, href: "/dashboard/owner/profile-tenant", permission: "view_profile" },
     { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner/layanan", permission: "view_layanan" },
     { name: "Kelola Staf", icon: <Users size={20} />, href: "/dashboard/owner/staff", permission: "view_staff" },
@@ -127,9 +130,13 @@ export default function SidebarMenu({ role, onNavigate }: SidebarMenuProps) {
         const storedRoleName = localStorage.getItem("user_role");
         if (storedRoleName) {
           const rolesList = rolesRes?.data?.data || rolesRes?.data || rolesRes || [];
-          const currentRoleData = rolesList.find((r: any) => 
-            r.name.toLowerCase() === storedRoleName.toLowerCase()
-          );
+          const currentRoleData = rolesList.find((r: any) => {
+            const dbRole = r.name.toLowerCase().trim();
+            const localRole = storedRoleName.toLowerCase().trim();
+            return dbRole === localRole || 
+                   dbRole === localRole.replace(/_/g, " ") || 
+                   dbRole.replace(/\s+/g, "_") === localRole;
+          });
 
           if (currentRoleData?.id) {
             const { data: permData } = await superAdminService.getRolePermissions(currentRoleData.id);

@@ -31,6 +31,8 @@ import { verifySessionToken } from '@/lib/session';
  *               layanan_id: { type: string, description: "ID layanan yang dipesan" }
  *               customer_name: { type: string, description: "Nama pelanggan (opsional, default ambil dari profil)" }
  *               catatan: { type: string, description: "Catatan tambahan untuk pesanan" }
+ *               tanggal: { type: string, format: date, description: "Tanggal booking pesanan (contoh: 2024-05-23)" }
+ *               jam: { type: string, format: time, description: "Jam booking pesanan (contoh: 14:30)" }
  *     responses:
  *       201:
  *         description: Pesanan berhasil dibuat
@@ -121,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { layanan_id, catatan, customer_name } = body;
+    const { layanan_id, catatan, customer_name, tanggal, jam } = body;
 
     if (!layanan_id) {
       return NextResponse.json({ error: 'ID Layanan wajib diisi' }, { status: 400 });
@@ -162,7 +164,9 @@ export async function POST(request: NextRequest) {
         customer_id: profile.id,
         customer_name: customer_name || profile.full_name,
         status_order: 'Menunggu Konfirmasi',
-        catatan: catatan || ''
+        catatan: catatan || '',
+        tanggal_order: tanggal || null,
+        jam: jam || null
       }])
       .select()
       .single();

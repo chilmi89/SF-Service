@@ -9,6 +9,12 @@ import cloudinary from '@/lib/cloudinary';
  *   get:
  *     summary: Mengambil semua daftar tenant
  *     tags: [Tenants]
+ *     description: |
+ *       Mengembalikan seluruh data merchant / tenant (Toko Baju, Servis AC, dll) yang terdaftar di aplikasi.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil semua isi dari tabel `tenants`, diurutkan berdasarkan namanya.
+ *       2. Menampilkan hasilnya.
  *     responses:
  *       200:
  *         description: Berhasil mengambil data
@@ -20,8 +26,19 @@ import cloudinary from '@/lib/cloudinary';
  *     summary: Membuat tenant baru
  *     tags: [Tenants]
  *     description: |
+ *       Mendaftarkan toko/tenant baru dari User biasa yang ingin berjualan / menjadi penyedia jasa.
  *       Slug dan Kode Tenant akan di-generate otomatis oleh sistem.
  *       Mendukung upload file (multipart/form-data) atau Base64 (application/json).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Verifikasi pengguna (harus login).
+ *       2. Memastikan pengakses memiliki Role "user biasa". Jika sudah jadi tenant, pendaftaran ditolak.
+ *       3. Mengecek kelengkapan biodata di profil (Nama, Nomor HP). Jika belum, wajib melengkapi dulu.
+ *       4. Menerima request input detail toko beserta gambar banner (diunggah ke Cloudinary).
+ *       5. **Auto-Generate**: Sistem akan membuat Slug unik, dan membuat `kode_tenant` berisi 4 huruf acak (misal X9Q1) sebagai kode registrasi staf.
+ *       6. Menyimpan data toko tersebut ke tabel `tenants`.
+ *       7. **Otomatisasi Role**: Role user tersebut otomatis di-*upgrade* (dari user biasa menjadi **Owner Tunggal**).
+ *       8. Memperbarui Token JWT dengan Role baru, lalu mengatur ulang HttpOnly Cookie.
  *     requestBody:
  *       required: true
  *       content:

@@ -16,6 +16,12 @@ import { checkProfileCompletion } from '@/lib/profile';
  *   get:
  *     summary: Melihat detail tenant
  *     tags: [Tenants]
+ *     description: |
+ *       Menampilkan profil rinci sebuah toko (tenant).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil ID dari parameter endpoint.
+ *       2. Menarik dan mengembalikan data tenant bersangkutan.
  *     responses:
  *       200:
  *         description: Berhasil
@@ -25,6 +31,13 @@ import { checkProfileCompletion } from '@/lib/profile';
  *     description: |
  *       Semua field ditampilkan, namun secara sistem hanya **Nomor Telepon** dan **Gambar** yang dapat diubah berkali-kali. 
  *       Nama, Slug, Alamat, dan Kode Tenant bersifat permanen setelah dibuat.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Validasi token JWT & otorisasi.
+ *       2. Pengecekan ketat: Pastikan bahwa user yang merequest benar-benar Pemilik (*Owner*) dari Tenant yang akan di-update, atau dia adalah Super Admin.
+ *       3. Mengunggah gambar baru ke Cloudinary jika diberikan.
+ *       4. **Enforcement (Pencegahan)**: Menyaring field payload JSON; fitur ubah nama toko/kode hanya diizinkan apabila user ber-role Super Admin.
+ *       5. Memperbarui tabel `tenants`. Jika kode referal diubah oleh Super Admin, akan secara reaktif mengupdate kolom kode_tenant di semua `profiles` pegawainya.
  *     requestBody:
  *       required: true
  *       content:
@@ -49,6 +62,14 @@ import { checkProfileCompletion } from '@/lib/profile';
  *   delete:
  *     summary: Menghapus tenant
  *     tags: [Tenants]
+ *     description: |
+ *       Menghapus layanan bisnis / toko milik pengguna dari platform.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memeriksa identitas (Hanya Owner toko tersebut / Super admin).
+ *       2. Memastikan tidak ada *foreign key block* (misal layanan aktif masih tersisa).
+ *       3. **Downgrade Otomatis**: Jika berhasil dihapus, Role dari owner akan diturunkan (didowngrade) kembali menjadi `user biasa` dan kolom `kode_tenant` di tabel `profiles`-nya dibersihkan (menjadi null).
+ *       4. Record tenant dihapus permanen.
  *     responses:
  *       204:
  *         description: Berhasil dihapus

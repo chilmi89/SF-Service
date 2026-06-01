@@ -8,12 +8,28 @@ import { verifySessionToken } from '@/lib/session';
  *   get:
  *     summary: Mendapatkan daftar staf di tenant (Admin & Teknisi)
  *     tags: [Tenants Staff]
+ *     description: |
+ *       Melihat daftar seluruh karyawan / staf yang dipekerjakan dalam sebuah tenant.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Pengecekan sesi Token.
+ *       2. Mengidentifikasi Role yang memanggil API. Super Admin bisa melihat semua lewat filter, sedangkan Pemilik / Staf hanya dibatasi pada tenant-nya sendiri.
+ *       3. Mengambil daftar akun dari tabel `profiles` (yang memiliki `kode_tenant` yang sama) dengan pengecualian *sembunyikan diri sendiri*.
  *     responses:
  *       200:
  *         description: Berhasil mengambil daftar staf
  *   post:
  *     summary: Menambahkan staf baru (Admin Tenant atau Teknisi) ke tenant
  *     tags: [Tenants Staff]
+ *     description: |
+ *       Merekrut dan mendaftarkan staf baru berdasarkan email yang sudah terdaftar di platform.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memastikan akun yang request ber-role Owner / Super Admin.
+ *       2. (Opsional/Disarankan) Mengecek status langganan aktif tenant sebelum bisa menambah staf.
+ *       3. Mencari `auth_users.id` berdasarkan input email. Jika email tidak ditemukan, proses ditolak.
+ *       4. Memastikan user tujuan (calon staf) belum tergabung ke tenant manapun.
+ *       5. Update `profiles` calon staf: Menyematkan `kode_tenant` milik bos-nya, dan meng-*upgrade* role mereka (menjadi `admin tenant` atau `teknisi`).
  *     requestBody:
  *       required: true
  *       content:

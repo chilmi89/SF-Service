@@ -7,12 +7,27 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  *   get:
  *     summary: Mendapatkan semua daftar profil
  *     tags: [Profiles]
+ *     description: |
+ *       Menampilkan semua profil pengguna di dalam sistem.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil data (query) dari tabel `profiles`.
+ *       2. Melakukan Left-Join ke tabel `auth_users` untuk mendapatkan email.
+ *       3. Melakukan Left-Join ke tabel `tenants` untuk mendapatkan nama tenant jika pengguna terasosiasi dengan tenant tertentu.
+ *       4. Mengembalikan list profil dan membersihkan field internal yang rahasia.
  *     responses:
  *       200:
  *         description: Berhasil mengambil data
  *   post:
  *     summary: Membuat profil baru secara manual
  *     tags: [Profiles]
+ *     description: |
+ *       Memasukkan profil baru secara manual (biasanya digunakan otomatis pada saat registrasi, tapi tersedia jika butuh import manual).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Menerima payload berupa ID akun otentikasi (`user_id`), nama, nomor hp, dll.
+ *       2. Memasukkannya sebagai record baru di tabel `profiles`.
+ *     security:
  *       - BearerAuth: []
  *     requestBody:
  *       required: true

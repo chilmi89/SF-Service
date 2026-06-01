@@ -6,6 +6,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  * /api/kategori:
  *   get:
  *     summary: Mengambil daftar kategori layanan
+ *     description: |
+ *       Menampilkan semua data kategori layanan.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil data dari tabel `Kategori_layanan` secara urut (ascending).
+ *       2. Mengembalikan daftar data kategori ke klien (bisa diakses oleh siapa saja).
  *     tags: [Layanan (User)]
  *     responses:
  *       200:

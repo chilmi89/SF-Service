@@ -5,7 +5,13 @@ import { NextResponse } from 'next/server';
  * /api/auth/logout:
  *   post:
  *     summary: Logout user
- *     description: Menghapus token otentikasi dari cookie browser.
+ *     description: |
+ *       Menghapus token otentikasi dari cookie browser.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. API Menerima request pemutusan sesi.
+ *       2. Menginstruksikan browser untuk mengubah tanggal kedaluwarsa cookie `token` ke masa lalu (menjadi tidak valid).
+ *       3. Browser secara otomatis akan menghapus token otentikasi pengguna.
  *     tags:
  *       - Auth
  *     responses:

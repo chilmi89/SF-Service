@@ -9,15 +9,29 @@ import { verifySessionToken } from '@/lib/session';
  *     summary: Mengambil daftar tugas (Task)
  *     tags: [Tasks]
  *     description: |
- *       - **User Biasa**: Melihat task yang terkait dengan pesanan (order) miliknya.
- *       - **Teknisi**: Melihat daftar task yang ditugaskan kepada dirinya.
- *       - **Owner**: Melihat semua task di tenant miliknya.
+ *       Menampilkan daftar tugas dengan filter sesuai role pengguna.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Verifikasi sesi token otentikasi dari cookie.
+ *       2. Mengevaluasi Role pengguna: 
+ *          - **Customer**: Hanya melihat task yang terkait dengan pesanannya.
+ *          - **Teknisi**: Melihat task yang secara eksplisit di-assign kepadanya.
+ *          - **Owner/Admin**: Melihat semua riwayat task yang ada di dalam tenant miliknya.
+ *       3. Menjalankan query ke tabel `tasks` dengan relasi `orders` dan `profiles`.
  *     responses:
  *       200:
  *         description: Berhasil mengambil data
  *   post:
  *     summary: Membuat tugas baru (Untuk Owner)
  *     tags: [Tasks]
+ *     description: |
+ *       Mendelegasikan sebuah pesanan menjadi tugas kepada teknisi atau untuk dikerjakan sendiri.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memverifikasi Otorisasi (Hanya boleh dipanggil oleh Owner/Admin).
+ *       2. Otomatis menentukan teknisi jika ID dikosongkan (Owner tunggal otomatis menunjuk dirinya sendiri, sedangkan Admin akan diblokir dan wajib menunjuk teknisi).
+ *       3. Menetapkan otomatis deadline (default 1 hari dari waktu sekarang jika tidak ada input spesifik).
+ *       4. Membuat baris baru di tabel `tasks` yang berelasi erat dengan `order_id` asal.
  *     requestBody:
  *       required: true
  *       content:
@@ -110,17 +124,28 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { order_id, technician_id, nama_tugas, deskripsi, deadline } = body;
+    const { order_id, technician_id, nama_tugas, deskripsi } = body;
+    let { deadline } = body;
 
     if (!order_id || !nama_tugas) {
       return NextResponse.json({ error: 'Order ID dan Nama Tugas wajib diisi' }, { status: 400 });
     }
 
-    // Jika technician_id tidak diisi, otomatis assign ke dirinya sendiri
+    // Jika deadline tidak diisi, otomatis 1 hari dari sekarang
+    if (!deadline) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      deadline = tomorrow.toISOString();
+    }
+
     let assignedTechnician = technician_id;
     if (!assignedTechnician) {
-      const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('user_id', userId).single();
-      assignedTechnician = profile?.id;
+      if (['owner', 'owner tunggal', 'owner_tunggal'].includes(role)) {
+        const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('user_id', userId).single();
+        assignedTechnician = profile?.id;
+      } else {
+        return NextResponse.json({ error: 'Admin wajib menunjuk teknisi untuk tugas ini' }, { status: 400 });
+      }
     }
 
     const { data: task, error } = await supabaseAdmin

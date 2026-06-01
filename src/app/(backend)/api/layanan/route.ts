@@ -2,12 +2,20 @@ import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySessionToken } from '@/lib/session';
 import cloudinary from '@/lib/cloudinary';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 /**
  * @swagger
  * /api/layanan:
  *   get:
  *     summary: Mengambil daftar layanan
+ *     description: |
+ *       Mendapatkan daftar layanan yang tersedia, bisa di-filter berdasarkan kategori.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil parameter `id_kategori` dari query string (opsional).
+ *       2. Melakukan query *join* pada tabel `layanan` dan `tenants`.
+ *       3. Mengembalikan seluruh layanan atau daftar yang sesuai dengan filter kategori.
  *     tags: [Layanan (User)]
  *     parameters:
  *       - in: query
@@ -21,7 +29,17 @@ import cloudinary from '@/lib/cloudinary';
  *   post:
  *     summary: Menambah layanan baru (Khusus Tenant)
  *     tags: [Layanan (Tenant)]
- *     description: Endpoint ini otomatis mendeteksi tenant_id dari sesi login pengguna, sehingga tidak perlu lagi dikirim secara manual.
+ *     description: |
+ *       Membuat layanan baru dan mendukung upload foto (Cloudinary). Endpoint ini otomatis mendeteksi `tenant_id` dari sesi login pengguna.
+ *       **Batasan (Rate Limit): Maksimal pembuatan 5 layanan per hari.**
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memverifikasi sesi (JWT HttpOnly Cookie) untuk memastikan login sah.
+ *       2. Melakukan pengecekan *Role* (Hanya `owner` atau `owner tunggal` yang diperbolehkan).
+ *       3. Mengambil `tenant_id` otomatis dari sesi tersebut.
+ *       4. **Rate Limiting**: Mengecek apakah tenant tersebut sudah membuat 5 layanan pada hari ini. Jika ya, blokir sementara.
+ *       5. Menerima payload (form-data/JSON) dan mengunggah gambar ke Cloudinary (jika ada).
+ *       6. Menyimpan data layanan baru ke tabel `layanan` terkait dengan `tenant_id` tersebut.
  *     requestBody:
  *       required: true
  *       content:
@@ -54,7 +72,9 @@ import cloudinary from '@/lib/cloudinary';
  *       401:
  *         description: Sesi tidak sah
  *       403:
- *         description: Akses ditolak karena user bukan tenant
+ *         description: Akses ditolak atau Batas limit tercapai
+ *       429:
+ *         description: Terlalu banyak request (Limit tercapai)
  */
 
 export async function GET(request: NextRequest) {
@@ -101,6 +121,17 @@ export async function POST(request: NextRequest) {
 
     if (!tenant_id) {
       return NextResponse.json({ error: 'Akses ditolak: User bukan bagian dari tenant manapun' }, { status: 403 });
+    }
+
+    // 2. Cek Rate Limit (Max 5x per hari)
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const rateLimit = await checkRateLimit('create_layanan', tenant_id.toString(), 5, ONE_DAY_MS);
+    
+    if (!rateLimit.allowed) {
+      const hoursLeft = Math.ceil(rateLimit.remainingMs / (60 * 60 * 1000));
+      return NextResponse.json({ 
+        error: `Anda telah mencapai batas maksimal pembuatan layanan hari ini (5x). Silakan coba lagi dalam ${hoursLeft} jam.` 
+      }, { status: 429 });
     }
 
     const contentType = request.headers.get('content-type') || '';

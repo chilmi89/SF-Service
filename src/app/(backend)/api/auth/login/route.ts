@@ -2,13 +2,25 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createSessionToken } from '@/lib/session';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 /**
  * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Melakukan login user (HttpOnly Cookie)
- *     description: Memvalidasi kredensial login dan menyimpan sesi di dalam **HttpOnly Cookie** yang aman (Bank Standard).
+ *     description: |
+ *       Memvalidasi kredensial login dan menyimpan sesi di dalam **HttpOnly Cookie** yang aman (Bank Standard).
+ *       **Batasan (Rate Limit): Maksimal 5x percobaan login per hari.**
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Menerima email dan password dari body request.
+ *       2. **Rate Limiting**: Mengecek riwayat login dari email terkait. Jika mencapai 5x dalam sehari, akan di-blokir sementara.
+ *       3. Melakukan pengecekan apakah email terdaftar di database `auth_users`.
+ *       3. Memvalidasi password menggunakan algoritma hashing (bcrypt).
+ *       4. Jika valid, mengambil role pengguna dan `kode_tenant` dari tabel `profiles`.
+ *       5. Menerbitkan JWT (Session Token) yang dikunci ke dalam HttpOnly Cookie (berlaku 24 jam).
+ *       6. Mengembalikan respons sukses untuk memicu perpindahan (redirect) ke halaman `/home`.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -48,6 +60,8 @@ import { createSessionToken } from '@/lib/session';
  *         description: Email dan password tidak boleh kosong
  *       401:
  *         description: Email atau password salah
+ *       429:
+ *         description: Terlalu banyak percobaan login
  *       500:
  *         description: Terjadi kesalahan pada server
  */
@@ -59,6 +73,18 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Email dan password tidak boleh kosong' },
         { status: 400 }
+      );
+    }
+    
+    // 0. Pengecekan Limit (Max 5x Login per Hari)
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const rateLimit = await checkRateLimit('login', email.toLowerCase(), 5, ONE_DAY_MS);
+    
+    if (!rateLimit.allowed) {
+      const hoursLeft = Math.ceil(rateLimit.remainingMs / (60 * 60 * 1000));
+      return NextResponse.json(
+        { error: `Anda telah mencoba login terlalu banyak hari ini (Maks. 5x). Silakan coba lagi dalam ${hoursLeft} jam.` },
+        { status: 429 }
       );
     }
 

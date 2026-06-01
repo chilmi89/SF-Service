@@ -8,6 +8,13 @@ import { verifySessionToken } from '@/lib/session';
  *   get:
  *     summary: Mengambil semua daftar paket langganan
  *     tags: [Langganan]
+ *     description: |
+ *       Menampilkan semua data paket langganan aplikasi (misal: Bulanan, Tahunan).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Langsung mengambil daftar paket berlangganan dari tabel `Langganan`.
+ *       2. Mengurutkan paket berdasarkan harga.
+ *       3. Mengembalikan array berisi seluruh opsi paket yang bisa dibeli.
  *     responses:
  *       200:
  *         description: Berhasil mengambil data paket
@@ -16,6 +23,14 @@ import { verifySessionToken } from '@/lib/session';
  *   post:
  *     summary: Membuat paket langganan baru
  *     tags: [Langganan]
+ *     description: |
+ *       Menambah opsi paket langganan baru ke dalam sistem (Khusus Super Admin).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Pengecekan Token Sesi (harus sudah login).
+ *       2. Validasi Role ketat: **Hanya `super admin`** yang boleh mengakses fungsi ini.
+ *       3. Mengekstrak nominal `harga` dan `durasi` dari JSON body request.
+ *       4. Menyimpan paket langganan ke database dan merespon dengan data paket terbaru.
  *     security:
  *       - cookieAuth: []
  *     requestBody:

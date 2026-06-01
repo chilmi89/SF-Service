@@ -14,12 +14,24 @@ import { verifySessionToken } from '@/lib/session';
  *   get:
  *     summary: Mendapatkan detail langganan tenant
  *     tags: [Langganan Tenant]
+ *     description: |
+ *       Menampilkan detail pendaftaran/transaksi langganan seorang tenant.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil parameter ID pendaftaran dari URL.
+ *       2. Melakukan Fetch dari tabel `Langganan_tenant` dilengkapi JOIN dengan detail paket `Langganan` dan informasi `tenants`.
  *     responses:
  *       200:
  *         description: Berhasil
  *   put:
  *     summary: Memperbarui langganan tenant
  *     tags: [Langganan Tenant]
+ *     description: |
+ *       Mengedit data kepemilikan paket langganan tenant.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil request update `id_langganan` atau `kode_tenant`.
+ *       2. Menimpa record pada tabel relasional `Langganan_tenant`.
  *     requestBody:
  *       required: true
  *       content:
@@ -35,6 +47,11 @@ import { verifySessionToken } from '@/lib/session';
  *   delete:
  *     summary: Menghapus langganan tenant
  *     tags: [Langganan Tenant]
+ *     description: |
+ *       Mencabut paket layanan yang terdaftar pada tenant.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Melakukan hard-delete pada tabel `Langganan_tenant` berdasarkan ID langganan-tenant.
  *     responses:
  *       200:
  *         description: Berhasil dihapus

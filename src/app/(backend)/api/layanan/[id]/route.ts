@@ -14,12 +14,27 @@ import cloudinary from '@/lib/cloudinary';
  *         type: string
  *   get:
  *     summary: Melihat detail layanan
+ *     description: |
+ *       Menampilkan detail informasi dari satu layanan secara spesifik.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengekstrak parameter `id` dari URL.
+ *       2. Mengambil data terkait dari tabel `layanan` beserta relasinya dengan `tenants`.
+ *       3. Mengembalikan objek layanan ke klien.
  *     tags: [Layanan (User)]
  *     responses:
  *       200:
  *         description: Berhasil
  *   put:
  *     summary: Memperbarui data layanan (Khusus Tenant)
+ *     description: |
+ *       Mengedit data informasi layanan (nama, harga, gambar, deskripsi).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memverifikasi sesi JWT dari *cookie* (pastikan ter-otentikasi).
+ *       2. Memastikan bahwa role pengguna adalah Owner dari sebuah Tenant.
+ *       3. Mengelola upload foto profil baru ke Cloudinary (opsional).
+ *       4. Memperbarui record di tabel `layanan` dengan syarat `id` layanan cocok dan `tenant_id` cocok dengan yang ada di sesi pengguna (mengamankan agar tidak bisa edit layanan tenant lain).
  *     tags: [Layanan (Tenant)]
  *     requestBody:
  *       required: true
@@ -48,6 +63,13 @@ import cloudinary from '@/lib/cloudinary';
  *         description: Berhasil diperbarui
  *   delete:
  *     summary: Menghapus layanan (Khusus Tenant)
+ *     description: |
+ *       Menghapus layanan yang tidak diperlukan lagi dari sistem.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memverifikasi token autentikasi.
+ *       2. Melakukan pengecekan hak akses Owner Tenant.
+ *       3. Menghapus baris (row) data layanan dari database yang memiliki `id` yang di-request dan `tenant_id` pengguna yang meminta (security strict).
  *     tags: [Layanan (Tenant)]
  *     responses:
  *       204:

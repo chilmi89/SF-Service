@@ -6,9 +6,13 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  * /api/super-admin/role-permissions:
  *   get:
  *     summary: Ambil daftar permission (semua atau difilter per role)
- *     description: >
- *       Jika `role_id` diberikan, akan mengembalikan semua permission dengan status aktif/nonaktif
- *       (assigned) untuk role tersebut. Jika `role_id` kosong, mengembalikan seluruh permission.
+ *     description: |
+ *       Jika `role_id` diberikan, akan mengembalikan semua permission dengan status aktif/nonaktif (assigned) untuk role tersebut. Jika `role_id` kosong, mengembalikan seluruh permission.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Membaca query `role_id`.
+ *       2. Mengambil master data dari tabel `permissions`.
+ *       3. Jika ada filter role, lakukan cross-check ke tabel *junction* `role_permissions` untuk menandai hak akses apa saja yang dimiliki role tersebut (`assigned: true/false`).
  *     tags: [Super Admin]
  *     parameters:
  *       - in: query

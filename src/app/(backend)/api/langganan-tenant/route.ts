@@ -8,12 +8,29 @@ import { verifySessionToken } from '@/lib/session';
  *   get:
  *     summary: Mengambil semua daftar langganan tenant
  *     tags: [Langganan Tenant]
+ *     description: |
+ *       Melihat histori dan daftar tenant mana saja yang sudah berlangganan paket tertentu.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Verifikasi Session pengguna.
+ *       2. Otorisasi cerdas:
+ *          - Jika User adalah **Super Admin**, ia dapat melihat semua daftar transaksi langganan dari seluruh tenant di sistem.
+ *          - Jika User adalah **Owner/Tenant biasa**, sistem hanya akan mengembalikan riwayat pembelian langganan untuk tenant mereka sendiri.
+ *       3. Melakukan Join antara tabel langganan, tabel tenant, dan `Langganan_tenant` untuk menampilkan data gabungan secara komprehensif.
  *     responses:
  *       200:
  *         description: Berhasil mengambil data
  *   post:
  *     summary: Mendaftarkan tenant ke paket langganan
  *     tags: [Langganan Tenant]
+ *     description: |
+ *       Menghubungkan/mendaftarkan tenant ke dalam sebuah paket langganan dan otomatis melakukan upgrade Role.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Menerima input `kode_tenant` (bisa berupa ID Int / string kode referal) dan `id_langganan`.
+ *       2. Jika menerima kode string referal, sistem akan mencari `id` (integer) tenant terlebih dahulu di tabel `tenants`.
+ *       3. Membuat record baris baru pada tabel `Langganan_tenant`.
+ *       4. **Auto-Upgrade**: Sistem secara otomatis akan mem-bypass Role akun `owner tunggal` menjadi `owner` pada tabel `profiles` bagi pendaftar tersebut, sehingga fitur penugasan dsb bisa langsung aktif.
  *     requestBody:
  *       required: true
  *       content:

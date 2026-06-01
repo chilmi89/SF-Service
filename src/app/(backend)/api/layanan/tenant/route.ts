@@ -8,7 +8,15 @@ import { verifySessionToken } from '@/lib/session';
  *   get:
  *     summary: Mengambil daftar layanan milik tenant
  *     tags: [Layanan (Tenant)]
- *     description: Endpoint khusus untuk tenant (Owner/Owner Tunggal) agar dapat melihat daftar layanannya sendiri tanpa harus memasukkan ID.
+ *     description: |
+ *       Endpoint khusus untuk tenant (Owner/Owner Tunggal) agar dapat melihat daftar layanannya sendiri tanpa harus memasukkan ID.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memverifikasi Session Token dari cookie pengguna.
+ *       2. Pengecekan Otorisasi: Hanya user dengan role `owner` atau `owner tunggal` yang diizinkan mengakses.
+ *       3. Secara otomatis mengekstrak `tenant_id` dari payload Session.
+ *       4. Melakukan pencarian di tabel `layanan` khusus untuk `tenant_id` tersebut.
+ *       5. Menampilkan daftar layanan milik tenant itu sendiri.
  *     responses:
  *       200:
  *         description: Berhasil mengambil daftar layanan

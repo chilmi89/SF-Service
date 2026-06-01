@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySessionToken } from '@/lib/session';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 /**
  * @swagger
@@ -9,8 +10,14 @@ import { verifySessionToken } from '@/lib/session';
  *     summary: Mengambil daftar pesanan
  *     tags: [Orders]
  *     description: |
- *       - **Customer**: `GET /api/orders` (Melihat pesanan miliknya sendiri, siapapun bisa pakai).
- *       - **Owner**: `GET /api/orders?as=tenant` (Melihat semua pesanan yang masuk ke tenant-nya).
+ *       Mendapatkan daftar pesanan (order) berdasarkan role user yang login.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memverifikasi Session Token.
+ *       2. Mengambil profil user yang login.
+ *       3. Jika query parameter `as=tenant`, sistem mengecek hak akses Owner/Admin.
+ *       4. Query database akan menyesuaikan: Customer melihat pesanan pribadinya, sedangkan Owner melihat seluruh pesanan masuk ke tenant-nya.
+ *       5. Menggabungkan data pesanan dengan relasi tabel `layanan` dan `transactions`.
  *     parameters:
  *       - in: query
  *         name: as
@@ -26,6 +33,15 @@ import { verifySessionToken } from '@/lib/session';
  *     description: |
  *       Membuat pesanan baru. Sistem akan otomatis membuat `transaction` dan menghubungkannya dengan `order`.
  *       User harus login agar pesanannya terhubung dengan akunnya.
+ *       **Batasan (Rate Limit): Maksimal 1x order per hari untuk tiap pengguna.**
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Memverifikasi Session Token untuk memastikan user login.
+ *       2. Memeriksa kelengkapan profil customer (Nama, HP, Alamat).
+ *       3. **Rate Limiting**: Mengecek apakah pengguna sudah melakukan pesanan hari ini. Jika ya, blokir pesanan baru.
+ *       4. Mendapatkan detail layanan yang dipesan (seperti harga dasar).
+ *       5. Membuat record pesanan baru (`orders`) dengan status awal (2 = "proses").
+ *       6. Secara otomatis men-generate invoice dan membuat record tagihan baru (`transactions`) yang berelasi dengan pesanan tersebut.
  *     requestBody:
  *       required: true
  *       content:
@@ -41,7 +57,9 @@ import { verifySessionToken } from '@/lib/session';
  *     responses:
  *       201:
  *         description: Pesanan berhasil dibuat
- */
+ *       429:
+ *         description: Batas pesanan per hari tercapai
+ * */
 
 export async function GET(request: NextRequest) {
   try {
@@ -143,6 +161,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Profil Anda belum lengkap. Silakan lengkapi Nama Lengkap, Nomor HP, dan Alamat di pengaturan profil sebelum membuat pesanan.' 
       }, { status: 403 });
+    }
+    
+    // Cek Rate Limit (Max 1x per hari per customer)
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const rateLimit = await checkRateLimit('create_order', profile.id.toString(), 1, ONE_DAY_MS);
+    
+    if (!rateLimit.allowed) {
+      const hoursLeft = Math.ceil(rateLimit.remainingMs / (60 * 60 * 1000));
+      return NextResponse.json({ 
+        error: `Anda hanya diizinkan membuat 1 pesanan dalam sehari. Silakan tunggu ${hoursLeft} jam lagi untuk pesanan berikutnya.` 
+      }, { status: 429 });
     }
 
     const body = await request.json();

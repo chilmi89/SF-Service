@@ -14,6 +14,13 @@ import { verifySessionToken } from '@/lib/session';
  *   put:
  *     summary: Mengubah status tugas (Untuk Owner/Teknisi)
  *     tags: [Tasks]
+ *     description: |
+ *       Mengupdate progres pengerjaan (status) dari suatu tugas.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Pengecekan otorisasi (Hanya Teknisi, Admin, atau Owner yang berhak).
+ *       2. Memperbarui kolom `status_tugas` di tabel `tasks` secara spesifik.
+ *       3. **Otomatisasi Lanjutan**: Apabila status diubah menjadi teks `Selesai`, sistem akan memicu trigger otomatis yang juga mengubah status *Order* bersangkutan menjadi `menunggu pembayaran` (status ID = 7).
  *     requestBody:
  *       required: true
  *       content:
@@ -28,6 +35,12 @@ import { verifySessionToken } from '@/lib/session';
  *   delete:
  *     summary: Menghapus tugas (Hanya Owner)
  *     tags: [Tasks]
+ *     description: |
+ *       Membatalkan / menghapus tugas secara permanen.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Pengecekan otorisasi tingkat tinggi (Hanya Owner/Admin).
+ *       2. Menghapus record baris di tabel `tasks` dari database Supabase.
  *     responses:
  *       204:
  *         description: Berhasil dihapus
@@ -63,6 +76,20 @@ export async function PUT(
       .single();
 
     if (error) throw error;
+
+    // Jika task selesai, otomatis update status pesanan menjadi "menunggu pembayaran" (ID = 7)
+    if (body.status_tugas?.toLowerCase() === 'selesai') {
+      if (data && data.order_id) {
+        const { error: orderError } = await supabaseAdmin
+          .from('orders')
+          .update({ status: 7 })
+          .eq('id', data.order_id);
+          
+        if (orderError) {
+          console.error("Gagal mengupdate status pesanan:", orderError.message);
+        }
+      }
+    }
 
     return NextResponse.json({ data, message: 'Status tugas berhasil diperbarui' }, { status: 200 });
   } catch (error: any) {

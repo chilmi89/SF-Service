@@ -14,6 +14,13 @@ import { verifySessionToken } from '@/lib/session';
  *   get:
  *     summary: Mendapatkan detail paket langganan
  *     tags: [Langganan]
+ *     description: |
+ *       Menampilkan informasi spesifik tentang satu paket langganan tertentu.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil parameter `id` langganan dari URL.
+ *       2. Mencari spesifikasi paket (harga & durasi) dari tabel `Langganan`.
+ *       3. Mengembalikan detail paket ke sisi frontend.
  *     responses:
  *       200:
  *         description: Berhasil mengambil detail paket
@@ -22,6 +29,13 @@ import { verifySessionToken } from '@/lib/session';
  *   put:
  *     summary: Memperbarui paket langganan
  *     tags: [Langganan]
+ *     description: |
+ *       Memperbarui data harga atau durasi paket (Khusus Super Admin).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Validasi Sesi pengguna dan Role **super admin**.
+ *       2. Membaca id dari URL dan update body JSON.
+ *       3. Mengedit data (baris) pada tabel `Langganan` sesuai `id` tersebut.
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -41,6 +55,12 @@ import { verifySessionToken } from '@/lib/session';
  *   delete:
  *     summary: Menghapus paket langganan
  *     tags: [Langganan]
+ *     description: |
+ *       Menghapus salah satu paket yang sudah tidak berlaku (Khusus Super Admin).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Otorisasi ketat untuk Role **super admin**.
+ *       2. Menghapus data secara hard-delete pada tabel `Langganan` untuk `id` bersangkutan.
  *     security:
  *       - cookieAuth: []
  *     responses:

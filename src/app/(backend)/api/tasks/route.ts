@@ -25,7 +25,7 @@ import { verifySessionToken } from '@/lib/session';
  *     summary: Membuat tugas baru (Untuk Owner)
  *     tags: [Tasks]
  *     description: |
- *       Mendelegasikan sebuah pesanan menjadi tugas kepada teknisi atau untuk dikerjakan sendiri.
+ *       Mendelegasikan sebuah pesanan menjadi tugas kepada teknisi atau untuk dikerjakan sendiri
  *       
  *       **Alur Kerja (Workflow):**
  *       1. Memverifikasi Otorisasi (Hanya boleh dipanggil oleh Owner/Admin).
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { order_id, technician_id, deskripsi } = body;
+    const { order_id, technician_id, deskripsi, status_tugas } = body;
     let { deadline } = body;
 
     if (!order_id || !deskripsi) {
@@ -147,13 +147,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const finalStatus = (status_tugas && status_tugas !== 'Pending') ? status_tugas : 2;
+
     const { data: task, error } = await supabaseAdmin
       .from('tasks')
       .insert([{
         order_id,
         technician_id: assignedTechnician,
         deskripsi,
-        status_tugas: 'Pending', // Default status
+        status_tugas: finalStatus,
         deadline: deadline || null
       }])
       .select()

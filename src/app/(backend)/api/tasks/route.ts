@@ -25,7 +25,7 @@ import { verifySessionToken } from '@/lib/session';
  *     summary: Membuat tugas baru (Untuk Owner)
  *     tags: [Tasks]
  *     description: |
- *       Mendelegasikan sebuah pesanan menjadi tugas kepada teknisi atau untuk dikerjakan sendiri.
+ *       Mendelegasikan sebuah pesanan menjadi tugas kepada teknisi atau untuk dikerjakan sendiri
  *       
  *       **Alur Kerja (Workflow):**
  *       1. Memverifikasi Otorisasi (Hanya boleh dipanggil oleh Owner/Admin).

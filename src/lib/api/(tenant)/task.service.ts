@@ -20,13 +20,12 @@ export const taskService = {
 
   /**
    * Membuat tugas baru (Khusus Owner/Admin Tenant)
-   * @param payload Data tugas (order_id dan nama_tugas wajib)
+   * @param payload Data tugas (order_id dan deskripsi wajib)
    */
   async createTask(payload: {
     order_id: string;
     technician_id?: string;
-    nama_tugas: string;
-    deskripsi?: string;
+    deskripsi: string;
     deadline?: string;
   }) {
     return apiClient('/api/tasks', {

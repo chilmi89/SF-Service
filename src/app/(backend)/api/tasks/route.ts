@@ -38,12 +38,11 @@ import { verifySessionToken } from '@/lib/session';
  *         application/json:
  *           schema:
  *             type: object
- *             required: [order_id, nama_tugas]
+ *             required: [order_id, deskripsi]
  *             properties:
  *               order_id: { type: string, description: "ID pesanan (order) yang terkait" }
  *               technician_id: { type: string, description: "ID Profil Teknisi yang ditugaskan (opsional, bisa dirinya sendiri)" }
- *               nama_tugas: { type: string }
- *               deskripsi: { type: string }
+ *               deskripsi: { type: string, description: "Deskripsi tugas yang harus dikerjakan" }
  *               deadline: { type: string, format: date-time }
  *     responses:
  *       201:
@@ -124,11 +123,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { order_id, technician_id, nama_tugas, deskripsi } = body;
+    const { order_id, technician_id, deskripsi } = body;
     let { deadline } = body;
 
-    if (!order_id || !nama_tugas) {
-      return NextResponse.json({ error: 'Order ID dan Nama Tugas wajib diisi' }, { status: 400 });
+    if (!order_id || !deskripsi) {
+      return NextResponse.json({ error: 'Order ID dan Deskripsi Tugas wajib diisi' }, { status: 400 });
     }
 
     // Jika deadline tidak diisi, otomatis 1 hari dari sekarang
@@ -153,8 +152,7 @@ export async function POST(request: NextRequest) {
       .insert([{
         order_id,
         technician_id: assignedTechnician,
-        nama_tugas,
-        deskripsi: deskripsi || '',
+        deskripsi,
         status_tugas: 'Pending', // Default status
         deadline: deadline || null
       }])

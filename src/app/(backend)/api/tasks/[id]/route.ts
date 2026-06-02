@@ -78,7 +78,7 @@ export async function PUT(
     if (error) throw error;
 
     // Jika task selesai, otomatis update status pesanan menjadi "menunggu pembayaran" (ID = 7)
-    if (body.status_tugas?.toLowerCase() === 'selesai') {
+    if (String(body.status_tugas) === '4' || body.status_tugas?.toLowerCase() === 'selesai') {
       if (data && data.order_id) {
         const { error: orderError } = await supabaseAdmin
           .from('orders')

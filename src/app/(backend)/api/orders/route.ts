@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySessionToken } from '@/lib/session';
-import { checkRateLimit } from '@/lib/rateLimit';
 
 /**
  * @swagger
@@ -33,15 +32,23 @@ import { checkRateLimit } from '@/lib/rateLimit';
  *     description: |
  *       Membuat pesanan baru. Sistem akan otomatis membuat `transaction` dan menghubungkannya dengan `order`.
  *       User harus login agar pesanannya terhubung dengan akunnya.
- *       **Batasan (Rate Limit): Maksimal 1x order per hari untuk tiap pengguna.**
- *       
+ *
+ *       **Aturan Pesanan Aktif:**
+ *       Seorang pengguna hanya boleh memiliki **1 pesanan aktif** pada satu waktu.
+ *       Pesanan dianggap selesai/tidak aktif jika statusnya:
+ *       - **`ditolak` (ID: 6)** → Pesanan dibatalkan oleh admin
+ *       - **`pembayaran selesai` (ID: 8)** → Pesanan tuntas & lunas
+ *
+ *       Jika masih ada order dengan status selain itu (proses, perjalanan, menunggu pembayaran, dll),
+ *       pengguna **tidak dapat** membuat order baru.
+ *
  *       **Alur Kerja (Workflow):**
  *       1. Memverifikasi Session Token untuk memastikan user login.
  *       2. Memeriksa kelengkapan profil customer (Nama, HP, Alamat).
- *       3. **Rate Limiting**: Mengecek apakah pengguna sudah melakukan pesanan hari ini. Jika ya, blokir pesanan baru.
- *       4. Mendapatkan detail layanan yang dipesan (seperti harga dasar).
- *       5. Membuat record pesanan baru (`orders`) dengan status awal (2 = "proses").
- *       6. Secara otomatis men-generate invoice dan membuat record tagihan baru (`transactions`) yang berelasi dengan pesanan tersebut.
+ *       3. **Cek Order Aktif**: Query database mencari order customer yang statusnya bukan `ditolak (6)` dan bukan `pembayaran selesai (8)`. Jika ditemukan, request ditolak dengan pesan informatif.
+ *       4. Mendapatkan detail layanan yang dipesan (harga dasar dan tenant_id).
+ *       5. Membuat record pesanan baru (`orders`) dengan status awal `proses (2)`.
+ *       6. Secara otomatis men-generate nomor invoice unik dan membuat record tagihan (`transactions`).
  *     requestBody:
  *       required: true
  *       content:
@@ -57,8 +64,12 @@ import { checkRateLimit } from '@/lib/rateLimit';
  *     responses:
  *       201:
  *         description: Pesanan berhasil dibuat
- *       429:
- *         description: Batas pesanan per hari tercapai
+ *       400:
+ *         description: ID Layanan tidak diisi
+ *       403:
+ *         description: Profil belum lengkap atau masih ada order aktif yang berjalan
+ *       404:
+ *         description: Layanan tidak ditemukan
  * */
 
 export async function GET(request: NextRequest) {
@@ -162,16 +173,27 @@ export async function POST(request: NextRequest) {
         error: 'Profil Anda belum lengkap. Silakan lengkapi Nama Lengkap, Nomor HP, dan Alamat di pengaturan profil sebelum membuat pesanan.' 
       }, { status: 403 });
     }
-    
-    // Cek Rate Limit (Max 1x per hari per customer)
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-    const rateLimit = await checkRateLimit('create_order', profile.id.toString(), 1, ONE_DAY_MS);
-    
-    if (!rateLimit.allowed) {
-      const hoursLeft = Math.ceil(rateLimit.remainingMs / (60 * 60 * 1000));
+
+    // =============================================
+    // CEK ORDER AKTIF (1 order aktif per pengguna)
+    // Status yang dianggap SELESAI/TIDAK AKTIF:
+    //   ID 6 = ditolak (dibatalkan admin)
+    //   ID 8 = pembayaran selesai
+    // Jika ada order selain status itu → blokir
+    // =============================================
+    const SELESAI_STATUS_IDS = [6, 8];
+    const { data: activeOrder } = await supabaseAdmin
+      .from('orders')
+      .select('id, status')
+      .eq('id_customer', profile.id)
+      .not('status', 'in', `(${SELESAI_STATUS_IDS.join(',')})`)
+      .limit(1)
+      .maybeSingle();
+
+    if (activeOrder) {
       return NextResponse.json({ 
-        error: `Anda hanya diizinkan membuat 1 pesanan dalam sehari. Silakan tunggu ${hoursLeft} jam lagi untuk pesanan berikutnya.` 
-      }, { status: 429 });
+        error: 'Anda masih memiliki pesanan yang sedang berjalan. Pesanan baru hanya dapat dibuat setelah pesanan aktif selesai (pembayaran lunas atau dibatalkan oleh admin).' 
+      }, { status: 403 });
     }
 
     const body = await request.json();

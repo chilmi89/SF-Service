@@ -171,12 +171,23 @@ export default function TenantRegisterPage() {
             Kembali ke Beranda
           </Link>
 
+          {/* Logo Section */}
+          <div className="flex justify-start mb-4">
+            <Link href="/home" className="flex items-center gap-2 group">
+              <img
+                src="/images/logo.png"
+                alt="FixIt Logo"
+                className="h-16 w-auto object-contain"
+              />
+            </Link>
+          </div>
+
           {/* Header */}
-          <header className="border-b border-gray-100 pb-8 mb-8 mt-2">
-            <h1 className="text-3xl font-bold tracking-tight text-black">
+          <header className="border-b border-gray-100 pb-6 mb-6">
+            <h1 className="text-2xl font-bold tracking-tight text-black">
               Daftarkan Tenant Baru
             </h1>
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="text-xs text-gray-400 mt-1.5">
               Silakan lengkapi detail bisnis Anda di bawah ini untuk mulai bermitra dengan FixIt.
             </p>
           </header>

@@ -173,11 +173,13 @@ export default function ManageStaffPage() {
           <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">Kelola Staf</h1>
           <p className="text-sm font-medium text-gray-500 mt-1">Daftar staf admin dan teknisi yang terasosiasi dengan tenant Anda.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           {tenantInfo?.kode_tenant && (
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-250 px-4 py-2.5 rounded-xl">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Kode Tenant:</span>
-              <code className="text-xs font-black text-black">{tenantInfo.kode_tenant}</code>
+            <div className="flex items-center justify-between sm:justify-start gap-2 bg-gray-50 border border-gray-250 px-4 py-2.5 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Kode Tenant:</span>
+                <code className="text-xs font-black text-black">{tenantInfo.kode_tenant}</code>
+              </div>
               <button 
                 onClick={handleCopyCode} 
                 className="text-gray-400 hover:text-black transition-colors ml-1"
@@ -189,7 +191,7 @@ export default function ManageStaffPage() {
           )}
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-black text-white hover:bg-gray-800 font-bold text-sm px-5 py-3 rounded-xl transition-all shadow-lg shadow-black/10 active:scale-95 shrink-0"
+            className="flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800 font-bold text-sm px-5 py-3 rounded-xl transition-all shadow-lg shadow-black/10 active:scale-95 w-full sm:w-auto"
           >
             <UserPlus size={18} />
             Tambah Staf Baru
@@ -198,32 +200,32 @@ export default function ManageStaffPage() {
       </div>
 
       {/* Stats Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 max-w-3xl">
-        <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
-            <Users size={24} />
+      <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8 w-full max-w-3xl">
+        <div className="p-3 sm:p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-4">
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Staf</p>
-            <p className="text-2xl font-black text-black">{staffList.length}</p>
+            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest text-gray-400">Total Staf</p>
+            <p className="text-lg sm:text-2xl font-black text-black leading-none mt-1">{staffList.length}</p>
           </div>
         </div>
-        <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-            <Users size={24} />
+        <div className="p-3 sm:p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-4">
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Teknisi</p>
-            <p className="text-2xl font-black text-black">{totalTechnicians}</p>
+            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest text-gray-400">Teknisi</p>
+            <p className="text-lg sm:text-2xl font-black text-black leading-none mt-1">{totalTechnicians}</p>
           </div>
         </div>
-        <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center">
-            <Users size={24} />
+        <div className="p-3 sm:p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-4">
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center shrink-0">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Admin Tenant</p>
-            <p className="text-2xl font-black text-black">{totalAdmins}</p>
+            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest text-gray-400">Admin</p>
+            <p className="text-lg sm:text-2xl font-black text-black leading-none mt-1">{totalAdmins}</p>
           </div>
         </div>
       </div>
@@ -244,7 +246,7 @@ export default function ManageStaffPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-x-auto min-h-[300px]">
+        <div className="flex-1 min-h-[300px]">
           {isLoading ? (
             <div className="h-full flex flex-col items-center justify-center py-20">
               <Loader2 className="animate-spin text-black" size={32} />
@@ -259,19 +261,84 @@ export default function ManageStaffPage() {
               </p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-gray-100 text-[10px] font-black uppercase tracking-wider text-gray-400 bg-gray-50/30">
-                  <th className="py-4 px-6">Identitas Staf</th>
-                  <th className="py-4 px-6">Kontak</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-[10px] font-black uppercase tracking-wider text-gray-400 bg-gray-50/30">
+                      <th className="py-4 px-6">Identitas Staf</th>
+                      <th className="py-4 px-6">Kontak</th>
+                      <th className="py-4 px-6">Status</th>
+                      <th className="py-4 px-6 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredStaff.map((staff) => (
+                      <tr key={staff.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full overflow-hidden bg-black/5 flex-shrink-0 relative border border-gray-100">
+                              <Image
+                                src={staff.avatar_url || "/images/budi.png"}
+                                alt={staff.full_name || "Staff Avatar"}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-black">{staff.full_name || "Nama Belum Diatur"}</p>
+                              <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                                staff.role === "teknisi"
+                                  ? "bg-amber-50 text-amber-600"
+                                  : "bg-purple-50 text-purple-600"
+                              }`}>
+                                {staff.role === "admin tenant" ? "Admin" : staff.role}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
+                              <Mail size={12} />
+                              {staff.email || "-"}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
+                              <Phone size={12} />
+                              {staff.phone || "-"}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full text-xs font-bold">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Aktif
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            onClick={() => {
+                              setSelectedStaff(staff);
+                              setShowDeleteModal(true);
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            title="Hapus Staf"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="block md:hidden divide-y divide-gray-100">
                 {filteredStaff.map((staff) => (
-                  <tr key={staff.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 px-6">
+                  <div key={staff.id} className="p-4 flex flex-col gap-4 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full overflow-hidden bg-black/5 flex-shrink-0 relative border border-gray-100">
                           <Image
@@ -283,7 +350,7 @@ export default function ManageStaffPage() {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-black">{staff.full_name || "Nama Belum Diatur"}</p>
-                          <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                          <span className={`inline-block mt-0.5 text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
                             staff.role === "teknisi"
                               ? "bg-amber-50 text-amber-600"
                               : "bg-purple-50 text-purple-600"
@@ -292,41 +359,39 @@ export default function ManageStaffPage() {
                           </span>
                         </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
-                          <Mail size={12} />
-                          {staff.email || "-"}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
-                          <Phone size={12} />
-                          {staff.phone || "-"}
-                        </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                          <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Aktif
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedStaff(staff);
+                            setShowDeleteModal(true);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                          title="Hapus Staf"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full text-xs font-bold">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Aktif
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => {
-                          setSelectedStaff(staff);
-                          setShowDeleteModal(true);
-                        }}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                        title="Hapus Staf"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 bg-gray-50/50 p-2.5 rounded-xl text-xs text-gray-500 font-semibold">
+                      <div className="flex items-center gap-1.5 overflow-hidden">
+                        <Mail size={12} className="shrink-0 text-gray-400" />
+                        <span className="truncate" title={staff.email}>{staff.email || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 overflow-hidden">
+                        <Phone size={12} className="shrink-0 text-gray-400" />
+                        <span className="truncate" title={staff.phone}>{staff.phone || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
       </div>

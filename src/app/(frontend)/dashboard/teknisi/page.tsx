@@ -9,19 +9,30 @@ import {
   MapPin,
   MessageSquare,
   ChevronRight,
-  MoreVertical,
   Calendar,
   Filter,
-  Wallet
+  Wallet,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
-import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { authService } from "@/lib/api/auth.service";
+import { useTasks } from "@/hooks/useTasks";
+import { Toast } from "@/components/toast";
 
 export default function TeknisiDashboard() {
   const { userRole } = useAuth();
   const [profile, setProfile] = useState<any>(null);
+  
+  const {
+    tasks,
+    isLoading,
+    fetchTasks,
+    updateTaskStatus,
+    toast,
+    setToast,
+  } = useTasks();
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -37,19 +48,19 @@ export default function TeknisiDashboard() {
       }
     };
     loadProfile();
-  }, []);
+    fetchTasks();
+  }, [fetchTasks]);
+
+  // Hitung stats berdasarkan tasks asli
+  const tasksHariIni = tasks.filter(t => t.status === "Menunggu" || t.status === "Dalam Perjalanan");
+  const totalSelesai = tasks.filter(t => t.status === "Selesai").length;
+  const selesaiHariIni = tasks.filter(t => t.status === "Selesai").length; // sederhana
 
   const stats = [
-    { label: "Tugas Hari Ini", value: "4", trend: "2 Selesai", color: "text-blue-600", bg: "bg-blue-50", icon: <Wrench size={18} /> },
+    { label: "Tugas Aktif", value: tasksHariIni.length.toString(), trend: `${selesaiHariIni} Selesai`, color: "text-blue-600", bg: "bg-blue-50", icon: <Wrench size={18} /> },
     { label: "Pendapatan Bulan Ini", value: "Rp 3.5M", trend: "+15%", color: "text-emerald-600", bg: "bg-emerald-50", icon: <Wallet size={18} /> },
-    { label: "Rating Teknisi", value: "4.9", trend: "Sangat Baik", color: "text-amber-600", bg: "bg-amber-50", icon: <Star size={18} /> },
-    { label: "Total Selesai", value: "128", trend: "Bulan Ini", color: "text-purple-600", bg: "bg-purple-50", icon: <CheckCircle2 size={18} /> },
-  ];
-
-  const assignedOrders = [
-    { id: "ORD-9921", customer: "Budi Santoso", service: "Service AC Split", address: "Jl. Sudirman No. 12", status: "Dalam Perjalanan", time: "10:00 WIB", priority: "Tinggi" },
-    { id: "ORD-9922", customer: "Siska Amelia", service: "Perbaikan Pipa Bocor", address: "Komp. Mawar Blok B4", status: "Menunggu", time: "13:30 WIB", priority: "Sedang" },
-    { id: "ORD-9923", customer: "Anwar Jaya", service: "Instalasi Listrik", address: "Jl. Melati No. 8", status: "Menunggu", time: "15:00 WIB", priority: "Normal" },
+    { label: "Rating Anda", value: "4.9", trend: "Sangat Baik", color: "text-amber-600", bg: "bg-amber-50", icon: <Star size={18} /> },
+    { label: "Total Selesai", value: totalSelesai.toString(), trend: "Bulan Ini", color: "text-purple-600", bg: "bg-purple-50", icon: <CheckCircle2 size={18} /> },
   ];
 
   return (
@@ -131,61 +142,81 @@ export default function TeknisiDashboard() {
               <Filter size={14} className="text-gray-400" />
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">
-                  <th className="px-6 py-4">Pelanggan & ID</th>
-                  <th className="px-6 py-4">Layanan & Lokasi</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Waktu</th>
-                  <th className="px-6 py-4">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {assignedOrders.map((order, i) => (
-                  <tr key={i} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="space-y-0.5">
-                        <p className="text-[10px] font-black text-gray-400">{order.id}</p>
-                        <p className="text-sm font-bold text-black">{order.customer}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-gray-700">{order.service}</p>
-                      <div className="flex items-center gap-1 mt-1 text-gray-400">
-                        <MapPin size={12} />
-                        <p className="text-[10px] font-bold">{order.address}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter ${
-                        order.status === 'Dalam Perjalanan' ? 'bg-blue-50 text-blue-600' :
-                        order.status === 'Menunggu' ? 'bg-amber-50 text-amber-600' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-xs font-bold text-gray-400 flex items-center gap-1">
-                      <Clock size={12} />
-                      {order.time}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <button className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                          <MessageSquare size={14} />
-                        </button>
-                        <button className="px-3 py-1.5 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors">
-                          {order.status === 'Menunggu' ? 'Mulai' : 'Selesai'}
-                        </button>
-                      </div>
-                    </td>
+          
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-black mb-3" />
+              <p className="text-xs font-bold text-gray-500">Memuat jadwal tugas...</p>
+            </div>
+          ) : tasksHariIni.length === 0 ? (
+            <div className="py-20 text-center flex flex-col items-center justify-center">
+              <AlertCircle size={28} className="text-gray-400 mb-2" />
+              <p className="text-xs font-bold text-gray-500">Tidak ada tugas aktif hari ini.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">
+                    <th className="px-6 py-4">Pelanggan</th>
+                    <th className="px-6 py-4">Layanan & Lokasi</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Waktu</th>
+                    <th className="px-6 py-4">Aksi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {tasksHariIni.map((task, i) => (
+                    <tr key={i} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-bold text-black">{task.customerName}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-medium text-gray-700">{task.serviceName}</p>
+                        <div className="flex items-center gap-1 mt-1 text-gray-400">
+                          <MapPin size={12} />
+                          <p className="text-[10px] font-bold">{task.address}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter ${
+                          task.status === 'Dalam Perjalanan' ? 'bg-blue-50 text-blue-600' :
+                          task.status === 'Menunggu' ? 'bg-amber-50 text-amber-600' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>
+                          {task.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-bold text-gray-400 flex items-center gap-1">
+                        <Clock size={12} />
+                        {task.time}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                            <MessageSquare size={14} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              updateTaskStatus(
+                                task.id,
+                                task.status === 'Menunggu' ? 'Dalam Perjalanan' : 'Selesai'
+                              )
+                            }
+                            className="px-3 py-1.5 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors"
+                          >
+                            {task.status === 'Menunggu' ? 'Mulai' : 'Selesai'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </motion.div>
 
         {/* SIDE PANELS */}
@@ -203,9 +234,9 @@ export default function TeknisiDashboard() {
             
             <div className="space-y-3">
               {[
-                { item: "Freon R32", qty: "2 Tabung", desc: "Untuk service AC Bpk. Budi" },
-                { item: "Pipa PVC 1/2", qty: "5 Meter", desc: "Instalasi pipa air Ibu Siska" },
-                { item: "Kabel NYM", qty: "10 Meter", desc: "Instalasi listrik Bpk. Anwar" },
+                { item: "Freon R32", qty: "2 Tabung", desc: "Untuk service AC pelanggan" },
+                { item: "Pipa PVC 1/2", qty: "5 Meter", desc: "Instalasi air pipa" },
+                { item: "Kabel NYM", qty: "10 Meter", desc: "Instalasi listrik" },
               ].map((tool, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50">
                   <div className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-black">
@@ -229,6 +260,16 @@ export default function TeknisiDashboard() {
         </div>
 
       </div>
+
+      {toast && (
+        <Toast
+          show={toast.show}
+          title={toast.title}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

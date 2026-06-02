@@ -157,10 +157,10 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-black selection:bg-black selection:text-white">
-      <div className="flex flex-1 flex-col lg:flex-row">
+    <div className="h-screen w-screen overflow-hidden bg-white text-black selection:bg-black selection:text-white">
+      <div className="flex h-full w-full flex-col lg:flex-row">
         {/* LEFT COLUMN: CURATED IMAGE FULL */}
-        <div className="w-full lg:w-1/2 h-48 sm:h-64 lg:h-auto relative overflow-hidden">
+        <div className="hidden lg:block lg:w-1/2 h-full relative overflow-hidden">
           <Image
             src="/images/card.png"
             alt="Architecture"
@@ -172,7 +172,7 @@ function LoginContent() {
         </div>
 
         {/* RIGHT COLUMN: LOGIN FORM (FixIt Style) */}
-        <div className="relative flex flex-1 flex-col justify-center rounded-t-[30px] lg:rounded-t-none lg:rounded-l-[40px] px-6 py-12 lg:px-24 overflow-hidden bg-white lg:-ml-12 z-10 shadow-[-20px_0_50px_rgba(0,0,0,0.05)] border-t lg:border-t-0 lg:border-l border-black/[0.05]">
+        <div className="relative flex flex-1 flex-col justify-center px-10 sm:px-16 lg:px-20 overflow-hidden bg-white z-10 shadow-[-20px_0_50px_rgba(0,0,0,0.05)] h-full">
           {/* Background Decorations */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <motion.div
@@ -207,52 +207,54 @@ function LoginContent() {
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="relative z-10 w-full max-w-md mx-auto"
+            className="relative z-10 w-full max-w-sm mx-auto pt-10 lg:pt-12"
           >
             {/* Logo/Brand Section */}
-            <motion.div variants={itemVariants} className="mb-10 text-center">
-              <motion.div
-                whileHover={{ scale: 1.15, rotate: 12 }}
-                whileTap={{ scale: 0.85 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                className="mx-auto mb-6 flex h-16 w-16 cursor-pointer items-center justify-center rounded-2xl bg-black text-3xl font-black text-white shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
+            <motion.div variants={itemVariants} className="mb-6 text-center">
+              <div
+                className="mx-auto mb-3 flex h-20 w-auto cursor-pointer items-center justify-center"
+                onClick={() => router.push("/home")}
               >
-                F
-              </motion.div>
-              <h1 className="text-xs font-bold text-black sm:text-4xl">
+                <img
+                  src="/images/logo.png"
+                  alt="FixIt Logo"
+                  className="h-20 w-auto object-contain"
+                />
+              </div>
+              <h1 className="text-xs font-bold text-black sm:text-3xl">
                 Welcome!
               </h1>
-              <p className="mt-3 text-sm font-semibold text-[#666]">
+              <p className="mt-2 text-sm font-semibold text-[#666]">
                 Masuk ke akun FixIt Anda
               </p>
             </motion.div>
 
             {/* Login Card */}
-            <motion.div variants={itemVariants} className="p-2">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <motion.div variants={itemVariants} className="p-1">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <motion.div variants={itemVariants}>
                   <label
                     htmlFor="email"
-                    className="mb-2 ml-1 block text-sm font-bold text-black"
+                    className="mb-1.5 ml-1 block text-sm font-bold text-black"
                   >
                     Email
                   </label>
                   <div className="group relative">
-                    <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[#a1a1a1] transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-black" />
+                    <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[#a1a1a1]" />
                     <input
                       id="email"
                       type="email"
                       placeholder="nama@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-2xl border border-black/[0.3] bg-white/50 py-4 pr-4 pl-12 text-sm font-medium outline-none transition-all focus:border-black/30 focus:bg-white focus:ring-[6px] focus:ring-black/[0.04]"
+                      className="w-full rounded-2xl border border-black/[0.2] bg-white/50 py-3 pr-4 pl-12 text-sm font-medium outline-none transition-all focus:border-black/30 focus:bg-white"
                       required
                     />
                   </div>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                  <div className="mb-2 flex items-center justify-between px-1">
+                  <div className="mb-1.5 flex items-center justify-between px-1">
                     <label
                       htmlFor="password"
                       className="block text-sm font-bold text-black"
@@ -267,20 +269,20 @@ function LoginContent() {
                     </Link>
                   </div>
                   <div className="group relative">
-                    <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[#a1a1a1] transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-black" />
+                    <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[#a1a1a1]" />
                     <input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-2xl border border-black/[0.3] bg-white/50 py-4 pr-12 pl-12 text-sm font-medium outline-none transition-all focus:border-black/30 focus:bg-white focus:ring-[6px] focus:ring-black/[0.04]"
+                      className="w-full rounded-2xl border border-black/[0.2] bg-white/50 py-3 pr-12 pl-12 text-sm font-medium outline-none transition-all focus:border-black/30 focus:bg-white"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute top-1/2 right-4 -translate-y-1/2 text-[#a1a1a1] transition-colors hover:text-black"
+                      className="absolute top-1/2 right-4 -translate-y-1/2 text-[#a1a1a1]"
                     >
                       {showPassword ? (
                         <EyeOff className="h-5 w-5" />
@@ -296,7 +298,7 @@ function LoginContent() {
                     variants={itemVariants}
                     disabled={isLoading}
                     type="submit"
-                    className="group relative mt-2 flex h-14 w-full items-center justify-center overflow-hidden rounded-full border border-black/[0.3] bg-white font-bold transition-all duration-300"
+                    className="group relative mt-1 flex h-12 w-full items-center justify-center overflow-hidden rounded-full border border-black/[0.2] bg-white font-bold transition-all duration-300"
                   >
                     {isLoading ? (
                       <Loader2 className="h-5 w-5 animate-spin text-black" />
@@ -319,29 +321,29 @@ function LoginContent() {
                 </div>
               </form>
 
-              <motion.div variants={itemVariants} className="mt-5">
+              <motion.div variants={itemVariants} className="mt-4">
                 <div className="relative flex items-center justify-center">
-                  <span className="absolute w-full border-t border-black/[0.2]"></span>
-                  <span className="relative bg-white px-4 text-sm font-medium tracking-[0.25em] text-[#a1a1a1]">
+                  <span className="absolute w-full border-t border-black/[0.15]"></span>
+                  <span className="relative bg-white px-4 text-xs font-medium tracking-[0.25em] text-[#a1a1a1] uppercase">
                     Atau
                   </span>
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="mt-4 grid grid-cols-2 gap-4">
                   <motion.button
-                    whileHover={{ y: -5, backgroundColor: "rgba(0,0,0,0.03)" }}
+                    whileHover={{ y: -2, backgroundColor: "rgba(0,0,0,0.03)" }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center rounded-2xl border border-black/[0.1] bg-white/50 py-3.5 text-sm font-bold transition-all"
+                    className="flex items-center justify-center rounded-2xl border border-black/[0.1] bg-white/50 py-2.5 text-xs font-bold transition-all"
                   >
-                    <Chrome className="mr-2 h-5 w-5 text-[#EA4335]" />
+                    <Chrome className="mr-2 h-4 w-4 text-[#EA4335]" />
                     Google
                   </motion.button>
                   <motion.button
-                    whileHover={{ y: -5, backgroundColor: "rgba(0,0,0,0.03)" }}
+                    whileHover={{ y: -2, backgroundColor: "rgba(0,0,0,0.03)" }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center rounded-2xl border border-black/[0.1] bg-white/50 py-3.5 text-sm font-bold transition-all"
+                    className="flex items-center justify-center rounded-2xl border border-black/[0.1] bg-white/50 py-2.5 text-xs font-bold transition-all"
                   >
-                    <Github className="mr-2 h-5 w-5" />
+                    <Github className="mr-2 h-4 w-4" />
                     Github
                   </motion.button>
                 </div>
@@ -349,7 +351,7 @@ function LoginContent() {
 
               <motion.p
                 variants={itemVariants}
-                className="mt-5 text-center text-sm font-bold text-[#666]"
+                className="mt-4 text-center text-xs font-bold text-[#666]"
               >
                 Belum punya akun?{" "}
                 <Link

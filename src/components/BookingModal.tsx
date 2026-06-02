@@ -7,6 +7,7 @@ import { X, Calendar, Clock, MapPin, AlignLeft, Shield, CheckCircle2, Loader2, U
 import { orderService } from "@/lib/api/order.service";
 import { useAuth } from "@/hooks/useAuth";
 import { profileService } from "@/lib/api/profile.service";
+import { Toast, ToastType } from "@/components/toast";
 
 export interface ServiceData {
   id: string;
@@ -33,6 +34,13 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const [toast, setToast] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: ToastType;
+  } | null>(null);
 
   // Mencegah scroll pada body saat modal terbuka
   useEffect(() => {
@@ -70,6 +78,7 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
       setDate("");
       setTime("");
       setNotes("");
+      setToast(null);
     }
   }, [isOpen]);
 
@@ -104,15 +113,21 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
         onClose();
       }, 2500);
     } catch (err: any) {
-      console.error("Booking error:", err);
-      alert(err.message || "Maaf, terjadi kesalahan saat memproses pesanan Anda.");
+      console.warn("Booking error:", err);
+      setToast({
+        show: true,
+        title: "Gagal Membuat Pesanan",
+        message: err.message || "Maaf, terjadi kesalahan saat memproses pesanan Anda.",
+        type: "error"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 sm:px-6">
           {/* Backdrop */}
@@ -261,5 +276,15 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
         </div>
       )}
     </AnimatePresence>
+    {toast && (
+      <Toast
+        show={toast.show}
+        title={toast.title}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast(null)}
+      />
+    )}
+    </>
   );
 }

@@ -11,163 +11,71 @@ import {
   FileText, 
   AlertCircle, 
   Check, 
-  X as XIcon
+  X as XIcon,
+  Wrench,
+  Clock
 } from "lucide-react";
-import { Toast, ToastType } from "@/components/toast";
-import { apiClient } from "@/lib/api/api-client";
-
-interface Layanan {
-  nama_layanan: string;
-  harga_dasar: number;
-}
-
-interface Transaction {
-  invoice_number: string;
-  total_bayar: number;
-  status_pembayaran: string | number;
-}
-
-interface Order {
-  id: string;
-  customer_name: string;
-  status_order: "Menunggu Konfirmasi" | "Diterima" | "Ditolak";
-  catatan: string;
-  created_at: string;
-  layanan: Layanan;
-  transactions: Transaction;
-  status?: number;
-  tanggal_order: string;
-  jam: string;
-  id_customer: string;
-}
+import { Toast } from "@/components/toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useVerifikasiOrder, Order } from "@/hooks/useVerifikasiOrder";
 
 export default function OrderVerificationPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { userRole } = useAuth();
+  const {
+    orders,
+    technicians,
+    isLoading,
+    isSubmitting,
+    toast,
+    setToast,
+    fetchOrders,
+    fetchTechnicians,
+    acceptOrderWithTask,
+    rejectOrder,
+  } = useVerifikasiOrder();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"Menunggu Konfirmasi" | "Diterima" | "Ditolak" | "Semua">("Menunggu Konfirmasi");
   
   // State Action Modals
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [actionType, setActionType] = useState<"Diterima" | "Ditolak" | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State Toast
-  const [toast, setToast] = useState({
-    show: false,
-    title: "",
-    message: "",
-    type: "info" as ToastType
-  });
-
-  const showToast = (title: string, message: string, type: ToastType) => {
-    setToast({ show: true, title, message, type });
-  };
-
-  const mapStatusToOrder = (status: number): "Menunggu Konfirmasi" | "Diterima" | "Ditolak" => {
-    if (status === 5) return "Diterima";
-    if (status === 6) return "Ditolak";
-    return "Menunggu Konfirmasi";
-  };
-
-  const fetchOrders = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await apiClient("/api/orders?as=tenant");
-      if (error) {
-        showToast("Gagal", error || "Terjadi kesalahan saat memuat data pesanan.", "error");
-      }
-      if (data) {
-        const rawOrders = data.data || data;
-        const mappedOrders = (Array.isArray(rawOrders) ? rawOrders : []).map((o: any) => {
-          const tx = Array.isArray(o.transactions) ? o.transactions[0] : o.transactions;
-          return {
-            ...o,
-            transactions: tx || null,
-            status_order: mapStatusToOrder(o.status)
-          };
-        });
-
-        // Ambil profil customer secara parallel agar mendapatkan full_name
-        const customerIds = Array.from(new Set(mappedOrders.map((o: any) => o.id_customer).filter(Boolean))) as string[];
-        const profilesMap: Record<string, string> = {};
-        
-        await Promise.all(
-          customerIds.map(async (id) => {
-            try {
-              const res = await apiClient(`/api/profiles/${id}`);
-              const p = res?.data?.data || res?.data || res;
-              if (p && p.full_name) {
-                profilesMap[id] = p.full_name;
-              }
-            } catch (err) {
-              console.error("Gagal memuat profil untuk customer ID:", id, err);
-            }
-          })
-        );
-
-        const finalOrders = mappedOrders.map((o: any) => ({
-          ...o,
-          customer_name: profilesMap[o.id_customer] || "Pelanggan"
-        }));
-
-        setOrders(finalOrders);
-      }
-    } catch (err: any) {
-      console.error(err);
-      showToast("Gagal", "Gagal memuat pesanan dari server.", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // States for Task Creation Form
+  const [selectedTechId, setSelectedTechId] = useState<string>("");
+  const [deadline, setDeadline] = useState<string>("");
+  const [taskName, setTaskName] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+    fetchTechnicians();
+  }, [fetchOrders, fetchTechnicians]);
 
   const handleUpdateStatus = async () => {
     if (!selectedOrder || !actionType) return;
-    try {
-      setIsSubmitting(true);
-      
-      const statusMap: Record<string, number> = {
-        "Diterima": 5,
-        "Ditolak": 6
-      };
-      const targetStatus = statusMap[actionType];
-
-      const { error } = await apiClient(`/api/orders/${selectedOrder.id}`, {
-        method: "PUT",
-        body: { status: targetStatus }
-      });
-
-      if (error) {
-        showToast("Gagal", error || "Gagal memperbarui status pesanan.", "error");
+    
+    let success = false;
+    if (actionType === "Diterima") {
+      const isOwnerTunggal = userRole?.toLowerCase() === "owner tunggal" || userRole?.toLowerCase() === "owner_tunggal";
+      if (!isOwnerTunggal && !selectedTechId) {
+        alert("Harap pilih teknisi terlebih dahulu!");
         return;
       }
-
-      // Perbarui status secara lokal di state
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === selectedOrder.id
-            ? { ...o, status_order: actionType, status: targetStatus }
-            : o
-        )
+      success = await acceptOrderWithTask(
+        selectedOrder.id,
+        isOwnerTunggal ? undefined : selectedTechId,
+        deadline,
+        taskName,
+        description
       );
+    } else {
+      success = await rejectOrder(selectedOrder.id);
+    }
 
-      showToast(
-        "Berhasil", 
-        `Pesanan ${selectedOrder.transactions?.invoice_number || ""} telah ${actionType.toLowerCase()}.`, 
-        "success"
-      );
-      
+    if (success) {
       setSelectedOrder(null);
       setActionType(null);
-    } catch (error: any) {
-      console.error(error);
-      showToast("Gagal", "Terjadi kesalahan saat memproses permintaan.", "error");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -387,6 +295,18 @@ export default function OrderVerificationPage() {
                         onClick={() => {
                           setSelectedOrder(order);
                           setActionType("Diterima");
+                          // Initialize task details
+                          setTaskName(`Pekerjaan: ${order.layanan?.nama_layanan || "Servis"}`);
+                          setDescription(
+                            `Detail pesanan untuk customer ${order.customer_name}. Catatan: ${
+                              order.catatan || "-"
+                            }`
+                          );
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          const formattedDate = tomorrow.toISOString().substring(0, 16);
+                          setDeadline(formattedDate);
+                          setSelectedTechId("");
                         }}
                         className="flex-1 py-2.5 rounded-xl bg-black text-white hover:bg-zinc-800 text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
                       >
@@ -410,21 +330,94 @@ export default function OrderVerificationPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden"
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className={`absolute top-0 left-0 w-full h-1.5 ${actionType === "Diterima" ? "bg-emerald-500" : "bg-red-500"}`}></div>
               
               <h3 className="text-xl font-black text-black mb-3">
-                {actionType === "Diterima" ? "Terima Pesanan ini?" : "Tolak Pesanan ini?"}
+                {actionType === "Diterima" ? "Terima & Buat Tugas" : "Tolak Pesanan ini?"}
               </h3>
               
-              <p className="text-sm font-medium text-gray-600 mb-6 leading-relaxed">
-                Apakah Anda yakin ingin memproses pesanan dari <strong className="text-black">{selectedOrder.customer_name}</strong> dengan layanan <strong className="text-black">"{selectedOrder.layanan?.nama_layanan}"</strong>?
-                <br /><br />
-                Status invoice <strong className="text-black">{selectedOrder.transactions?.invoice_number}</strong> akan diubah menjadi <span className={`font-bold px-1.5 py-0.5 rounded text-xs ${actionType === "Diterima" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{actionType.toUpperCase()}</span>.
-              </p>
+              <div className="flex-1 overflow-y-auto pr-1 space-y-4 text-sm font-medium text-gray-600 mb-6 leading-relaxed">
+                <p>
+                  Apakah Anda yakin ingin memproses pesanan dari <strong className="text-black">{selectedOrder.customer_name}</strong> dengan layanan <strong className="text-black">"{selectedOrder.layanan?.nama_layanan}"</strong>?
+                </p>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                {actionType === "Diterima" && (
+                  <div className="space-y-3 pt-4 border-t border-gray-100">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-black">Detail Tugas Baru</h4>
+                    
+                    {/* Nama Tugas */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-gray-400">Nama Tugas</label>
+                      <input 
+                        type="text"
+                        value={taskName}
+                        onChange={(e) => setTaskName(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-black outline-none focus:border-black transition-all"
+                        placeholder="Nama Tugas"
+                      />
+                    </div>
+
+                    {/* Deskripsi */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-gray-400">Deskripsi Tugas</label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-medium text-gray-600 outline-none focus:border-black transition-all min-h-[70px] resize-none"
+                        placeholder="Deskripsi tugas"
+                      />
+                    </div>
+
+                    {/* Deadline (Date-Time Picker) */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                        <Clock size={12} /> Deadline Pengerjaan
+                      </label>
+                      <input 
+                        type="datetime-local"
+                        value={deadline}
+                        onChange={(e) => setDeadline(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-black outline-none focus:border-black transition-all"
+                      />
+                    </div>
+
+                    {/* Teknisi (Only if NOT owner tunggal) */}
+                    {!(userRole?.toLowerCase() === "owner tunggal" || userRole?.toLowerCase() === "owner_tunggal") ? (
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                          <Wrench size={12} /> Tunjuk Teknisi
+                        </label>
+                        <select
+                          value={selectedTechId}
+                          onChange={(e) => setSelectedTechId(e.target.value)}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-black outline-none focus:border-black transition-all"
+                        >
+                          <option value="">-- Pilih Teknisi Tersedia --</option>
+                          {technicians.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.full_name} ({t.email || "No Email"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs font-semibold">
+                        Info: Anda terdaftar sebagai <strong>Owner Tunggal</strong>. Tugas ini akan secara otomatis ditugaskan kepada diri Anda sendiri.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {actionType === "Ditolak" && (
+                  <p>
+                    Status invoice <strong className="text-black">{selectedOrder.transactions?.invoice_number}</strong> akan diubah menjadi <span className="font-bold px-1.5 py-0.5 rounded text-xs bg-red-50 text-red-700">DITOLAK</span>.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 bg-white shrink-0">
                 <button
                   onClick={() => {
                     setSelectedOrder(null);
@@ -437,8 +430,8 @@ export default function OrderVerificationPage() {
                 </button>
                 <button
                   onClick={handleUpdateStatus}
-                  disabled={isSubmitting}
-                  className={`px-5 py-2.5 flex items-center gap-2 font-bold text-xs text-white rounded-xl shadow-lg transition-all disabled:opacity-75 ${
+                  disabled={isSubmitting || (actionType === "Diterima" && !(userRole?.toLowerCase() === "owner tunggal" || userRole?.toLowerCase() === "owner_tunggal") && !selectedTechId)}
+                  className={`px-5 py-2.5 flex items-center gap-2 font-bold text-xs text-white rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     actionType === "Diterima" 
                       ? "bg-emerald-600 hover:bg-emerald-700" 
                       : "bg-red-600 hover:bg-red-700"
@@ -450,7 +443,7 @@ export default function OrderVerificationPage() {
                       Memproses...
                     </>
                   ) : (
-                    actionType === "Diterima" ? "Ya, Terima" : "Ya, Tolak"
+                    actionType === "Diterima" ? "Ya, Terima & Tugaskan" : "Ya, Tolak"
                   )}
                 </button>
               </div>
@@ -459,13 +452,15 @@ export default function OrderVerificationPage() {
         )}
       </AnimatePresence>
 
-      <Toast
-        show={toast.show}
-        title={toast.title}
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast(prev => ({ ...prev, show: false }))}
-      />
+      {toast && (
+        <Toast
+          show={toast.show}
+          title={toast.title}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

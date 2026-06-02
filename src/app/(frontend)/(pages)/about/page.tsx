@@ -1,445 +1,218 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { motion, Variants } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
-  Wrench,
-  CheckCircle2,
-  ChevronRight,
-  User,
-  Search,
-  Settings,
-  Shield,
-  Clock,
-  ArrowUpRight,
-  Package,
-  BarChart3,
+  Sparkles,
+  Building2,
   Users,
-  Star,
-  Quote,
+  ShieldCheck,
+  TrendingUp,
+  ArrowUpRight,
+  Check,
   Layers,
-  Rocket,
-  Headphones,
+  Wrench
 } from "lucide-react";
 
-export default function LandingPage() {
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  };
+export default function AboutPage() {
+  const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-transparent text-black selection:bg-black selection:text-white selection:rounded-none">
-      <main className="relative z-10">
+    <div className="min-h-screen bg-white text-black selection:bg-black selection:text-white">
+      <main className="relative z-10 px-6 md:px-12 lg:px-20 pt-32 pb-24 max-w-7xl mx-auto space-y-32">
+        
         {/* Hero Section */}
-        {/* Hero Section - Full Background */}
-        <section className="relative w-full min-h-screen flex items-center overflow-hidden">
-          {/* Background Image & Overlay */}
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/images/hero.png"
-              alt="Professional Home Service"
-              fill
-              priority
-              className="object-cover grayscale brightness-75"
-            />
-            <div className="absolute inset-0 bg-black/60" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/20 to-transparent" />
+        <section className="max-w-3xl mx-auto text-center space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/5 text-[9px] font-bold text-black uppercase tracking-wider"
+          >
+            <Sparkles className="h-3 w-3" />
+            Tentang FixIt
+          </motion.div>
+          
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-5xl font-black tracking-tight leading-[1.1] text-black"
+          >
+            Menyatukan Penyedia Jasa <br />
+            <span className="text-gray-400">dengan Kebutuhan Rumah Anda.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-xs sm:text-sm text-gray-500 font-medium leading-relaxed max-w-xl mx-auto"
+          >
+            FixIt hadir sebagai jembatan digital yang menghubungkan pemilik rumah dengan berbagai perusahaan penyedia jasa perbaikan dan perawatan profesional secara terpusat, aman, dan efisien.
+          </motion.p>
+        </section>
+
+        {/* Story Section - Editorial Grid with Image */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center border-t border-black/[0.06] pt-16">
+          <div className="lg:col-span-7 space-y-6">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Misi & Visi</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-black leading-tight">
+              Mendigitalisasi Industri Jasa Servis Rumah Tangga.
+            </h2>
+            <div className="space-y-4 text-xs sm:text-sm text-gray-600 font-medium leading-relaxed">
+              <p>
+                Selama bertahun-tahun, pengusaha jasa perbaikan rumah dan pelanggan seringkali menghadapi kendala koordinasi. Pelanggan kesulitan menemukan teknisi handal yang terverifikasi, sementara perusahaan jasa kesulitan mengelola jadwal, melacak tim di lapangan, serta menjangkau area operasional yang lebih luas secara efektif.
+              </p>
+              <p>
+                FixIt didirikan untuk memecahkan masalah tersebut. Kami tidak hanya membuat platform pencarian bagi pengguna, tetapi juga merancang infrastruktur digital khusus bagi perusahaan jasa untuk naik kelas. Mulai dari manajemen teknisi, dasbor laporan, hingga katalog layanan terintegrasi dapat diakses secara langsung demi menaikkan produktivitas harian.
+              </p>
+            </div>
+          </div>
+          <div className="lg:col-span-5 relative">
+            <div className="relative w-full h-[320px] sm:h-[380px] rounded-2xl overflow-hidden bg-gray-50 border border-black/[0.08] shadow-sm">
+              <Image
+                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=800"
+                alt="FixIt Professional Service"
+                fill
+                className="object-cover transition-transform duration-700 hover:scale-105"
+              />
+            </div>
+            {/* Overlay badge decoration */}
+            <div className="absolute -bottom-4 -left-4 bg-white border border-black/[0.08] p-4 rounded-xl shadow-md hidden sm:flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                <Check className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-black">100% Terverifikasi</p>
+                <p className="text-[8px] text-gray-400 font-bold">Mitra Resmi FixIt</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Ecosystem Pillars - Split Columns without Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 border-t border-black/[0.06] pt-16">
+          {/* Column 1: For Service Partners */}
+          <div className="space-y-6">
+            <div className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center text-black">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-black text-black">Bagi Mitra Perusahaan Jasa</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                Kami menyediakan ekosistem terpadu untuk mendominasi pasar lokal dan mengoptimalkan sistem manajemen internal.
+              </p>
+            </div>
+            <ul className="space-y-3 pt-2">
+              {[
+                { title: "Dasbor Pengawasan Real-time", desc: "Pantau status pengerjaan tugas dan jadwalkan teknisi secara instan." },
+                { title: "Manajemen Katalog Jasa", desc: "Perbarui harga, deskripsi layanan, dan cakupan wilayah secara mandiri." },
+                { title: "Rekap Transaksi Otomatis", desc: "Sistem pencatatan invoice digital yang meminimalisir kesalahan operasional." }
+              ].map((item, idx) => (
+                <li key={idx} className="flex gap-3">
+                  <Check className="h-4 w-4 text-black shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-black">{item.title}</h4>
+                    <p className="text-[11px] text-gray-500 font-medium leading-normal">{item.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="w-full relative z-10 px-6 md:px-12 lg:px-20 pt-32 pb-20">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={containerVariants}
-              className="space-y-10 max-w-3xl"
+          {/* Column 2: For Household Customers */}
+          <div className="space-y-6">
+            <div className="h-10 w-10 rounded-xl bg-black/5 flex items-center justify-center text-black">
+              <Users className="h-5 w-5" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-black text-black">Bagi Pelanggan Rumah Tangga</h3>
+              <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                Kemudahan penuh untuk menjaga fungsionalitas dan kenyamanan rumah Anda tanpa rasa khawatir.
+              </p>
+            </div>
+            <ul className="space-y-3 pt-2">
+              {[
+                { title: "Mitra Resmi Terverifikasi", desc: "Seluruh perusahaan jasa yang bergabung telah melewati penyaringan ketat." },
+                { title: "Pemesanan Katalog Instan", desc: "Pilih jenis layanan, jadwalkan kedatangan, dan pesan langsung dari portal mitra." },
+                { title: "Garansi & Transparansi Biaya", desc: "Biaya jasa yang tertera di katalog bersifat final tanpa biaya tambahan tak terduga." }
+              ].map((item, idx) => (
+                <li key={idx} className="flex gap-3">
+                  <Check className="h-4 w-4 text-black shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-black">{item.title}</h4>
+                    <p className="text-[11px] text-gray-500 font-medium leading-normal">{item.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* Wide Landscape Image Banner */}
+        <section className="relative w-full h-[240px] sm:h-[320px] rounded-2xl overflow-hidden bg-gray-100 border border-black/[0.06] shadow-sm">
+          <Image
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200"
+            alt="Modern Living Space Managed by FixIt"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          <div className="absolute bottom-6 left-6 text-white space-y-1">
+            <h4 className="text-sm sm:text-base font-black">Rumah Nyaman, Tanpa Beban</h4>
+            <p className="text-[10px] sm:text-xs text-white/80 font-medium">Fokus pada kenyamanan Anda, biar kami yang mengurus sisanya.</p>
+          </div>
+        </section>
+
+        {/* Milestones / Impact stats */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-8 border-y border-black/[0.06] py-12 text-center">
+          {[
+            { value: "150+", label: "Mitra Terdaftar" },
+            { value: "12K+", label: "Order Selesai" },
+            { value: "98.4%", label: "Ulasan Puas" },
+            { value: "4.8/5", label: "Rating Rata-rata" }
+          ].map((stat, idx) => (
+            <div key={idx} className="space-y-1.5">
+              <p className="text-3xl font-black text-black tracking-tight">{stat.value}</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* CTA - Editorial Invitation */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
+          <div className="lg:col-span-8 space-y-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/5 text-[9px] font-bold text-black uppercase tracking-wider">
+              <Layers className="h-3 w-3" />
+              Gabung Ekosistem FixIt
+            </span>
+            <h2 className="text-3xl font-black text-black tracking-tight leading-tight">
+              Kembangkan Perusahaan Jasa Anda Bersama Kami.
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium leading-relaxed max-w-xl">
+              Daftarkan usaha Anda hari ini untuk mengakses ribuan calon pelanggan baru dan rasakan kecanggihan pengelolaan operasional berbasis digital terpusat.
+            </p>
+          </div>
+          <div className="lg:col-span-4 lg:justify-self-end flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => router.push("/auth/tenant-register")}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-black hover:bg-black/90 text-white font-black text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
             >
-              <motion.div variants={itemVariants}>
-                <span className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[#a1a1a1] backdrop-blur-md">
-                  Home Service Specialist
-                </span>
-              </motion.div>
-              <motion.h1 
-                variants={itemVariants}
-                className="text-3xl font-black leading-[1.1] text-white sm:text-4xl md:text-5xl lg:text-7xl"
-              >
-                Rumah Nyaman, <br />
-                <span className="text-[#a1a1a1]">Tanpa Beban.</span>
-              </motion.h1>
-              <motion.p 
-                variants={itemVariants}
-                className="max-w-xl text-md font-medium text-gray-300"
-              >
-                Kami menghadirkan teknisi profesional untuk segala kebutuhan servis rumah Anda. Cepat, transparan, dan bergaransi resmi dari FixIt.
-              </motion.p>
-              <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
-                <button className="flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-lg font-bold text-black transition-all hover:bg-white/90 active:scale-95">
-                  Pesan Layanan <ChevronRight className="h-5 w-5" />
-                </button>
-                <button className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/5 backdrop-blur-md transition-colors hover:bg-white/10 text-white">
-                  <Search className="h-6 w-6" />
-                </button>
-              </motion.div>
-
-            </motion.div>
+              Mulai Kemitraan
+              <ArrowUpRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => router.push("/partners")}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-black font-black text-xs transition-all border border-black/5 active:scale-95 cursor-pointer"
+            >
+              Cari Perusahaan Jasa
+              <Wrench className="h-4 w-4" />
+            </button>
           </div>
         </section>
 
-
-        {/* Highlight Features Section */}
-        <section className="py-20 bg-gray-50/30">
-          <div className="w-full px-6 md:px-12 lg:px-20">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {[
-                {
-                  title: "Manajemen Inventori",
-                  desc: "Pantau stok suku cadang secara real-time. Notifikasi otomatis saat stok menipis untuk mencegah kendala layanan.",
-                  icon: <Package className="h-6 w-6 text-white" />,
-                },
-                {
-                  title: "Laporan Profit Otomatis",
-                  desc: "Data keuangan yang akurat dan instan. Visualisasi keuntungan harian hingga tahunan dalam genggaman Anda.",
-                  icon: <BarChart3 className="h-6 w-6 text-white" />,
-                },
-                {
-                  title: "Monitoring Teknisi",
-                  desc: "Pantau lokasi dan status pekerjaan teknisi di lapangan melalui dashboard terpusat yang responsif.",
-                  icon: <Users className="h-6 w-6 text-white" />,
-                },
-              ].map((feature, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -5 }}
-                  className="rounded-3xl border border-black/[0.05] bg-white p-10 shadow-[0_10px_40px_rgba(0,0,0,0.02)]"
-                >
-                  <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-black">
-                    {feature.icon}
-                  </div>
-                  <h3 className="mb-4 text-xl font-black">{feature.title}</h3>
-                  <p className="text-sm font-medium leading-relaxed text-[#666]">
-                    {feature.desc}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Feature Section (Grid 12) */}
-        <section className="py-24 bg-white/50">
-          <div className="w-full px-6 md:px-12 lg:px-20">
-            {/* Section Header */}
-            <div className="mb-16 max-w-2xl">
-              <motion.h2 
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="font-black text-4xl mb-4"
-              >
-                Pesan Jasa Servis
-              </motion.h2>
-              <motion.p 
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="text-md font-medium text-[#666]"
-              >
-                Marketplace terintegrasi yang menghubungkan pelanggan dengan teknisi ahli di berbagai bidang layanan untuk kebutuhan harian Anda.
-              </motion.p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-              {/* Primary Card: AC & Electronics */}
-              <motion.div 
-                whileHover={{ scale: 1.01 }}
-                className="relative min-h-[500px] overflow-hidden rounded-2xl border border-black/[0.1] lg:col-span-8 group shadow-lg"
-              >
-                <Image 
-                  src="/images/ac.png" 
-                  alt="Servis AC & Elektronik" 
-                  fill 
-                  className="object-cover grayscale transition-transform duration-700 group-hover:scale-110" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                
-                <div className="absolute top-8 left-8">
-                  <span className="rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/20">
-                    Paling Dicari
-                  </span>
-                </div>
-
-                <div className="absolute bottom-10 left-10 right-10">
-                  <h3 className="text-3xl font-bold text-white md:text-4xl">Servis AC & Elektronik</h3>
-                  <p className="mt-3 max-w-sm text-sm font-medium text-white/70">
-                    Layanan perawatan rutin dan perbaikan AC oleh teknisi tersertifikasi dengan jaminan kualitas terbaik.
-                  </p>
-                </div>
-                <button className="absolute bottom-10 right-10 h-14 w-14 flex items-center justify-center rounded-full bg-white text-black transition-transform hover:scale-110">
-                  <ArrowUpRight className="h-6 w-6" />
-                </button>
-              </motion.div>
-
-              {/* Secondary Column: Automotive & Plumbing */}
-              <div className="flex flex-col gap-8 lg:col-span-4">
-                {/* Automotive Card */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="relative min-h-[240px] flex-1 overflow-hidden rounded-2xl border border-black/[0.1] group shadow-md"
-                >
-                  <Image 
-                    src="/images/automotive.png" 
-                    alt="Otomotif" 
-                    fill 
-                    className="object-cover grayscale transition-all duration-700 group-hover:scale-110 group-hover:grayscale-0" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-8 left-8">
-                    <h4 className="text-xl font-bold text-white">Otomotif</h4>
-                    <p className="mt-1 text-xs font-medium text-white/60">Servis rutin hingga tune-up kendaraan harian.</p>
-                  </div>
-                </motion.div>
-
-                {/* Plumbing Card */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="relative min-h-[240px] flex-1 overflow-hidden rounded-2xl border border-black/[0.1] group shadow-md"
-                >
-                  <Image 
-                    src="/images/plumbing.png" 
-                    alt="Plumbing & Pipa" 
-                    fill 
-                    className="object-cover grayscale transition-all duration-700 group-hover:scale-110 group-hover:grayscale-0" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-8 left-8">
-                    <h4 className="text-xl font-bold text-white">Plumbing & Pipa</h4>
-                    <p className="mt-1 text-xs font-medium text-white/60">Solusi tuntas untuk segala masalah instalasi air rumah.</p>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Services List Section */}
-        <section className="bg-black/[0.02] py-24">
-          <div className="w-full px-6 md:px-12 lg:px-20">
-            <div className="mb-8">
-              <div className="mb-10 space-y-2">
-                <h2 className="text-4xl font-black md:text-5xl">Layanan Kami</h2>
-                <p className="text-md font-medium text-[#666]">Kategori servis yang paling sering dibutuhkan.</p>
-              </div>
-              
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                {/* Search Bar */}
-                <div className="relative flex max-w-md flex-1 items-center">
-                  <Search className="absolute left-4 h-4 w-4 text-[#a1a1a1]" />
-                  <input 
-                    type="text" 
-                    placeholder="Cari layanan servis..." 
-                    className="w-full rounded-full border border-black/[0.1] bg-white py-3 pl-11 pr-6 text-sm font-medium outline-none focus:border-black transition-colors"
-                  />
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex items-center gap-4 self-end rounded-full border border-black/[0.1] bg-white px-4 py-2 sm:self-auto">
-                  <span className="text-sm font-bold text-black">Semua</span>
-                  <div className="h-4 w-px bg-black/[0.1]" />
-                  <span className="text-sm font-bold text-[#a1a1a1]">Pipa</span>
-                  <span className="text-sm font-bold text-[#a1a1a1]">Listrik</span>
-                  <span className="text-sm font-bold text-[#a1a1a1]">AC</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex overflow-x-auto gap-8 pb-12 pt-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6">
-              {[
-                { name: "Servis & Cuci AC", price: "Mulai 75rb", info: "Pembersihan rutin, isi freon, & perbaikan mesin.", icon: <Settings className="h-6 w-6" /> },
-                { name: "Perbaikan Instalasi Pipa", price: "Mulai 150rb", info: "Mendeteksi kebocoran, wastafel mampet, & pompa air.", icon: <Wrench className="h-6 w-6" /> },
-                { name: "Instalasi & Servis Listrik", price: "Mulai 100rb", info: "Pasang titik baru, servis panel, & perbaikan korsleting.", icon: <Settings className="h-6 w-6" /> },
-                { name: "Servis Mesin Cuci", price: "Mulai 120rb", info: "Perbaikan modul, bocor air, & ganti mesin pengering.", icon: <Settings className="h-6 w-6" /> },
-                { name: "Perbaikan Water Heater", price: "Mulai 200rb", info: "Servis pemanas air gas/listrik & penggantian elemen.", icon: <Settings className="h-6 w-6" /> },
-                { name: "Pembersihan Tandon Air", price: "Mulai 90rb", info: "Kuras tangki air, pembersihan jamur & lumut.", icon: <Wrench className="h-6 w-6" /> }
-              ].map((service, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -10 }}
-                  className="group relative flex w-[280px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl border border-black/[0.1] bg-white p-8 transition-all hover:border-black shadow-sm hover:shadow-xl"
-                >
-                  <div className="space-y-6">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-black text-white transition-all group-hover:scale-110">
-                      {service.icon}
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-bold leading-tight">{service.name}</h4>
-                      <p className="mt-2 text-xs font-medium leading-relaxed text-[#666]">{service.info}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex items-center justify-between border-t border-black/[0.05] pt-6">
-                    <span className="text-lg font-bold">{service.price}</span>
-                    <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-all hover:scale-110 active:scale-95">
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Why ServisHub? Section */}
-        <section className="py-24 bg-gray-50/50">
-          <div className="w-full px-6 md:px-12 lg:px-20">
-            <div className="mb-20 text-center">
-              <h2 className="text-4xl font-black mb-6">Mengapa FixtIt?</h2>
-              <div className="mx-auto h-1 w-16 bg-black rounded-full" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                {
-                  title: "Enterprise Security",
-                  desc: "Keamanan data tingkat bank dengan enkripsi end-to-end yang menjamin privasi bisnis Anda.",
-                  icon: <Shield className="h-6 w-6" />
-                },
-                {
-                  title: "Multi-tenant Isolation",
-                  desc: "Infrastruktur cloud yang memisahkan data antar tenant untuk performa maksimal dan keamanan.",
-                  icon: <Layers className="h-6 w-6" />
-                },
-                {
-                  title: "24/7 Support",
-                  desc: "Tim ahli kami siap membantu kendala operasional Anda kapan saja melalui live chat dan telepon.",
-                  icon: <Headphones className="h-6 w-6" />
-                },
-                {
-                  title: "Infinite Scalability",
-                  desc: "Platform yang tumbuh bersama bisnis Anda, dari 1 teknisi hingga ribuan cabang di seluruh Indonesia.",
-                  icon: <Rocket className="h-6 w-6" />
-                }
-              ].map((feature, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="text-center group"
-                >
-                  <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-black/[0.05] transition-colors group-hover:bg-black group-hover:text-white">
-                    {feature.icon}
-                  </div>
-                  <h3 className="mb-4 text-xl font-black">{feature.title}</h3>
-                  <p className="text-sm font-medium leading-relaxed text-[#666]">
-                    {feature.desc}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section className="py-24 bg-white relative z-10">
-          <div className="w-full px-6 md:px-12 lg:px-20">
-            <div className="mb-16 text-center">
-              <h2 className="text-4xl font-black mb-4 text-black">Apa Kata Mereka?</h2>
-              <p className="text-lg font-medium text-[#666]">Pengalaman nyata dari pelanggan setia FixIt.</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {[
-                {
-                  name: "Budi Santoso",
-                  role: "Pemilik Rumah",
-                  content: "Sangat profesional. AC rumah jadi dingin lagi hanya dalam waktu 30 menit. Teknisi sangat mengerti apa yang dilakukan.",
-                  avatar: "/images/budi.png",
-                  rating: 5
-                },
-                {
-                  name: "Maya Kartika",
-                  role: "Pelaku Bisnis",
-                  content: "Sistem pelaporannya sangat membantu bisnis saya. Profit harian terpantau jelas dan transparan.",
-                  avatar: "/images/maya.png",
-                  rating: 5
-                },
-                {
-                  name: "Hendra Wijaya",
-                  role: "Karyawan Swasta",
-                  content: "Teknisi sangat ramah dan berpakaian rapi. Sangat nyaman untuk layanan di dalam rumah. Pasti langganan!",
-                  avatar: "/images/hendra.png",
-                  rating: 5
-                }
-              ].map((testimonial, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -5 }}
-                  className="relative rounded-2xl border border-black/30 bg-white p-10 shadow-sm hover:shadow-xl transition-all"
-                >
-                  <Quote className="absolute top-8 right-10 h-10 w-10 text-black/[0.03]" />
-                  
-                  <div className="flex gap-1 mb-6">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-black text-black" />
-                    ))}
-                  </div>
-
-                  <p className="text-md font-medium leading-relaxed mb-10 italic text-black">
-                    "{testimonial.content}"
-                  </p>
-
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-black/[0.05]">
-                      <Image
-                        src={testimonial.avatar}
-                        alt={testimonial.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-black">{testimonial.name}</h4>
-                      <p className="text-xs font-bold text-[#a1a1a1] uppercase">{testimonial.role}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );

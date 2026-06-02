@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Briefcase, 
@@ -9,179 +10,249 @@ import {
   ChevronDown, 
   MoreVertical,
   Users,
-  Clock
+  Clock,
+  Wrench,
+  CheckCircle2,
+  AlertCircle,
+  MapPin,
+  Calendar,
+  Loader2
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useTasks } from "@/hooks/useTasks";
+import { Toast } from "@/components/toast";
 
 export default function TenantDashboard() {
+  const { userRole } = useAuth();
+  const {
+    tasks,
+    isLoading,
+    fetchTasks,
+    updateTaskStatus,
+    toast,
+    setToast,
+  } = useTasks();
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  const isOwnerTunggal = userRole?.toLowerCase() === "owner tunggal" || userRole?.toLowerCase() === "owner_tunggal";
+
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'Dalam Perjalanan': return 'bg-blue-50 text-blue-600 border-blue-200';
+      case 'Menunggu': return 'bg-amber-50 text-amber-600 border-amber-200';
+      case 'Selesai': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+      case 'Dibatalkan': return 'bg-red-50 text-red-600 border-red-200';
+      default: return 'bg-gray-50 text-gray-600 border-gray-200';
+    }
+  };
+
+  // Hitung statistik berdasarkan tugas riil
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === "Selesai").length;
+  const activeTasks = tasks.filter(t => t.status === "Dalam Perjalanan" || t.status === "Menunggu").length;
+
   return (
     <div className="p-4 sm:p-8 md:p-12 space-y-8 md:space-y-12 w-full overflow-hidden">
-          
-          {/* STATS ROW */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {[
-              { label: "Pendapatan Tenant", value: "Rp 42.8M", trend: "+8.2%", color: "text-emerald-500", icon: <TrendingUp size={20} /> },
-              { label: "Pesanan Masuk", value: "156", trend: "+12.5%", color: "text-blue-500", icon: <Briefcase size={20} /> },
-              { label: "Rating Tenant", value: "4.9", trend: "+0.3", color: "text-amber-500", icon: <Star size={20} className="fill-current" /> },
-              { label: "Teknisi Aktif", value: "12", trend: "Tetap", color: "text-purple-500", icon: <Users size={20} /> },
-            ].map((stat, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="group rounded-xl border border-gray-300 bg-white p-4 sm:p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-black/5 flex flex-col sm:block"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2 sm:gap-0">
-                  <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-2xl bg-black/[0.03] flex items-center justify-center shrink-0 transition-colors group-hover:bg-black group-hover:text-white`}>
-                    <div className="scale-75 sm:scale-100">{stat.icon}</div>
-                  </div>
-                  <span className={`w-fit rounded-md sm:rounded-lg border px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[10px] uppercase tracking-tighter font-black ${
-                    stat.trend.startsWith('+') 
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                      : 'bg-gray-50 text-gray-600 border-gray-100'
-                  }`}>
-                    {stat.trend}
-                  </span>
-                </div>
-                <div className="mt-auto sm:mt-0">
-                  <p className="text-[9px] sm:text-xs font-medium text-gray-600 mb-0.5 sm:mb-1 line-clamp-1">{stat.label}</p>
-                  <h3 className="text-lg sm:text-2xl font-bold tracking-tight leading-none">{stat.value}</h3>
-                </div>
-              </motion.div>
-            ))}
+      
+      {/* STATS ROW */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        {[
+          { label: "Total Pekerjaan", value: totalTasks.toString(), trend: "Aktif", color: "text-blue-500", icon: <Briefcase size={20} /> },
+          { label: "Pekerjaan Aktif", value: activeTasks.toString(), trend: `${activeTasks} tugas`, color: "text-amber-500", icon: <Clock size={20} /> },
+          { label: "Pekerjaan Selesai", value: completedTasks.toString(), trend: `${completedTasks} tugas`, color: "text-emerald-500", icon: <CheckCircle2 size={20} /> },
+          { label: "Role Anda", value: isOwnerTunggal ? "Owner Tunggal" : "Owner Tenant", trend: "Sistem", color: "text-purple-500", icon: <Users size={20} /> },
+        ].map((stat, i) => (
+          <motion.div 
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="group rounded-xl border border-gray-300 bg-white p-4 sm:p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-black/5 flex flex-col sm:block"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2 sm:gap-0">
+              <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-2xl bg-black/[0.03] flex items-center justify-center shrink-0 transition-colors group-hover:bg-black group-hover:text-white`}>
+                <div className="scale-75 sm:scale-100">{stat.icon}</div>
+              </div>
+              <span className={`w-fit rounded-md sm:rounded-lg border px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[10px] uppercase tracking-tighter font-black bg-gray-50 text-gray-600 border-gray-100`}>
+                {stat.trend}
+              </span>
+            </div>
+            <div className="mt-auto sm:mt-0">
+              <p className="text-[9px] sm:text-xs font-medium text-gray-600 mb-0.5 sm:mb-1 line-clamp-1">{stat.label}</p>
+              <h3 className="text-lg sm:text-2xl font-bold tracking-tight leading-none">{stat.value}</h3>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* CONDITIONAL CONTENT BASED ON OWNER TUNGGAL OR REGULAR OWNER */}
+      {isOwnerTunggal ? (
+        /* OWNER TUNGGAL VIEW: MY PERSONAL TASKS CARD GRID */
+        <section className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-black text-black">Tugas Mandiri Saya</h2>
+              <p className="text-xs font-medium text-gray-500">Kelola dan kerjakan pesanan pelanggan Anda secara langsung.</p>
+            </div>
           </div>
 
-          {/* PERFORMANCE CHART SECTION */}
-          <section className="rounded-xl border border-gray-300 bg-white p-5 sm:p-10 shadow-sm relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-12 gap-4 sm:gap-0">
-              <div>
-                <h2 className="text-xl font-bold mb-1">Statistik Pesanan</h2>
-                <p className="text-xs font-medium text-gray-600">Grafik permintaan servis pada tenant Anda</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button className="h-10 px-4 rounded-xl border border-black/[0.05] text-xs font-black flex items-center gap-2 hover:bg-black/[0.03]">
-                  Mingguan <ChevronDown size={14} />
-                </button>
-                <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-black text-white shadow-lg transition-all hover:scale-105 active:scale-95">
-                  <Plus size={18} />
-                </button>
-              </div>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
+              <Loader2 className="h-10 w-10 animate-spin text-black mb-4" />
+              <h3 className="text-sm font-bold text-black">Memuat data tugas Anda...</h3>
             </div>
+          ) : tasks.length === 0 ? (
+            <div className="py-16 flex flex-col items-center justify-center text-center border border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
+              <AlertCircle size={32} className="text-gray-400 mb-3" />
+              <h3 className="text-sm font-bold text-black mb-1">Belum Ada Tugas</h3>
+              <p className="text-xs font-medium text-gray-500 max-w-sm">
+                Silakan terima pesanan baru di halaman verifikasi order untuk membuat tugas otomatis.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tasks.map((task, i) => (
+                <motion.div
+                  key={task.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group flex flex-col shadow-sm"
+                >
+                  <div className="p-5 border-b border-gray-100 bg-gray-50/30 flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase">Tugas Mandiri</span>
+                        <div className={`px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 ${getStatusColor(task.status)}`}>
+                          {task.status === 'Dalam Perjalanan' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
+                          {task.status}
+                        </div>
+                      </div>
+                      <h3 className="text-base font-black text-black leading-tight group-hover:text-blue-600 transition-colors">{task.serviceName}</h3>
+                    </div>
+                  </div>
 
-            {/* Simulated SVG Chart */}
-            <div className="relative w-full mt-6 sm:mt-8 aspect-[10/3] min-h-[150px]">
-              <svg className="h-full w-full overflow-visible" viewBox="-60 -20 1080 380">
-                {/* Grid Lines and Y-Axis */}
-                {[0, 1, 2, 3].map((i) => (
-                  <g key={`y-${i}`}>
-                    <text x="-20" y={i * 100 + 8} fill="#a1a1aa" fontSize="24" fontWeight="600" textAnchor="end">
-                      {30 - i * 10}
-                    </text>
-                    <line x1="0" y1={i * 100} x2="1000" y2={i * 100} stroke="#f0f0f0" strokeWidth="1" />
-                  </g>
-                ))}
-                
-                {/* X-Axis Labels */}
-                {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map((day, i) => (
-                  <text key={day} x={i * (1000 / 6)} y="350" fill="#a1a1aa" fontSize="24" fontWeight="600" textAnchor="middle">
-                    {day}
-                  </text>
-                ))}
-                <defs>
-                  <linearGradient id="tenantChartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f97316" stopOpacity="0.1" />
-                    <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path 
-                  d="M0,280 Q150,200 300,220 T600,100 T1000,150 V300 H0 Z" 
-                  fill="url(#tenantChartGradient)"
-                />
-                <motion.path 
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 2, ease: "easeInOut" }}
-                  d="M0,280 Q150,200 300,220 T600,100 T1000,150" 
-                  fill="none" 
-                  stroke="#f97316" 
-                  strokeWidth="3" 
-                  strokeLinecap="round"
-                />
-                <circle cx="600" cy="100" r="6" fill="#f97316" stroke="white" strokeWidth="2" />
-              </svg>
-              
-              <div 
-                className="absolute rounded-xl bg-black p-3 text-white shadow-2xl transform -translate-x-1/2 -translate-y-[calc(100%+12px)]"
-                style={{ top: '33%', left: '60%' }}
-              >
-                <p className="text-[10px] font-bold opacity-50">Hari Ini</p>
-                <p className="text-xs font-black whitespace-nowrap">24 Pesanan</p>
-              </div>
-            </div>
-          </section>
+                  <div className="p-5 space-y-3 flex-grow text-xs font-semibold text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <Users size={14} className="text-gray-400" />
+                      <span className="text-black font-bold">{task.customerName}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
+                      <span className="leading-snug">{task.address}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-gray-400" />
+                      <span>{task.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-gray-400" />
+                      <span>{task.time}</span>
+                    </div>
+                  </div>
 
-          {/* RECENT ORDERS TABLE */}
-          <section className="rounded-xl border border-gray-300 bg-white shadow-sm overflow-hidden mt-6 sm:mt-0">
-            <div className="p-4 sm:p-6 border-b border-gray-300 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold mb-1">Pesanan Terbaru</h2>
-                <p className="text-xs font-medium text-[#a1a1a1]">Daftar permintaan servis yang masuk ke tenant Anda</p>
-              </div>
-              <button className="h-9 px-4 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-black shadow-sm transition-all hover:bg-black/[0.03] active:scale-95">
-                Kelola Semua
-              </button>
+                  <div className="p-4 border-t border-gray-100 bg-gray-50/30 flex justify-end gap-2">
+                    {task.status !== 'Selesai' && task.status !== 'Dibatalkan' && (
+                      <button
+                        onClick={() =>
+                          updateTaskStatus(
+                            task.id,
+                            task.status === 'Menunggu' ? 'Dalam Perjalanan' : 'Selesai'
+                          )
+                        }
+                        className="w-full py-2 rounded-xl bg-black text-white text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-all active:scale-95 shadow-sm text-center"
+                      >
+                        {task.status === 'Menunggu' ? 'Mulai Tugas' : 'Selesaikan Pekerjaan'}
+                      </button>
+                    )}
+                    {task.status === 'Selesai' && (
+                      <div className="w-full py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 text-[10px] font-bold uppercase tracking-wider text-center cursor-not-allowed">
+                        Selesai
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
             </div>
-            
+          )}
+        </section>
+      ) : (
+        /* REGULAR OWNER VIEW: STAFF TASK MONITORING TABLE */
+        <section className="rounded-xl border border-gray-300 bg-white shadow-sm overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-gray-300">
+            <h2 className="text-lg font-bold mb-1">Monitoring Tugas Teknisi</h2>
+            <p className="text-xs font-medium text-gray-500">Pantau progres pekerjaan yang sedang ditangani oleh staf teknisi Anda.</p>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-black mb-3" />
+              <p className="text-xs font-bold text-gray-500">Memuat data monitoring tugas...</p>
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="py-16 flex flex-col items-center justify-center text-center text-gray-500">
+              <AlertCircle size={28} className="mb-2" />
+              <p className="text-xs font-bold">Belum ada tugas pengerjaan yang dibuat di tenant ini.</p>
+            </div>
+          ) : (
             <div className="overflow-x-auto pb-4">
               <table className="w-full text-left min-w-[800px]">
                 <thead>
-                  <tr className="bg-black/[0.02] text-[10px] font-medium uppercase tracking-widest text-[#a1a1a1]">
-                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">ID</th>
-                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">LAYANAN</th>
+                  <tr className="bg-black/[0.02] text-[10px] font-medium uppercase tracking-widest text-gray-400">
+                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">NAMA TUGAS</th>
+                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">PELANGGAN</th>
                     <th className="px-4 sm:px-8 py-4 whitespace-nowrap">TEKNISI</th>
-                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">WAKTU</th>
-                    <th className="px-4 sm:px-8 py-4 text-right whitespace-nowrap">BIAYA</th>
+                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">DEADLINE</th>
                     <th className="px-4 sm:px-8 py-4 text-center whitespace-nowrap">STATUS</th>
-                    <th className="px-4 sm:px-8 py-4"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/[0.03]">
-                  {[
-                    { id: "#T-701", service: "Service AC Split", tech: "Rian H.", time: "14:00 WIB", amount: "Rp 150.000", status: "Terjadwal", sc: "bg-blue-50 text-blue-600 border-blue-100" },
-                    { id: "#T-702", service: "Cuci AC (2 Unit)", tech: "Budi S.", time: "15:30 WIB", amount: "Rp 200.000", status: "Selesai", sc: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-                    { id: "#T-703", service: "Perbaikan Kompresor", tech: "Dedi K.", time: "16:15 WIB", amount: "Rp 850.000", status: "Proses", sc: "bg-amber-50 text-amber-600 border-amber-100" },
-                    { id: "#T-704", service: "Isi Freon R32", tech: "Rian H.", time: "Besok, 09:00", amount: "Rp 350.000", status: "Menunggu", sc: "bg-gray-50 text-gray-600 border-gray-100" },
-                  ].map((row, i) => (
-                    <tr key={i} className="text-xs font-bold transition-all hover:bg-black/[0.01]">
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 text-black/40 text-[10px] font-black whitespace-nowrap">{row.id}</td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">{row.service}</td>
+                  {tasks.map((task) => (
+                    <tr key={task.id} className="text-xs font-bold transition-all hover:bg-black/[0.01]">
+                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                        <span className="block text-black">{task.serviceName}</span>
+                      </td>
+                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">{task.customerName}</td>
                       <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-[8px] font-black shrink-0">{row.tech[0]}</div>
-                          {row.tech}
+                          <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-[8px] font-black shrink-0 border border-gray-200">
+                            {task.technicianName.charAt(0)}
+                          </div>
+                          {task.technicianName}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 flex items-center gap-2 whitespace-nowrap">
-                        <Clock size={12} className="text-[#a1a1a1] shrink-0" />
-                        {row.time}
+                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Clock size={12} className="shrink-0" />
+                          <span>{task.date} {task.time}</span>
+                        </div>
                       </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-bold whitespace-nowrap">{row.amount}</td>
                       <td className="px-4 sm:px-8 py-4 sm:py-6 text-center whitespace-nowrap">
-                        <span className={`rounded-lg border px-2.5 py-1 text-[10px] uppercase tracking-tighter font-bold ${row.sc}`}>
-                          {row.status}
+                        <span className={`rounded-lg border px-2.5 py-1 text-[9px] uppercase tracking-wider font-black ${getStatusColor(task.status)}`}>
+                          {task.status}
                         </span>
-                      </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 text-right whitespace-nowrap">
-                        <button className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-black/[0.05] transition-colors ml-auto">
-                          <MoreVertical size={14} className="text-[#a1a1a1]" />
-                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </section>
+          )}
+        </section>
+      )}
+
+      {toast && (
+        <Toast
+          show={toast.show}
+          title={toast.title}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

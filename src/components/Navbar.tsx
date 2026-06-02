@@ -149,14 +149,18 @@ export default function Navbar() {
       <nav className="fixed top-6 left-0 right-0 z-50 flex flex-col items-center px-4 pointer-events-none">
         <div className="flex w-full max-w-7xl items-center justify-between rounded-xl bg-transparent border border-black/5 shadow-xl px-4 md:px-10 py-2 backdrop-blur-sm pointer-events-auto">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2.5 group">
             <motion.div
-              whileHover={{ rotate: 12, scale: 1.1 }}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white font-black"
+              whileHover={{ rotate: 8, scale: 1.05 }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl overflow-hidden shrink-0"
             >
-              F
+              <img
+                src="/images/logo-icon.png"
+                alt="FixIt Logo"
+                className="h-full w-full object-contain"
+              />
             </motion.div>
-            <span className="text-xl font-black tracking-tight text-black">
+            <span className="text-lg font-black tracking-tight text-black">
               FixIt
             </span>
           </Link>
@@ -165,7 +169,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-10 text-sm font-bold text-[#666]">
             {[
               { label: "Home", href: "/home" },
-              { label: "Services", href: "/service" },
+              { label: "Partners", href: "/partners" },
               { label: "About", href: "/about" },
               { label: "Contact", href: "/contact" },
             ].map((item) => {
@@ -278,9 +282,10 @@ export default function Navbar() {
             <div className="flex flex-col gap-4 text-center font-bold">
               {[
                 { label: "Home", href: "/home" },
-                { label: "Services", href: "#" },
+                { label: "Services", href: "/services" },
+                { label: "Partners", href: "/partners" },
                 { label: "About", href: "/about" },
-                { label: "Contact", href: "#" },
+                { label: "Contact", href: "/contact" },
               ].map((item) => (
                 <Link
                   key={item.label}

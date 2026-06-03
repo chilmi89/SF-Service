@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySessionToken } from '@/lib/session';
 import cloudinary from '@/lib/cloudinary';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 /**
  * @swagger
@@ -16,12 +17,30 @@ import cloudinary from '@/lib/cloudinary';
  *   get:
  *     summary: Mendapatkan detail profil berdasarkan ID
  *     tags: [Profiles]
+ *     description: |
+ *       Mengambil profil lengkap satu pengguna beserta relasi email dan nama tenant.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Menerima parameter `id` profil.
+ *       2. Menggabungkan data dari tabel `profiles`, `auth_users` (email), dan `tenants` (nama bisnis).
  *     responses:
  *       200:
  *         description: Berhasil
  *   put:
  *     summary: Memperbarui data profil (Mendukung upload file avatar)
  *     tags: [Profiles]
+ *     description: |
+ *       Fungsi untuk user mengedit pengaturan akun dan profilnya sendiri, termasuk ganti foto.
+ *       **Batasan (Rate Limit): Edit profil hanya dapat dilakukan 1 kali dalam seminggu.** (Kecuali bagi user baru yang pertama kali melengkapi profilnya).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Pengecekan sesi & validasi token login.
+ *       2. Memastikan user hanya mengedit ID profil miliknya (kecuali Super Admin).
+ *       3. **Rate Limiting**: Mengecek apakah ini adalah "Edit Profil" (profil sebelumnya sudah lengkap). Jika ya, batasi 1x seminggu.
+ *       4. Mendeteksi apakah input berisi `multipart/form-data` (foto) atau Base64.
+ *       5. Melakukan kompresi dan upload otomatis ke **Cloudinary**.
+ *       6. Menyimpan pembaruan URL foto dan biodata ke tabel `profiles`.
+ *       7. *Otomatis update credentials*: Jika JSON memuat `email` atau `password` baru, otomatis bcrypt-hash ulang lalu update ke tabel `auth_users`.
  *     requestBody:
  *       required: true
  *       content:
@@ -51,9 +70,17 @@ import cloudinary from '@/lib/cloudinary';
  *     responses:
  *       200:
  *         description: Berhasil diperbarui
+ *       429:
+ *         description: Batas edit profil tercapai
  *   delete:
  *     summary: Menghapus profil
  *     tags: [Profiles]
+ *     description: |
+ *       Menghapus sebuah profil pengguna (hapus akun).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Verifikasi otorisasi pengguna.
+ *       2. Menghapus data akun secara spesifik.
  *     responses:
  *       204:
  *         description: Berhasil dihapus
@@ -114,7 +141,7 @@ export async function PUT(
     // 2. Ambil data profil lama untuk pengecekan kepemilikan
     const { data: existingProfile, error: fetchError } = await supabaseAdmin
       .from('profiles')
-      .select('user_id')
+      .select('user_id, full_name, phone')
       .eq('id', id)
       .single();
 
@@ -125,6 +152,23 @@ export async function PUT(
     // 3. Keamanan: User hanya boleh mengedit profilnya sendiri (kecuali admin jika nanti ada logicnya)
     if (existingProfile.user_id !== (decoded as any).userId) {
       return NextResponse.json({ error: 'Anda tidak memiliki akses untuk mengedit profil ini.' }, { status: 403 });
+    }
+
+    // 3.5 Pengecekan Limitasi Edit Profil (1 minggu sekali)
+    // Jika profil sudah ada datanya (full_name dan phone tidak kosong), maka dihitung sebagai "Edit"
+    const isEditing = existingProfile.full_name && existingProfile.full_name.trim() !== "" && 
+                      existingProfile.phone && existingProfile.phone.trim() !== "";
+                      
+    if (isEditing) {
+      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+      const rateLimit = await checkRateLimit('edit_profile', id.toString(), 1, ONE_WEEK_MS);
+      
+      if (!rateLimit.allowed) {
+        const daysLeft = Math.ceil(rateLimit.remainingMs / (24 * 60 * 60 * 1000));
+        return NextResponse.json({ 
+          error: `Anda hanya diizinkan mengedit profil 1 kali dalam seminggu. Silakan tunggu ${daysLeft} hari lagi.` 
+        }, { status: 429 });
+      }
     }
 
     const contentType = request.headers.get('content-type') || '';

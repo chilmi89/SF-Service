@@ -21,10 +21,10 @@ import {
 
 export default function SuperAdminDashboard() {
   return (
-    <div className="p-8 md:p-12 space-y-12">
+    <div className="p-4 sm:p-8 md:p-12 space-y-8 md:space-y-12 w-full overflow-hidden">
           
           {/* STATS ROW */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {[
               { label: "Total Pendapatan", value: "Rp 128.4M", trend: "+12.5%", color: "text-emerald-500", icon: <TrendingUp size={20} /> },
               { label: "Permintaan Aktif", value: "842", trend: "+5.2%", color: "text-blue-500", icon: <Briefcase size={20} /> },
@@ -56,8 +56,8 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* PERFORMANCE CHART SECTION */}
-          <section className="rounded-xl border border-gray-300 bg-white p-10 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-12">
+          <section className="rounded-xl border border-gray-300 bg-white p-5 sm:p-10 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-12 gap-4 sm:gap-0">
               <div>
                 <h2 className="text-xl font-bold mb-1">Performa Layanan</h2>
                 <p className="text-xs font-medium text-gray-600">Tren permintaan layanan dalam 30 hari terakhir</p>
@@ -73,8 +73,8 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Simulated High-End SVG Chart */}
-            <div className="relative h-[300px] w-full mt-8">
-              <svg className="h-full w-full overflow-visible" viewBox="0 0 1000 300" preserveAspectRatio="none">
+            <div className="relative w-full mt-6 sm:mt-8 aspect-[10/3] min-h-[150px]">
+              <svg className="h-full w-full overflow-visible" viewBox="0 0 1000 300">
                 {/* Grid Lines */}
                 {[0, 1, 2, 3].map((i) => (
                   <line key={i} x1="0" y1={i * 100} x2="1000" y2={i * 100} stroke="#f0f0f0" strokeWidth="1" />
@@ -106,9 +106,12 @@ export default function SuperAdminDashboard() {
               </svg>
               
               {/* Tooltip Overlay (Mockup) */}
-              <div className="absolute top-[120px] left-[380px] rounded-xl bg-black p-3 text-white shadow-2xl">
+              <div 
+                className="absolute rounded-xl bg-black p-3 text-white shadow-2xl transform -translate-x-1/2 -translate-y-[120%]"
+                style={{ top: '60%', left: '40%' }}
+              >
                 <p className="text-[10px] font-bold opacity-50">12 Apr</p>
-                <p className="text-xs font-black">1.2k Permintaan</p>
+                <p className="text-xs font-black whitespace-nowrap">1.2k Permintaan</p>
               </div>
             </div>
           </section>

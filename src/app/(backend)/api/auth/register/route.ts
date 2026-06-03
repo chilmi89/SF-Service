@@ -8,7 +8,16 @@ import { createSessionToken } from '@/lib/session';
  * /api/auth/register:
  *   post:
  *     summary: Melakukan registrasi user baru
- *     description: Mendaftarkan email dan password ke dalam sistem dan menyimpannya di auth_users.
+ *     description: |
+ *       Mendaftarkan email dan password ke dalam sistem dan menyimpannya di auth_users.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Menerima email dan password dari pengguna baru.
+ *       2. Memeriksa apakah email tersebut sudah terdaftar sebelumnya (menghindari duplikasi).
+ *       3. Melakukan enkripsi (hashing) pada password menggunakan bcrypt.
+ *       4. Menyimpan data akun ke tabel `auth_users`.
+ *       5. Membuat profil default dengan menetapkan role sebagai `user biasa` di tabel `profiles`.
+ *       6. Secara otomatis membuat sesi login (HttpOnly Cookie) sehingga user tidak perlu login ulang setelah daftar.
  *     tags:
  *       - Auth
  *     requestBody:

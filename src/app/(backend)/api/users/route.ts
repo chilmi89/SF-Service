@@ -6,7 +6,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  * /api/users:
  *   get:
  *     summary: Ambil semua daftar user beserta profile dan role-nya
- *     description: Mengambil data profil lengkap termasuk email dari auth_users dan nama role.
+ *     description: |
+ *       Mengambil data profil lengkap termasuk email dari auth_users dan nama role.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Menarik data secara *Left Join* dari tabel `profiles` berserta relasinya `auth_users` (untuk email) dan `roles` (untuk nama role).
+ *       2. Sistem akan mem-*flatten* (meratakan) struktur datanya agar tidak *nested* sehingga mempermudah konsumsi pada tabel Frontend.
  *     tags: [Users]
  *     responses:
  *       200:

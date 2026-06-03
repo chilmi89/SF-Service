@@ -6,7 +6,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  * /api/super-admin/roles:
  *   get:
  *     summary: Ambil semua daftar role
- *     description: Mengembalikan daftar semua role yang ada di sistem (Role statis/manual dari DB)
+ *     description: |
+ *       Mengembalikan daftar semua role yang ada di sistem (Role statis/manual dari DB)
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil data dari tabel `roles` dan diurutkan berdasarkan namanya.
+ *       2. Digunakan terutama untuk dropdown pengisian role pada form pendaftaran/edit staf.
  *     tags: [Super Admin]
  *     responses:
  *       200:

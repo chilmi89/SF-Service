@@ -149,10 +149,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-black selection:bg-black selection:text-white">
-      <div className="flex flex-1 flex-col lg:flex-row">
+    <div className="h-screen w-screen overflow-hidden bg-white text-black selection:bg-black selection:text-white">
+      <div className="flex h-full w-full flex-col lg:flex-row">
         {/* LEFT COLUMN: CURATED IMAGE FULL */}
-        <div className="w-full lg:w-1/2 h-48 sm:h-64 lg:h-auto relative overflow-hidden">
+        <div className="hidden lg:block lg:w-1/2 h-full relative overflow-hidden">
           <Image
             src="/images/card.png"
             alt="Architecture"
@@ -164,7 +164,7 @@ export default function RegisterPage() {
         </div>
 
         {/* RIGHT COLUMN: REGISTER FORM (FixIt Style) */}
-        <div className="relative flex flex-1 flex-col justify-center px-6 py-12 lg:px-24 overflow-hidden">
+        <div className="relative flex flex-1 flex-col justify-center px-10 sm:px-16 lg:px-20 overflow-hidden bg-white h-full">
           {/* Background Blobs (Same as Login) */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <motion.div
@@ -179,52 +179,66 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Back Button - Fixed at top left of the form section */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="absolute top-8 left-8 lg:top-12 lg:left-12 z-20"
+          >
+            <Link
+              href="/home"
+              className="group flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Kembali ke Beranda
+            </Link>
+          </motion.div>
+
           <motion.div
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="relative z-10 mx-auto w-full max-w-md"
+            className="relative z-10 mx-auto w-full max-w-sm pt-10 lg:pt-12"
           >
-            {/* Nav Back */}
-            <motion.div variants={itemVariants}>
-              <Link
-                href="/"
-                className="group mb-12 inline-flex items-center gap-2 text-sm font-bold text-[#a1a1a1] transition-all hover:text-black"
+            {/* Logo/Brand Section */}
+            <motion.div variants={itemVariants} className="mb-4 text-center">
+              <div
+                className="mx-auto mb-2 flex h-16 w-auto cursor-pointer items-center justify-center"
+                onClick={() => router.push("/home")}
               >
-                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />{" "}
-                Kembali
-              </Link>
+                <img
+                  src="/images/logo.png"
+                  alt="FixIt Logo"
+                  className="h-16 w-auto object-contain"
+                />
+              </div>
             </motion.div>
 
             {/* Header */}
-            <div className="mb-12 space-y-4">
+            <div className="mb-4 text-center space-y-0.5">
               <motion.h1
                 variants={itemVariants}
-                className="text-3xl font-black tracking-tighter"
+                className="text-lg font-black tracking-tighter"
               >
                 REGISTER
               </motion.h1>
-              <motion.div
-                variants={itemVariants}
-                className="h-1 w-20 bg-black rounded-full"
-              />
               <motion.p
                 variants={itemVariants}
-                className="text-sm font-medium leading-relaxed text-[#666]"
+                className="text-[11px] font-semibold leading-relaxed text-gray-400"
               >
-                Daftar akun FixIt Anda untuk manajemen perawatan rumah yang
-                presisi dan modern.
+                Daftar akun FixIt Anda untuk manajemen perawatan rumah yang presisi dan modern.
               </motion.p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Social Login */}
-              <motion.div variants={itemVariants} className="space-y-6">
+              <motion.div variants={itemVariants} className="space-y-3">
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl border border-black/[0.1] bg-white py-4 text-sm font-bold transition-all hover:bg-black/[0.02] active:scale-[0.98]"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-black/[0.1] bg-white py-2.5 text-xs font-bold transition-all hover:bg-black/[0.02] active:scale-[0.98]"
                 >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -247,86 +261,86 @@ export default function RegisterPage() {
 
                 <div className="relative flex items-center justify-center">
                   <div className="absolute w-full border-t border-black/[0.05]" />
-                  <span className="relative bg-white px-4 text-[10px] font-bold tracking-[0.2em] text-[#a1a1a1] uppercase">
+                  <span className="relative bg-white px-4 text-[9px] font-bold tracking-[0.2em] text-[#a1a1a1] uppercase">
                     Atau
                   </span>
                 </div>
               </motion.div>
 
               {/* Email Address */}
-              <motion.div variants={itemVariants} className="space-y-3">
-                <label className="text-sm font-bold text-gray-400 ml-1">
+              <motion.div variants={itemVariants} className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 ml-1">
                   Email Address
                 </label>
                 <div className="group relative">
-                  <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[#a1a1a1] transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-black" />
+                  <Mail className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-[#a1a1a1]" />
                   <input
                     name="email"
                     type="email"
                     placeholder="nama@email.com"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full rounded-2xl border border-black/[0.3] bg-white/50 py-4 pr-4 pl-12 text-sm font-semibold outline-none transition-all focus:border-black/30 focus:bg-white focus:ring-[6px] focus:ring-black/[0.04]"
+                    className="w-full rounded-2xl border border-black/[0.2] bg-white/50 py-2.5 pr-4 pl-12 text-xs font-semibold outline-none transition-all focus:border-black/30 focus:bg-white"
                     required
                   />
                 </div>
               </motion.div>
 
               {/* Password */}
-              <motion.div variants={itemVariants} className="space-y-3">
-                <label className="text-sm font-bold text-gray-400 ml-1">
+              <motion.div variants={itemVariants} className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 ml-1">
                   Password
                 </label>
                 <div className="group relative">
-                  <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[#a1a1a1] transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-black" />
+                  <Lock className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-[#a1a1a1]" />
                   <input
                     name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full rounded-2xl border border-black/[0.3] bg-white/50 py-4 pr-12 pl-12 text-sm font-semibold outline-none transition-all focus:border-black/30 focus:bg-white focus:ring-[6px] focus:ring-black/[0.04]"
+                    className="w-full rounded-2xl border border-black/[0.2] bg-white/50 py-2.5 pr-12 pl-12 text-xs font-semibold outline-none transition-all focus:border-black/30 focus:bg-white"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-1/2 right-4 -translate-y-1/2 text-[#a1a1a1] transition-colors hover:text-black"
+                    className="absolute top-1/2 right-4 -translate-y-1/2 text-[#a1a1a1]"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 </div>
               </motion.div>
 
               {/* Confirm Password */}
-              <motion.div variants={itemVariants} className="space-y-3">
-                <label className="text-sm font-bold text-gray-400 ml-1">
+              <motion.div variants={itemVariants} className="space-y-1">
+                <label className="text-xs font-bold text-gray-400 ml-1">
                   Confirm Password
                 </label>
                 <div className="group relative">
-                  <Lock className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[#a1a1a1] transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-black" />
+                  <Lock className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-[#a1a1a1]" />
                   <input
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full rounded-2xl border border-black/[0.3] bg-white/50 py-4 pr-12 pl-12 text-sm font-semibold outline-none transition-all focus:border-black/30 focus:bg-white focus:ring-[6px] focus:ring-black/[0.04]"
+                    className="w-full rounded-2xl border border-black/[0.2] bg-white/50 py-2.5 pr-12 pl-12 text-xs font-semibold outline-none transition-all focus:border-black/30 focus:bg-white"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute top-1/2 right-4 -translate-y-1/2 text-[#a1a1a1] transition-colors hover:text-black"
+                    className="absolute top-1/2 right-4 -translate-y-1/2 text-[#a1a1a1]"
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 </div>
@@ -335,7 +349,7 @@ export default function RegisterPage() {
               {/* Agreement */}
               <motion.div
                 variants={itemVariants}
-                className="flex items-center gap-4"
+                className="flex items-center gap-3 py-1"
               >
                 <div className="relative flex items-center">
                   <input
@@ -343,17 +357,17 @@ export default function RegisterPage() {
                     id="agreed"
                     checked={agreed}
                     onChange={(e) => setAgreed(e.target.checked)}
-                    className="h-5 w-5 appearance-none rounded-lg border-2 border-black/[0.2] checked:bg-black checked:border-black transition-all cursor-pointer"
+                    className="h-4.5 w-4.5 appearance-none rounded-lg border-2 border-black/[0.15] checked:bg-black checked:border-black transition-all cursor-pointer"
                   />
                   {agreed && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="h-2 w-2 rounded-full bg-white" />
+                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
                     </div>
                   )}
                 </div>
                 <label
                   htmlFor="agreed"
-                  className="text-[10px] font-bold leading-normal text-[#666] cursor-pointer"
+                  className="text-[9px] font-bold leading-normal text-[#666] cursor-pointer uppercase"
                 >
                   I ACCEPT THE{" "}
                   <span className="font-black text-black underline">
@@ -366,23 +380,23 @@ export default function RegisterPage() {
               {/* Submit Button (Animated FixIt Style) */}
               <motion.div
                 variants={itemVariants}
-                className="flex justify-center pt-4"
+                className="flex justify-center pt-2"
               >
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="group relative flex h-14 w-70 items-center justify-center overflow-hidden rounded-full border border-black/[0.3] bg-white font-black uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 disabled:opacity-50"
+                  className="group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-full border border-black/[0.2] bg-white font-black uppercase tracking-[0.2em] transition-all duration-300 active:scale-95 disabled:opacity-50"
                 >
                   {isLoading ? (
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      <div className="flex h-full items-center justify-center gap-3 text-black text-xs transition duration-500 group-hover:-translate-y-[160%]">
+                      <div className="flex h-full items-center justify-center gap-2 text-black text-xs transition duration-500 group-hover:-translate-y-[160%]">
                         Daftar Sekarang <LayoutGrid className="h-4 w-4" />
                       </div>
                       <div className="absolute flex h-full w-full translate-y-[100%] items-center justify-center transition duration-500 group-hover:translate-y-0 text-xs">
                         <span className="absolute h-full w-full translate-y-full scale-y-0 skew-y-12 bg-black transition duration-500 group-hover:translate-y-0 group-hover:scale-[3.5]"></span>
-                        <span className="z-10 flex items-center gap-3 text-white">
+                        <span className="z-10 flex items-center gap-2 text-white">
                           Daftar Sekarang{" "}
                           <ArrowRight className="h-4 w-4 stroke-[3px]" />
                         </span>
@@ -395,7 +409,7 @@ export default function RegisterPage() {
               {/* Secondary Link */}
               <motion.p
                 variants={itemVariants}
-                className="text-center text-sm font-medium text-gray-400"
+                className="text-center text-xs font-medium text-gray-400 pt-1"
               >
                 Sudah punya akun?{" "}
                 <Link

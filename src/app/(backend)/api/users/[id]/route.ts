@@ -7,6 +7,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  *   get:
  *     summary: Detail user beserta profile dan role
  *     tags: [Users]
+ *     description: |
+ *       Menampilkan profil komplit dari sebuah akun.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil data dari tabel `profiles` berserta *join* (email, role).
+ *       2. Meratakan JSON Response agar mudah dibaca.
  *     parameters:
  *       - in: path
  *         name: id
@@ -40,6 +46,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  *   put:
  *     summary: Update role user
  *     tags: [Users]
+ *     description: |
+ *       Mengubah jabatan / otorisasi sebuah akun (Khusus Super Admin).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mengambil payload berupa ID `role_id` baru.
+ *       2. Mengupdate kolom `role_id` di tabel `profiles`.
  *     parameters:
  *       - in: path
  *         name: id
@@ -62,6 +74,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
  *   delete:
  *     summary: Hapus user permanen
  *     tags: [Users]
+ *     description: |
+ *       Mengahapus anggota/pengguna secara keseluruhan dari sistem (Khusus Super Admin).
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Mencari foreign key `user_id` pada tabel profil.
+ *       2. Memprioritaskan penghapusan akun utama di tabel `auth_users` terlebih dahulu untuk memastikan tidak ada sisa. Jika tidak ditemukan, baru menghapus tabel `profiles`.
  *     parameters:
  *       - in: path
  *         name: id

@@ -15,6 +15,12 @@ import { verifySessionToken } from '@/lib/session';
  *   delete:
  *     summary: Menghapus staf dari tenant (Kembalikan ke user biasa)
  *     tags: [Tenants Staff]
+ *     description: |
+ *       Memecat/mengeluarkan staf dari keanggotaan tenant.
+ *       
+ *       **Alur Kerja (Workflow):**
+ *       1. Pengecekan otorisasi: Hanya Owner dari tenant tersebut atau Super Admin yang berhak menghapus.
+ *       2. Memperbarui `profiles` staf bersangkutan: menghapus `kode_tenant` (di-set null) dan me-reset hak akses / Role kembali menjadi `user biasa`.
  *     responses:
  *       200:
  *         description: Berhasil dihapus

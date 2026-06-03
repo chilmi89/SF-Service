@@ -15,11 +15,13 @@ export default function SubscriptionPage() {
     isLoading, 
     error, 
     handleSubscribe,
+    handleCancelSubscription,
     isSubscribed 
   } = useSubscription();
 
   const [toast, setToast] = React.useState<{ show: boolean; title: string; message: string; type: ToastType } | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
+  const [isCancelling, setIsCancelling] = React.useState(false);
 
   const onSubscribe = async (planId: string | number) => {
     setIsProcessing(true);
@@ -38,6 +40,28 @@ export default function SubscriptionPage() {
         show: true,
         title: "Gagal Berlangganan",
         message: result.message || "Terjadi kesalahan saat memproses langganan.",
+        type: "error"
+      });
+    }
+  };
+
+  const onCancelClick = async () => {
+    setIsCancelling(true);
+    const result = await handleCancelSubscription();
+    setIsCancelling(false);
+
+    if (result.success) {
+      setToast({
+        show: true,
+        title: "Langganan Dibatalkan",
+        message: "Paket langganan Anda berhasil dibatalkan.",
+        type: "success"
+      });
+    } else {
+      setToast({
+        show: true,
+        title: "Gagal Membatalkan",
+        message: result.message || "Terjadi kesalahan saat membatalkan langganan.",
         type: "error"
       });
     }
@@ -88,7 +112,11 @@ export default function SubscriptionPage() {
       {/* ACTIVE SUBSCRIPTION VIEW */}
       {isSubscribed && activeSubscription && (
         <section>
-          <ActivePlanCard subscription={activeSubscription} />
+          <ActivePlanCard 
+            subscription={activeSubscription} 
+            onCancel={onCancelClick}
+            isCancelling={isCancelling}
+          />
         </section>
       )}
 

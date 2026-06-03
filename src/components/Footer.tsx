@@ -1,31 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Mail, Instagram, Twitter, Facebook } from "lucide-react";
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+  
   return (
-    <footer className="border-t border-black/20 bg-gray-50/50 px-6 py-4 relative z-10">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
-          {/* Brand & Copyright */}
-          <div className="text-center md:text-left">
-            <h4 className="text-lg font-black text-black">FixIt</h4>
-            <p className="mt-2 text-xs font-bold uppercase tracking-tight text-[#a1a1a1]">
-              © 2024 FIXIT NEVERDIE. ALL RIGHTS RESERVED.
-            </p>
-          </div>
+    <footer className="border-t border-black/[0.05] bg-transparent py-8 px-8 sm:px-16 relative z-10">
+      <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-400">
+        {/* Brand & Copyright */}
+        <div className="flex items-center gap-2.5">
+          <img
+            src="/images/logo-icon.png"
+            alt="FixIt Logo"
+            className="h-6 w-6 object-contain"
+          />
+          <span className="font-black text-black tracking-tight text-xs">FixIt</span>
+          <span className="text-gray-300">|</span>
+          <p className="text-[11px] font-medium text-gray-400">
+            &copy; {currentYear} FixIt. All rights reserved.
+          </p>
+        </div>
 
-          {/* Simple Links */}
-          <div className="flex flex-wrap justify-center gap-6 text-[10px] font-medium uppercase tracking-widest text-[#a1a1a1] md:gap-10">
-            <Link href="#" className="hover:text-black transition-colors">Platform</Link>
-            <Link href="#" className="hover:text-black transition-colors">Network</Link>
-            <Link href="#" className="hover:text-black transition-colors">Privacy</Link>
-            <Link href="#" className="hover:text-black transition-colors">Terms</Link>
-            <Link href="#" className="hover:text-black transition-colors">Cookies</Link>
-            <Link href="#" className="hover:text-black transition-colors">Contact</Link>
-          </div>
+        {/* Links */}
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[11px] text-gray-500 font-bold">
+          <Link href="/home" className="hover:text-black transition-colors">Home</Link>
+          <Link href="/about" className="hover:text-black transition-colors">About</Link>
+          <Link href="/partners" className="hover:text-black transition-colors">Partners</Link>
+          <Link href="/contact" className="hover:text-black transition-colors">Contact</Link>
         </div>
       </div>
     </footer>

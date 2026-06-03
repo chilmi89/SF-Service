@@ -16,6 +16,8 @@ export default function RootDashboardLayout({
   const { isLoggedIn, userRole, isLoading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const pathname = usePathname();
+
   // Menampilkan loader saat sedang mengecek status login
   if (isLoading) {
     return (
@@ -30,15 +32,14 @@ export default function RootDashboardLayout({
   //   return null;
   // }
 
-  const pathname = usePathname();
-
   // Normalisasi role untuk Sidebar
-  const getNormalizedRole = () : "superadmin" | "admin" | "teknisi" | "owner_tunggal" => {
+  const getNormalizedRole = () : "superadmin" | "admin" | "teknisi" | "owner_tunggal" | "owner" => {
     if (pathname?.startsWith("/dashboard/teknisi")) return "teknisi";
     
     const role = userRole?.toLowerCase() || "";
     if (role === "super admin" || role === "superadmin") return "superadmin";
     if (role === "owner tunggal" || role === "owner_tunggal") return "owner_tunggal";
+    if (role === "owner") return "owner";
     if (role === "teknisi") return "teknisi";
     return "admin"; // Default fallback
   };
@@ -62,12 +63,17 @@ export default function RootDashboardLayout({
       }`}>
         {/* Branding */}
         <div className="flex h-20 items-center justify-between px-8">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white font-black text-lg">
-              F
-            </div>
-            <span className="text-xl font-black tracking-tight">
-              {normalizedRole === "superadmin" ? "FixIt Admin" : "FixIt Tenant"}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <img
+              src="/images/logo-icon.png"
+              alt="FixIt Logo"
+              className="h-8 w-8 object-contain shrink-0"
+            />
+            <span className="text-base font-black tracking-tight text-black">
+              FixIt
+            </span>
+            <span className="text-[9px] font-black uppercase tracking-wider text-[#a1a1a1] bg-black/5 px-1.5 py-0.5 rounded shrink-0">
+              {normalizedRole === "superadmin" ? "Admin" : "Tenant"}
             </span>
           </Link>
           <button 

@@ -14,7 +14,9 @@ import {
   Shield,
   ChevronDown,
   ChevronRight,
-  LogOut
+  LogOut,
+  Building2,
+  ClipboardCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "@/lib/api/auth.service";
@@ -51,24 +53,28 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
   ],
   admin: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/admin", permission: "dashboard" },
+    { name: "Verifikasi Order", icon: <ClipboardCheck size={20} />, href: "/dashboard/admin/verifikasi-order", permission: "verifikasi_order" },
     { name: "Layanan", icon: <Briefcase size={20} />, href: "/dashboard/admin/layanan", permission: "view_layanan" },
     { name: "Transaksi", icon: <CreditCard size={20} />, href: "/dashboard/admin/transaksi", permission: "view_transaksi" },
   ],
   teknisi: [
-    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/teknisi", permission: "dashboard" },
+    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/teknisi" }, // Dashboard teknisi sebaiknya default tampil
     { name: "Tugas Saya", icon: <Briefcase size={20} />, href: "/dashboard/teknisi/tugas" },
   ],
   owner_tunggal: [
-    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner_tunggal", permission: "dashboard" },
-    { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner_tunggal/layanan", permission: "view_layanan" },
-    { name: "Teknisi", icon: <Users size={20} />, href: "/dashboard/owner/teknisi", permission: "view_pengguna" },
-    { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner_tunggal/subscription", permission: "view_langganan" },
-    { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner_tunggal/laporan", permission: "view_laporan" },
+    { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner", permission: "dashboard" },
+    { name: "Verifikasi Order", icon: <ClipboardCheck size={20} />, href: "/dashboard/admin/verifikasi-order" },
+    { name: "Profil Perusahaan", icon: <Building2 size={20} />, href: "/dashboard/owner/profile-tenant", permission: "view_profile" },
+    { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner/layanan", permission: "view_layanan" },
+    { name: "Kelola Staf", icon: <Users size={20} />, href: "/dashboard/owner/staff", permission: "view_staff" },
+    { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner/subscription", permission: "view_langganan" },
+    { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner/laporan", permission: "view_laporan" },
   ],
   owner: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner", permission: "dashboard" },
+    { name: "Profil Perusahaan", icon: <Building2 size={20} />, href: "/dashboard/owner/profile-tenant", permission: "view_profile" },
     { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner/layanan", permission: "view_layanan" },
-    { name: "Teknisi", icon: <Users size={20} />, href: "/dashboard/owner/teknisi", permission: "view_pengguna" },
+    { name: "Kelola Staf", icon: <Users size={20} />, href: "/dashboard/owner/staff", permission: "view_staff" },
     { name: "Langganan", icon: <CreditCard size={20} />, href: "/dashboard/owner/subscription", permission: "view_langganan" },
     { name: "Laporan", icon: <FileText size={20} />, href: "/dashboard/owner/laporan", permission: "view_laporan" },
   ]
@@ -124,16 +130,20 @@ export default function SidebarMenu({ role, onNavigate }: SidebarMenuProps) {
         const storedRoleName = localStorage.getItem("user_role");
         if (storedRoleName) {
           const rolesList = rolesRes?.data?.data || rolesRes?.data || rolesRes || [];
-          const currentRoleData = rolesList.find((r: any) => 
-            r.name.toLowerCase() === storedRoleName.toLowerCase()
-          );
+          const currentRoleData = rolesList.find((r: any) => {
+            const dbRole = r.name.toLowerCase().trim();
+            const localRole = storedRoleName.toLowerCase().trim();
+            return dbRole === localRole || 
+                   dbRole === localRole.replace(/_/g, " ") || 
+                   dbRole.replace(/\s+/g, "_") === localRole;
+          });
 
           if (currentRoleData?.id) {
             const { data: permData } = await superAdminService.getRolePermissions(currentRoleData.id);
             if (permData && permData.permissions) {
               const assigned = permData.permissions
                 .filter((p: any) => p.assigned)
-                .map((p: any) => p.name);
+                .map((p: any) => p.name.toLowerCase());
               
               setUserPermissions(assigned);
               // Update cache
@@ -166,7 +176,7 @@ export default function SidebarMenu({ role, onNavigate }: SidebarMenuProps) {
   // Helper untuk filter menu berdasarkan permission secara rekursif
   const filterMenuItems = (menuItems: NavItem[]): NavItem[] => {
     return menuItems
-      .filter(item => !item.permission || userPermissions.includes(item.permission))
+      .filter(item => !item.permission || userPermissions.some(p => p === item.permission?.toLowerCase()))
       .map(item => {
         if (item.children) {
           return { ...item, children: filterMenuItems(item.children) };

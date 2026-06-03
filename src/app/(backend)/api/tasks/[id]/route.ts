@@ -18,7 +18,7 @@ import { verifySessionToken } from '@/lib/session';
  *       Mengupdate progres pengerjaan (status) dari suatu tugas.
  *       
  *       **Alur Kerja (Workflow):**
- *       1. Pengecekan otorisasi (Hanya Teknisi, Admin, atau Owner yang berhak).
+ *       1. Pengecekan otorisasi (Hanya Teknisi, Admin, atau Owner yang berhak)
  *       2. Memperbarui kolom `status_tugas` di tabel `tasks` secara spesifik.
  *       3. **Otomatisasi Lanjutan**: Apabila status diubah menjadi teks `Selesai`, sistem akan memicu trigger otomatis yang juga mengubah status *Order* bersangkutan menjadi `menunggu pembayaran` (status ID = 7).
  *     requestBody:

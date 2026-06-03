@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       .from('tasks')
       .select(`
         *,
-        orders!inner (customer_id, customer_name, layanan(tenant_id)),
+        orders!inner (id_customer, customer:profiles!id_customer(full_name, phone), layanan(tenant_id)),
         technician:profiles!technician_id (full_name)
       `)
       .order('deadline', { ascending: true });
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('technician_id', profile.id);
     } else {
       // User Biasa melihat task terkait pesanan miliknya
-      query = query.eq('orders.customer_id', profile.id);
+      query = query.eq('orders.id_customer', profile.id);
     }
 
     const { data, error } = await query;

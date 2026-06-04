@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       // Teknisi melihat task yang di-assign kepadanya
       query = query.eq('technician_id', profile.id);
     } else {
-      // User Biasa melihat task terkait pesanan miliknya
+      // User Biasa melihat task terkait pesanan milikny
       query = query.eq('orders.id_customer', profile.id);
     }
 

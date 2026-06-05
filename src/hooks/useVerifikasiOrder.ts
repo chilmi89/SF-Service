@@ -23,6 +23,7 @@ export interface Order {
   tanggal_order: string;
   jam: string;
   id_customer: string;
+  hasTask?: boolean;
 }
 
 export function useVerifikasiOrder() {
@@ -37,31 +38,73 @@ export function useVerifikasiOrder() {
   };
 
   const mapStatusToOrder = (status: number): "Menunggu Konfirmasi" | "Diterima" | "Ditolak" => {
-    if (status === 5) return "Diterima";
     if (status === 6) return "Ditolak";
+    if (status === 5 || status === 7 || status === 8) return "Diterima";
     return "Menunggu Konfirmasi";
   };
 
   const fetchOrders = useCallback(async () => {
     try {
       setIsLoading(true);
+
+      // Resolve tenant ID dari owner yang sedang login
+      let myTenantId = localStorage.getItem("my_tenant_id");
+      if (!myTenantId) {
+        const profileId = localStorage.getItem("profile_id");
+        if (profileId) {
+          try {
+            const profileRes = await apiClient(`/api/profiles/${profileId}`);
+            const p = profileRes?.data?.data || profileRes?.data || profileRes;
+            if (p && p.kode_tenant) {
+              const tenantsRes = await apiClient('/api/tenants');
+              const tenants = tenantsRes?.data?.data || tenantsRes?.data || [];
+              const myTenant = tenants.find((t: any) => t.kode_tenant === p.kode_tenant);
+              if (myTenant) {
+                myTenantId = myTenant.id;
+                localStorage.setItem("my_tenant_id", myTenant.id);
+              }
+            }
+          } catch (e) {
+            console.error("Gagal mendeteksi tenant ID:", e);
+          }
+        }
+      }
+
       const res = await apiClient("/api/orders?as=tenant");
       if (res.error) {
         throw new Error(res.error);
+      }
+
+      // Fetch tasks to check if they exist for each order
+      let tasks: any[] = [];
+      try {
+        const resTasks = await apiClient("/api/tasks");
+        tasks = resTasks?.data?.data || resTasks?.data || [];
+      } catch (err) {
+        console.error("Gagal memuat daftar tugas untuk pengecekan:", err);
       }
       
       const rawOrders = res.data?.data || res.data || [];
       const mappedOrders = (Array.isArray(rawOrders) ? rawOrders : []).map((o: any) => {
         const tx = Array.isArray(o.transactions) ? o.transactions[0] : o.transactions;
+        const hasTask = tasks.some((t: any) => t.order_id === o.id);
         return {
           ...o,
           transactions: tx || null,
           status_order: mapStatusToOrder(o.status),
+          hasTask,
         };
       });
 
-      // Ambil profile customer secara parallel
-      const customerIds = Array.from(new Set(mappedOrders.map((o: any) => o.id_customer).filter(Boolean))) as string[];
+      // Filter order hanya yang milik tenant dari owner yang sedang login
+      const filteredOrders = mappedOrders.filter((o: any) => {
+        if (!myTenantId) return true; // Fallback jika tidak terdeteksi
+        const oTenantId = o.layanan?.tenant_id || o.transactions?.tenant_id;
+        return oTenantId === myTenantId;
+      });
+
+      // Ambil profile customer secara parallel (hanya untuk order yang relevan)
+      const customerIds = Array.from(new Set(filteredOrders.map((o: any) => o.id_customer).filter(Boolean))) as string[];
       const profilesMap: Record<string, string> = {};
       
       await Promise.all(
@@ -78,7 +121,7 @@ export function useVerifikasiOrder() {
         })
       );
 
-      const finalOrders = mappedOrders.map((o: any) => ({
+      const finalOrders = filteredOrders.map((o: any) => ({
         ...o,
         customer_name: profilesMap[o.id_customer] || "Pelanggan",
       }));
@@ -112,17 +155,7 @@ export function useVerifikasiOrder() {
   ) => {
     setIsSubmitting(true);
     try {
-      // 1. Update status order ke 5 (Diterima)
-      const resOrder = await apiClient(`/api/orders/${orderId}`, {
-        method: "PUT",
-        body: { status: 5 },
-      });
-
-      if (resOrder.error) {
-        throw new Error(resOrder.error);
-      }
-
-      // 2. Buat tugas baru
+      // 1. Buat tugas baru terlebih dahulu
       const combinedDescription = namaTugas 
         ? `${namaTugas}${deskripsi ? ` - ${deskripsi}` : ""}` 
         : (deskripsi || "Tugas Pekerjaan Servis");
@@ -145,10 +178,29 @@ export function useVerifikasiOrder() {
         throw new Error(resTask.error);
       }
 
+      // 2. Update status order ke 5 (Diterima)
+      const resOrder = await apiClient(`/api/orders/${orderId}`, {
+        method: "PUT",
+        body: { status: 5 },
+      });
+
+      if (resOrder.error) {
+        // Rollback task jika update order gagal
+        try {
+          const taskId = resTask.data?.data?.id || resTask.data?.id;
+          if (taskId) {
+            await taskService.deleteTask(taskId);
+          }
+        } catch (rollbackErr) {
+          console.error("Gagal menghapus tugas rollback:", rollbackErr);
+        }
+        throw new Error(resOrder.error);
+      }
+
       // Update state lokal
       setOrders((prev) =>
         prev.map((o) =>
-          o.id === orderId ? { ...o, status_order: "Diterima", status: 5 } : o
+          o.id === orderId ? { ...o, status_order: "Diterima", status: 5, hasTask: true } : o
         )
       );
 

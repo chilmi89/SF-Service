@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, Variants } from "framer-motion";
-import { User, Menu, X, ArrowUpRight, LogOut, AlertCircle } from "lucide-react";
+import { User, Menu, X, ArrowUpRight, LogOut, AlertCircle, ClipboardList } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { authService } from "@/lib/api/auth.service";
 import { apiClient } from "@/lib/api/api-client";
@@ -235,6 +235,15 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-4">
+                {userRole?.toLowerCase() === "user biasa" && (
+                  <Link
+                    href="/orders"
+                    className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-2 text-sm font-bold text-black transition-all hover:bg-gray-50 active:scale-95 shadow-sm animate-fade-in"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Pesanan Saya
+                  </Link>
+                )}
                 {userRole?.toLowerCase() === "user biasa" ? (
                   <button
                     onClick={handleTenantRegisterClick}
@@ -317,6 +326,16 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex flex-col gap-3">
+                  {userRole?.toLowerCase() === "user biasa" && (
+                    <Link
+                      href="/orders"
+                      className="rounded-full border border-black/10 bg-white py-4 text-black font-bold flex items-center justify-center gap-2 transition-all"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      Pesanan Saya
+                    </Link>
+                  )}
                   {userRole?.toLowerCase() === "user biasa" ? (
                     <button
                       onClick={(e) => {

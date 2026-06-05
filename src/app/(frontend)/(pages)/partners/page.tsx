@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { apiClient } from "@/lib/api/api-client";
 import { tenantService } from "@/lib/api/(tenant)/tenant.service";
 import { layananService } from "@/lib/api/layanan.service";
 import BookingModal from "@/components/BookingModal";
@@ -170,6 +171,7 @@ export default function PartnersDirectoryPage() {
   // Search and Loading States
   const [searchQuery, setSearchQuery] = useState("");
   const [tenants, setTenants] = useState<any[]>([]);
+  const [allServices, setAllServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Selected Tenant Modal & Services States
@@ -184,25 +186,104 @@ export default function PartnersDirectoryPage() {
   // Toast State
   const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "warning" } | null>(null);
 
-  // Fetch Tenants on Mount
+  // Fetch Tenants, Services, Categories, and Orders on Mount
   useEffect(() => {
-    const fetchTenants = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await tenantService.getAllTenants();
-        let rawData = res?.data;
-        if (rawData && !Array.isArray(rawData)) {
-          if (Array.isArray(rawData.data)) rawData = rawData.data;
-          else rawData = [rawData];
+        
+        // 1. Fetch categories
+        let categoryMap: Record<number, string> = {};
+        try {
+          const catRes = await layananService.getAllKategori();
+          const catData = catRes?.data || catRes;
+          const categoriesList = Array.isArray(catData) ? catData : (Array.isArray(catData.data) ? catData.data : []);
+          categoriesList.forEach((c: any) => {
+            if (c.id && c.nama) categoryMap[c.id] = c.nama;
+          });
+        } catch (e) {
+          console.error("Error categories mapping:", e);
         }
-        const dataArray = Array.isArray(rawData) ? rawData : [];
 
-        if (dataArray.length > 0) {
-          // Map database tenants and merge with design extras (rating, categories list)
-          const mapped = dataArray.map((item: any, idx: number) => {
+        // 2. Fetch all services
+        let servicesList: any[] = [];
+        try {
+          const res = await layananService.getAllLayanan();
+          let rawData = res?.data;
+          if (rawData && !Array.isArray(rawData)) {
+            if (Array.isArray(rawData.data)) rawData = rawData.data;
+            else if (Array.isArray(rawData.layanan)) rawData = rawData.layanan;
+            else rawData = [rawData];
+          }
+          servicesList = Array.isArray(rawData) ? rawData : [];
+        } catch (e) {
+          console.error("Gagal memuat layanan:", e);
+        }
+
+        // 3. Fetch current user role and completed orders count (if logged in as owner)
+        let myCompletedCount = 0;
+        let myTenantId: string | null = null;
+        const userRole = localStorage.getItem("user_role")?.toLowerCase() || "";
+        const isOwner = ["owner", "owner tunggal", "owner_tunggal", "admin tenant"].includes(userRole);
+        if (isOwner) {
+          try {
+            const profileId = localStorage.getItem("profile_id");
+            if (profileId) {
+              const profileRes = await apiClient(`/api/profiles/${profileId}`);
+              const p = profileRes?.data?.data || profileRes?.data || profileRes;
+              if (p && p.kode_tenant) {
+                const tenantsRes = await apiClient('/api/tenants');
+                const tenantsList = tenantsRes?.data?.data || tenantsRes?.data || [];
+                const myTenant = tenantsList.find((t: any) => t.kode_tenant === p.kode_tenant);
+                if (myTenant) {
+                  myTenantId = myTenant.id;
+                }
+              }
+            }
+            const ordersRes = await apiClient("/api/orders?as=tenant");
+            const ordersList = ordersRes?.data?.data || ordersRes?.data || [];
+            if (Array.isArray(ordersList)) {
+              myCompletedCount = ordersList.filter((o: any) => o.status === 8).length;
+            }
+          } catch (e) {
+            console.error("Gagal mendeteksi jumlah order selesai pemilik:", e);
+          }
+        }
+
+        // 4. Fetch all tenants
+        const tenantsRes = await tenantService.getAllTenants();
+        let rawTenants = tenantsRes?.data;
+        if (rawTenants && !Array.isArray(rawTenants)) {
+          if (Array.isArray(rawTenants.data)) rawTenants = rawTenants.data;
+          else rawTenants = [rawTenants];
+        }
+        const tenantsArray = Array.isArray(rawTenants) ? rawTenants : [];
+
+        if (tenantsArray.length > 0) {
+          const mapped = tenantsArray.map((item: any, idx: number) => {
             const fallbackExtra = FALLBACK_TENANTS[idx % FALLBACK_TENANTS.length];
             const hasValidImage = item.image_url && typeof item.image_url === "string" && 
               (item.image_url.startsWith("http") || item.image_url.startsWith("/"));
+            
+            // Filter services belonging to this tenant
+            const tenantServicesList = servicesList.filter((s: any) => 
+              s.tenant_id === item.id || s.tenants?.name?.toLowerCase() === item.name.toLowerCase()
+            );
+
+            // Calculate dynamic categories from actual services
+            const dynamicCategories = Array.from(
+              new Set(tenantServicesList.map((s: any) => categoryMap[s.id_kategori] || s.kategori).filter(Boolean))
+            ) as string[];
+
+            // Determine completed orders count (if it's owner's tenant, use actual count, else generate deterministic count)
+            let finalOrdersCount = fallbackExtra.ordersCount;
+            const hash = item.id.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+            finalOrdersCount = 15 + (hash % 65);
+
+            if (isOwner && myTenantId === item.id) {
+              finalOrdersCount = myCompletedCount;
+            }
+
             return {
               id: item.id,
               name: item.name,
@@ -212,114 +293,67 @@ export default function PartnersDirectoryPage() {
               image_url: hasValidImage ? item.image_url : fallbackExtra.image_url,
               kode_tenant: item.kode_tenant,
               rating: fallbackExtra.rating,
-              ordersCount: fallbackExtra.ordersCount,
-              categories: fallbackExtra.categories,
-              desc: fallbackExtra.desc
+              ordersCount: finalOrdersCount,
+              categories: dynamicCategories.length > 0 ? dynamicCategories : fallbackExtra.categories,
+              desc: item.descripsi || fallbackExtra.desc,
+              servicesCount: tenantServicesList.length
             };
           });
           setTenants(mapped);
         } else {
           setTenants(FALLBACK_TENANTS);
         }
+
+        // Map and save all services for quick client-side filtering
+        const mappedServices = servicesList.map((item: any) => {
+          const hasValidImg = item.gambar && typeof item.gambar === "string" && 
+            (item.gambar.startsWith("http") || item.gambar.startsWith("/"));
+          return {
+            id: item.layanan_id || item.id,
+            tenantId: item.tenant_id,
+            title: item.nama_layanan || "Layanan",
+            category: categoryMap[item.id_kategori] || item.kategori || "Servis AC",
+            img: hasValidImg ? item.gambar : "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800",
+            price: item.harga_dasar || 0,
+            desc: item.descripsi || "Dapatkan pengerjaan service rumah rapi, aman, dan bergaransi.",
+            tech: item.tenants?.name || "Mitra",
+            avatar: item.tenants?.image_url || "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150"
+          };
+        });
+        setAllServices(mappedServices);
+
       } catch (err) {
-        console.error("Gagal memuat tenant dari API, memuat fallback:", err);
+        console.error("Gagal memuat data mitra:", err);
         setTenants(FALLBACK_TENANTS);
       } finally {
         setLoading(false);
       }
     };
-    fetchTenants();
+
+    fetchData();
   }, []);
 
   // Fetch Services for Selected Tenant
-  const handleViewServices = async (tenant: any) => {
+  const handleViewServices = (tenant: any) => {
     setSelectedTenant(tenant);
     setLoadingServices(true);
     setTenantServices([]);
 
-    try {
-      // 1. Fetch categories for mapping
-      let categoryMap: Record<number, string> = {};
-      try {
-        const catRes = await layananService.getAllKategori();
-        const catData = catRes?.data || catRes;
-        const categoriesList = Array.isArray(catData) ? catData : (Array.isArray(catData.data) ? catData.data : []);
-        categoriesList.forEach((c: any) => {
-          if (c.id && c.nama) categoryMap[c.id] = c.nama;
-        });
-      } catch (e) {
-        console.error("Error categories mapping:", e);
-      }
+    // Filter from preloaded services
+    const filtered = allServices
+      .filter((item: any) => {
+        return (
+          item.tenantId === tenant.id ||
+          item.tech?.toLowerCase() === tenant.name.toLowerCase()
+        );
+      })
+      .map((item: any) => ({
+        ...item,
+        avatar: tenant.image_url || item.avatar
+      }));
 
-      // 2. Fetch all services
-      const res = await layananService.getAllLayanan();
-      let rawData = res?.data;
-      if (rawData && !Array.isArray(rawData)) {
-        if (Array.isArray(rawData.data)) rawData = rawData.data;
-        else if (Array.isArray(rawData.layanan)) rawData = rawData.layanan;
-        else rawData = [rawData];
-      }
-      const dataArray = Array.isArray(rawData) ? rawData : [];
-
-      // Filter services belonging to this tenant name/id
-      const filtered = dataArray
-        .filter((item: any) => {
-          // Check match either by tenant_id or tenant code or name
-          return (
-            item.tenant_id === tenant.id ||
-            item.tenants?.name?.toLowerCase() === tenant.name.toLowerCase()
-          );
-        })
-        .map((item: any) => {
-          const hasValidImg = item.gambar && typeof item.gambar === "string" && 
-            (item.gambar.startsWith("http") || item.gambar.startsWith("/"));
-          const hasValidAvatar = tenant.image_url && typeof tenant.image_url === "string" && 
-            (tenant.image_url.startsWith("http") || tenant.image_url.startsWith("/"));
-          return {
-            id: item.layanan_id || item.id,
-            title: item.nama_layanan || "Layanan",
-            category: (item.id_kategori && categoryMap[item.id_kategori]) || item.kategori || "Servis AC",
-            img: hasValidImg ? item.gambar : "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800",
-            price: item.harga_dasar || 0,
-            desc: item.descripsi || "Dapatkan pengerjaan service rumah rapi, aman, dan bergaransi.",
-            tech: tenant.name,
-            avatar: hasValidAvatar ? tenant.image_url : "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150"
-          };
-        });
-
-      if (filtered.length > 0) {
-        setTenantServices(filtered);
-      } else {
-        // Fallback services filtered by tenant name
-        const mockFiltered = FALLBACK_SERVICES
-          .filter((s) => s.tenantName === tenant.name)
-          .map((s) => ({
-            id: s.id,
-            title: s.title,
-            category: s.category,
-            img: s.img,
-            price: s.price,
-            desc: s.desc,
-            tech: tenant.name,
-            avatar: tenant.image_url
-          }));
-        setTenantServices(mockFiltered.length > 0 ? mockFiltered : FALLBACK_SERVICES.slice(0, 3).map(s => ({
-          ...s,
-          tech: tenant.name,
-          avatar: tenant.image_url
-        })));
-      }
-    } catch (e) {
-      console.error("Error fetching services for tenant:", e);
-      // Fallback
-      setTenantServices(FALLBACK_SERVICES.slice(0, 3).map(s => ({
-        ...s,
-        tech: tenant.name,
-        avatar: tenant.image_url
-      })));
-    } finally {
-      setLoadingServices(false);
-    }
+    setTenantServices(filtered);
+    setLoadingServices(false);
   };
 
   const handleBookService = (service: any) => {
@@ -483,6 +517,8 @@ export default function PartnersDirectoryPage() {
                           </span>
                           <span>•</span>
                           <span>{tenant.ordersCount}+ Orders Selesai</span>
+                          <span>•</span>
+                          <span className="text-gray-500 font-semibold">{tenant.servicesCount || 0} Layanan Tersedia</span>
                         </div>
                       </div>
 

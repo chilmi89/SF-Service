@@ -1,35 +1,37 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import SidebarMenu from "@/components/dashboard/SidebarMenu";
 import { 
-  Briefcase, 
-  Search, 
-  Bell, 
   MoreVertical, 
-  CheckCircle, 
-  Plus,
-  Star,
   ChevronDown,
-  TrendingUp,
-  LogOut
+  Loader2
 } from "lucide-react";
+import { useSuperAdminDashboard } from "@/hooks/superadmin/useSuperAdminDashboard";
 
 export default function SuperAdminDashboard() {
+  const { 
+    isLoading, 
+    error,
+    stats,
+    filter,
+    setFilter,
+    isFilterDropdownOpen,
+    setIsFilterDropdownOpen,
+    chartPaths,
+    hoveredPoint,
+    setHoveredPoint
+  } = useSuperAdminDashboard();
+
   return (
     <div className="p-4 sm:p-8 md:p-12 space-y-8 md:space-y-12 w-full overflow-hidden">
           
           {/* STATS ROW */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              { label: "Total Pendapatan", value: "Rp 128.4M", trend: "+12.5%", color: "text-emerald-500", icon: <TrendingUp size={20} /> },
-              { label: "Permintaan Aktif", value: "842", trend: "+5.2%", color: "text-blue-500", icon: <Briefcase size={20} /> },
-              { label: "Tingkat Kepuasan", value: "98.4%", trend: "+1.2%", color: "text-amber-500", icon: <Star size={20} className="fill-current" /> },
-            ].map((stat, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {stats.map((stat, i) => (
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -38,15 +40,11 @@ export default function SuperAdminDashboard() {
                 className="group rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-black/5"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`h-11 w-11 rounded-2xl bg-black/[0.03] flex items-center justify-center transition-colors group-hover:bg-black group-hover:text-white`}>
+                  <div className={`h-11 w-11 rounded-2xl bg-black/[0.03] flex items-center justify-center transition-colors group-hover:bg-black group-hover:text-white ${stat.color}`}>
                     {stat.icon}
                   </div>
-                  <span className={`rounded-lg border px-2.5 py-1 text-[10px] uppercase tracking-tighter font-black ${
-                    stat.trend.startsWith('+') 
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                      : 'bg-red-50 text-red-600 border-red-100'
-                  }`}>
-                    {stat.trend}
+                  <span className="rounded-lg border px-2.5 py-1 text-[10px] uppercase tracking-tighter font-black bg-emerald-50 text-emerald-600 border-emerald-100">
+                    Aktif
                   </span>
                 </div>
                 <p className="text-xs font-medium text-gray-600 mb-1">{stat.label}</p>
@@ -59,60 +57,183 @@ export default function SuperAdminDashboard() {
           <section className="rounded-xl border border-gray-300 bg-white p-5 sm:p-10 shadow-sm relative overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-12 gap-4 sm:gap-0">
               <div>
-                <h2 className="text-xl font-bold mb-1">Performa Layanan</h2>
-                <p className="text-xs font-medium text-gray-600">Tren permintaan layanan dalam 30 hari terakhir</p>
+                <h2 className="text-xl font-bold mb-1">Pertumbuhan User</h2>
+                <p className="text-xs font-medium text-gray-600">Jumlah pendaftar baru per hari dari waktu ke waktu</p>
               </div>
               <div className="flex items-center gap-3">
-                <button className="h-10 px-4 rounded-xl border border-black/[0.05] text-xs font-black flex items-center gap-2 hover:bg-black/[0.03]">
-                  Harian <ChevronDown size={14} />
-                </button>
-                <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-black text-white shadow-lg transition-all hover:scale-105 active:scale-95">
-                  <Plus size={18} />
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                    className="h-10 px-4 rounded-xl border border-black/[0.05] text-xs font-black flex items-center gap-2 hover:bg-black/[0.03] transition-all"
+                  >
+                    {filter === "7days" ? "7 Hari Terakhir" : filter === "30days" ? "30 Hari Terakhir" : "Semua"} 
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${isFilterDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  
+                  {isFilterDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsFilterDropdownOpen(false)} />
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl z-20">
+                        {[
+                          { id: "7days", label: "7 Hari Terakhir" },
+                          { id: "30days", label: "30 Hari Terakhir" },
+                          { id: "all", label: "Semua" }
+                        ].map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              setFilter(item.id as any);
+                              setIsFilterDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                              filter === item.id 
+                                ? "bg-black text-white" 
+                                : "text-gray-700 hover:bg-black/[0.03]"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Simulated High-End SVG Chart */}
+            {/* Dynamic SVG Chart */}
             <div className="relative w-full mt-6 sm:mt-8 aspect-[10/3] min-h-[150px]">
               <svg className="h-full w-full overflow-visible" viewBox="0 0 1000 300">
+                {/* Y-Axis Labels */}
+                {[0, 1, 2, 3].map((i) => {
+                  const val = chartPaths ? Math.round(chartPaths.maxVal - (i / 3) * chartPaths.maxVal) : 0;
+                  const y = 40 + i * 73.3;
+                  return (
+                    <text 
+                      key={`y-label-${i}`}
+                      x="30" 
+                      y={y + 4} 
+                      fill="#a1a1a1" 
+                      fontSize="10" 
+                      fontWeight="black" 
+                      textAnchor="end"
+                      className="select-none"
+                    >
+                      {val}
+                    </text>
+                  );
+                })}
+
                 {/* Grid Lines */}
                 {[0, 1, 2, 3].map((i) => (
-                  <line key={i} x1="0" y1={i * 100} x2="1000" y2={i * 100} stroke="#f0f0f0" strokeWidth="1" />
+                  <line key={i} x1="40" y1={40 + i * 73.3} x2="960" y2={40 + i * 73.3} stroke="#f0f0f0" strokeWidth="1" />
                 ))}
-                {/* Area Gradient */}
+                
+                {/* Area Gradient Defs */}
                 <defs>
                   <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#000" stopOpacity="0.05" />
                     <stop offset="100%" stopColor="#000" stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <path 
-                  d="M0,250 Q100,220 200,240 T400,180 T600,220 T800,140 T1000,160 V300 H0 Z" 
-                  fill="url(#chartGradient)"
-                />
-                <motion.path 
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 2, ease: "easeInOut" }}
-                  d="M0,250 Q100,220 200,240 T400,180 T600,220 T800,140 T1000,160" 
-                  fill="none" 
-                  stroke="black" 
-                  strokeWidth="3" 
-                  strokeLinecap="round"
-                />
-                {/* Data Points */}
-                <circle cx="400" cy="180" r="6" fill="black" stroke="white" strokeWidth="2" />
-                <circle cx="800" cy="140" r="6" fill="black" stroke="white" strokeWidth="2" />
+
+                {chartPaths && (
+                  <>
+                    {/* Area Gradient */}
+                    <path 
+                      d={chartPaths.areaD} 
+                      fill="url(#chartGradient)"
+                    />
+
+                    {/* Line Path with motion */}
+                    <motion.path 
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 1.5, ease: "easeInOut" }}
+                      d={chartPaths.pathD} 
+                      fill="none" 
+                      stroke="black" 
+                      strokeWidth="3" 
+                      strokeLinecap="round"
+                    />
+
+                    {/* Data Points */}
+                    {chartPaths.points.map((p, idx) => (
+                      <circle 
+                        key={idx} 
+                        cx={p.x} 
+                        cy={p.y} 
+                        r={hoveredPoint && hoveredPoint.x === p.x ? "6" : "4"} 
+                        fill="black" 
+                        stroke="white" 
+                        strokeWidth="2"
+                        className="transition-all duration-150"
+                      />
+                    ))}
+
+                    {/* X-Axis Ticks & Labels */}
+                    {chartPaths.points.map((p, idx) => {
+                      const showLabel = 
+                        idx === 0 || 
+                        idx === chartPaths.points.length - 1 || 
+                        (chartPaths.points.length > 2 && idx === Math.floor(chartPaths.points.length / 2)) ||
+                        (chartPaths.points.length > 4 && (idx === Math.floor(chartPaths.points.length / 4) || idx === Math.floor(chartPaths.points.length * 3 / 4)));
+                      
+                      if (!showLabel) return null;
+
+                      let formattedDate = p.date;
+                      try {
+                        const d = new Date(p.date);
+                        formattedDate = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+                      } catch (e) {}
+
+                      return (
+                        <g key={`x-tick-${idx}`}>
+                          <line x1={p.x} y1="260" x2={p.x} y2="265" stroke="#e0e0e0" strokeWidth="1" />
+                          <text 
+                            x={p.x} 
+                            y="280" 
+                            fill="#a1a1a1" 
+                            fontSize="10" 
+                            fontWeight="black" 
+                            textAnchor="middle"
+                            className="select-none"
+                          >
+                            {formattedDate}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Interactive Hov-zones */}
+                    {chartPaths.points.map((p, idx) => (
+                      <circle
+                        key={`hover-${idx}`}
+                        cx={p.x}
+                        cy={p.y}
+                        r="24"
+                        fill="transparent"
+                        className="cursor-pointer"
+                        onMouseEnter={() => setHoveredPoint(p)}
+                      />
+                    ))}
+                  </>
+                )}
               </svg>
               
-              {/* Tooltip Overlay (Mockup) */}
-              <div 
-                className="absolute rounded-xl bg-black p-3 text-white shadow-2xl transform -translate-x-1/2 -translate-y-[120%]"
-                style={{ top: '60%', left: '40%' }}
-              >
-                <p className="text-[10px] font-bold opacity-50">12 Apr</p>
-                <p className="text-xs font-black whitespace-nowrap">1.2k Permintaan</p>
-              </div>
+              {/* Tooltip Overlay */}
+              {hoveredPoint && (
+                <div 
+                  className="absolute rounded-xl bg-black p-3 text-white shadow-2xl pointer-events-none transform -translate-x-1/2 -translate-y-[120%] transition-all duration-150"
+                  style={{ 
+                    top: `${(hoveredPoint.y / 300) * 100}%`, 
+                    left: `${(hoveredPoint.x / 1000) * 100}%` 
+                  }}
+                >
+                  <p className="text-[10px] font-bold opacity-50">{hoveredPoint.date}</p>
+                  <p className="text-xs font-black whitespace-nowrap">{hoveredPoint.value} User Baru</p>
+                </div>
+              )}
             </div>
           </section>
 

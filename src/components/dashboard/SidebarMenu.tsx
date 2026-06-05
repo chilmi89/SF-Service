@@ -63,7 +63,7 @@ const MENU_CONFIG: Record<string, NavItem[]> = {
   ],
   owner_tunggal: [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard/owner", permission: "dashboard" },
-    { name: "Verifikasi Order", icon: <ClipboardCheck size={20} />, href: "/dashboard/admin/verifikasi-order" },
+    { name: "Verifikasi Order", icon: <ClipboardCheck size={20} />, href: "/dashboard/owner/verifikasi-order", permission: "verifikasi_order" },
     { name: "Profil Perusahaan", icon: <Building2 size={20} />, href: "/dashboard/owner/profile-tenant", permission: "view_profile" },
     { name: "Layanan Saya", icon: <Briefcase size={20} />, href: "/dashboard/owner/layanan", permission: "view_layanan" },
     { name: "Kelola Staf", icon: <Users size={20} />, href: "/dashboard/owner/staff", permission: "view_staff" },

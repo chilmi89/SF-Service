@@ -1,43 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Briefcase, 
-  TrendingUp, 
-  Star, 
-  Plus, 
-  ChevronDown, 
-  MoreVertical,
   Users,
   Clock,
-  Wrench,
   CheckCircle2,
   AlertCircle,
   MapPin,
   Calendar,
-  Loader2
+  Loader2,
+  Wallet,
+  ChevronDown
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useTasks } from "@/hooks/useTasks";
 import { Toast } from "@/components/toast";
+import { useOwnerDashboard } from "@/hooks/owner/useOwnerDashboard";
 
 export default function TenantDashboard() {
-  const { userRole } = useAuth();
   const {
     tasks,
-    isLoading,
-    fetchTasks,
+    isLoadingTasks,
     updateTaskStatus,
     toast,
     setToast,
-  } = useTasks();
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
-
-  const isOwnerTunggal = userRole?.toLowerCase() === "owner tunggal" || userRole?.toLowerCase() === "owner_tunggal";
+    isOwnerTunggal,
+    acceptedOrdersCount,
+    formattedRevenue,
+    layananCount,
+    staffCount,
+    chartPaths,
+    hoveredPoint,
+    setHoveredPoint,
+    filter,
+    setFilter,
+    isFilterDropdownOpen,
+    setIsFilterDropdownOpen
+  } = useOwnerDashboard();
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -49,22 +47,19 @@ export default function TenantDashboard() {
     }
   };
 
-  // Hitung statistik berdasarkan tugas riil
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === "Selesai").length;
-  const activeTasks = tasks.filter(t => t.status === "Dalam Perjalanan" || t.status === "Menunggu").length;
+  const stats = [
+    { label: "Pendapatan Diterima", value: formattedRevenue, trend: `${acceptedOrdersCount} Order`, color: "text-emerald-500", icon: <Wallet size={20} /> },
+    { label: "Jumlah Layanan", value: layananCount.toString(), trend: "Layanan Pembelian", color: "text-blue-500", icon: <Briefcase size={20} /> },
+    { label: "Jumlah Karyawan / Staff", value: staffCount.toString(), trend: "Staff Terdaftar", color: "text-amber-500", icon: <Users size={20} /> },
+    { label: "Role Anda", value: isOwnerTunggal ? "Owner Tunggal" : "Owner Tenant", trend: "Sistem", color: "text-purple-500", icon: <Users size={20} /> },
+  ];
 
   return (
     <div className="p-4 sm:p-8 md:p-12 space-y-8 md:space-y-12 w-full overflow-hidden">
       
       {/* STATS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        {[
-          { label: "Total Pekerjaan", value: totalTasks.toString(), trend: "Aktif", color: "text-blue-500", icon: <Briefcase size={20} /> },
-          { label: "Pekerjaan Aktif", value: activeTasks.toString(), trend: `${activeTasks} tugas`, color: "text-amber-500", icon: <Clock size={20} /> },
-          { label: "Pekerjaan Selesai", value: completedTasks.toString(), trend: `${completedTasks} tugas`, color: "text-emerald-500", icon: <CheckCircle2 size={20} /> },
-          { label: "Role Anda", value: isOwnerTunggal ? "Owner Tunggal" : "Owner Tenant", trend: "Sistem", color: "text-purple-500", icon: <Users size={20} /> },
-        ].map((stat, i) => (
+        {stats.map((stat, i) => (
           <motion.div 
             key={i}
             initial={{ opacity: 0, y: 20 }}
@@ -73,7 +68,7 @@ export default function TenantDashboard() {
             className="group rounded-xl border border-gray-300 bg-white p-4 sm:p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-black/5 flex flex-col sm:block"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2 sm:gap-0">
-              <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-2xl bg-black/[0.03] flex items-center justify-center shrink-0 transition-colors group-hover:bg-black group-hover:text-white`}>
+              <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-2xl bg-black/[0.03] flex items-center justify-center shrink-0 transition-colors group-hover:bg-black group-hover:text-white ${stat.color}`}>
                 <div className="scale-75 sm:scale-100">{stat.icon}</div>
               </div>
               <span className={`w-fit rounded-md sm:rounded-lg border px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[10px] uppercase tracking-tighter font-black bg-gray-50 text-gray-600 border-gray-100`}>
@@ -88,6 +83,202 @@ export default function TenantDashboard() {
         ))}
       </div>
 
+      {/* PERFORMANCE CHART SECTION */}
+      {chartPaths && chartPaths.points.length > 0 && (
+        <section className="rounded-xl border border-gray-300 bg-white p-5 sm:p-10 shadow-sm relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-12 gap-4 sm:gap-0">
+            <div>
+              <h2 className="text-xl font-bold mb-1">Pertumbuhan Order Diterima</h2>
+              <p className="text-xs font-medium text-gray-600">Statistik pesanan masuk harian yang disetujui (diterima) oleh tenant Anda.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* HOVER DETAIL */}
+              {hoveredPoint && (
+                <div className="px-4 py-2 rounded-xl bg-black text-white text-xs font-bold flex items-center gap-3 w-fit shadow-md animate-fade-in">
+                  <span className="opacity-75">{new Date(hoveredPoint.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{hoveredPoint.value} Pesanan</span>
+                </div>
+              )}
+
+              {/* FILTER DROPDOWN */}
+              <div className="relative">
+                <button 
+                  onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                  className="h-10 px-4 rounded-xl border border-black/[0.05] text-xs font-black flex items-center gap-2 hover:bg-black/[0.03] transition-all"
+                >
+                  {filter === "7days" ? "7 Hari Terakhir" : filter === "30days" ? "30 Hari Terakhir" : "Semua"} 
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${isFilterDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                
+                {isFilterDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsFilterDropdownOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl z-20">
+                      {[
+                        { id: "7days", label: "7 Hari Terakhir" },
+                        { id: "30days", label: "30 Hari Terakhir" },
+                        { id: "all", label: "Semua" }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setFilter(item.id as any);
+                            setIsFilterDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                            filter === item.id 
+                              ? "bg-black text-white" 
+                              : "text-gray-700 hover:bg-black/[0.03]"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic SVG Chart */}
+          <div className="relative w-full mt-6 sm:mt-8 aspect-[10/3] min-h-[150px]">
+            <svg className="h-full w-full overflow-visible" viewBox="0 0 1000 300">
+              {/* Y-Axis Labels */}
+              {[0, 1, 2, 3].map((i) => {
+                const val = chartPaths ? Math.round(chartPaths.maxVal - (i / 3) * chartPaths.maxVal) : 0;
+                const y = 40 + i * 73.3;
+                return (
+                  <text 
+                    key={`y-label-${i}`}
+                    x="30" 
+                    y={y + 4} 
+                    fill="#a1a1a1" 
+                    fontSize="10" 
+                    fontWeight="black" 
+                    textAnchor="end"
+                    className="select-none"
+                  >
+                    {val}
+                  </text>
+                );
+              })}
+
+              {/* Grid Lines */}
+              {[0, 1, 2, 3].map((i) => (
+                <line key={i} x1="40" y1={40 + i * 73.3} x2="960" y2={40 + i * 73.3} stroke="#f0f0f0" strokeWidth="1" />
+              ))}
+              
+              {/* Area Gradient Defs */}
+              <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#000" stopOpacity="0.05" />
+                  <stop offset="100%" stopColor="#000" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              {chartPaths && (
+                <>
+                  {/* Area Gradient */}
+                  <path 
+                    d={chartPaths.areaD} 
+                    fill="url(#chartGradient)"
+                  />
+
+                  {/* Line Path with motion */}
+                  <motion.path 
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    d={chartPaths.pathD} 
+                    fill="none" 
+                    stroke="black" 
+                    strokeWidth="3" 
+                    strokeLinecap="round"
+                  />
+
+                  {/* Data Points */}
+                  {chartPaths.points.map((p, idx) => (
+                    <circle 
+                      key={idx} 
+                      cx={p.x} 
+                      cy={p.y} 
+                      r={hoveredPoint && hoveredPoint.x === p.x ? "6" : "4"} 
+                      fill="black" 
+                      stroke="white" 
+                      strokeWidth="2"
+                      className="transition-all duration-150"
+                    />
+                  ))}
+
+                  {/* X-Axis Ticks & Labels */}
+                  {chartPaths.points.map((p, idx) => {
+                    const showLabel = 
+                      idx === 0 || 
+                      idx === chartPaths.points.length - 1 || 
+                      (chartPaths.points.length > 2 && idx === Math.floor(chartPaths.points.length / 2)) ||
+                      (chartPaths.points.length > 4 && (idx === Math.floor(chartPaths.points.length / 4) || idx === Math.floor(chartPaths.points.length * 3 / 4)));
+                    
+                    if (!showLabel) return null;
+
+                    let formattedDate = p.date;
+                    try {
+                      const d = new Date(p.date);
+                      formattedDate = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+                    } catch (e) {}
+
+                    return (
+                      <g key={`x-tick-${idx}`}>
+                        <line x1={p.x} y1="260" x2={p.x} y2="265" stroke="#e0e0e0" strokeWidth="1" />
+                        <text 
+                          x={p.x} 
+                          y="280" 
+                          fill="#a1a1a1" 
+                          fontSize="10" 
+                          fontWeight="black" 
+                          textAnchor="middle"
+                          className="select-none"
+                        >
+                          {formattedDate}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Interactive Hov-zones */}
+                  {chartPaths.points.map((p, idx) => (
+                    <circle
+                      key={`hover-${idx}`}
+                      cx={p.x}
+                      cy={p.y}
+                      r="24"
+                      fill="transparent"
+                      className="cursor-pointer"
+                      onMouseEnter={() => setHoveredPoint(p)}
+                    />
+                  ))}
+                </>
+              )}
+            </svg>
+            
+            {/* Tooltip Overlay */}
+            {hoveredPoint && (
+              <div 
+                className="absolute rounded-xl bg-black p-3 text-white shadow-2xl pointer-events-none transform -translate-x-1/2 -translate-y-[120%] transition-all duration-150"
+                style={{ 
+                  top: `${(hoveredPoint.y / 300) * 100}%`, 
+                  left: `${(hoveredPoint.x / 1000) * 100}%` 
+                }}
+              >
+                <p className="text-[10px] font-bold opacity-50">{hoveredPoint.date}</p>
+                <p className="text-xs font-black whitespace-nowrap">{hoveredPoint.value} Pesanan</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* CONDITIONAL CONTENT BASED ON OWNER TUNGGAL OR REGULAR OWNER */}
       {isOwnerTunggal ? (
         /* OWNER TUNGGAL VIEW: MY PERSONAL TASKS CARD GRID */
@@ -99,7 +290,7 @@ export default function TenantDashboard() {
             </div>
           </div>
 
-          {isLoading ? (
+          {isLoadingTasks ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
               <Loader2 className="h-10 w-10 animate-spin text-black mb-4" />
               <h3 className="text-sm font-bold text-black">Memuat data tugas Anda...</h3>
@@ -152,6 +343,13 @@ export default function TenantDashboard() {
                       <Clock size={14} className="text-gray-400" />
                       <span>{task.time}</span>
                     </div>
+
+                    {task.deskripsi && (
+                      <div className="p-3 bg-gray-50 rounded-xl border border-black/[0.03] space-y-1 mt-2 text-[11px]">
+                        <span className="text-[8px] font-black uppercase tracking-wider text-gray-400 block">Detail Tugas</span>
+                        <p className="font-medium text-gray-600 leading-relaxed whitespace-pre-wrap">{task.deskripsi}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-4 border-t border-gray-100 bg-gray-50/30 flex justify-end gap-2">
@@ -187,7 +385,7 @@ export default function TenantDashboard() {
             <p className="text-xs font-medium text-gray-500">Pantau progres pekerjaan yang sedang ditangani oleh staf teknisi Anda.</p>
           </div>
           
-          {isLoading ? (
+          {isLoadingTasks ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Loader2 className="h-8 w-8 animate-spin text-black mb-3" />
               <p className="text-xs font-bold text-gray-500">Memuat data monitoring tugas...</p>

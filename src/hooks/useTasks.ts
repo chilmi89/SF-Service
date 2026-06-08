@@ -32,16 +32,59 @@ export function useTasks() {
   const fetchTasks = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await taskService.getTasks();
+      // Resolve tenant ID dari owner yang sedang login
+      let myTenantId = localStorage.getItem("my_tenant_id");
+      if (!myTenantId) {
+        const profileId = localStorage.getItem("profile_id");
+        if (profileId) {
+          try {
+            const profileRes = await apiClient(`/api/profiles/${profileId}`);
+            const p = profileRes?.data?.data || profileRes?.data || profileRes;
+            if (p && p.kode_tenant) {
+              const tenantsRes = await apiClient('/api/tenants');
+              const tenants = tenantsRes?.data?.data || tenantsRes?.data || [];
+              const myTenant = tenants.find((t: any) => t.kode_tenant === p.kode_tenant);
+              if (myTenant) {
+                myTenantId = myTenant.id;
+                localStorage.setItem("my_tenant_id", myTenant.id);
+              }
+            }
+          } catch (e) {
+            console.error("Gagal mendeteksi tenant ID:", e);
+          }
+        }
+      }
+
+      const userRole = localStorage.getItem("user_role")?.toLowerCase() || "";
+      const isOwner = ["owner", "owner tunggal", "owner_tunggal", "admin tenant"].includes(userRole);
+
+      const [res, ordersRes] = await Promise.all([
+        taskService.getTasks(),
+        apiClient(isOwner ? "/api/orders?as=tenant" : "/api/orders")
+      ]);
+
       const rawData = res?.data?.data || res?.data || [];
       const dataArray = Array.isArray(rawData) ? rawData : [];
 
-      // Ambil profile customer secara parallel untuk mendapatkan nomor HP & alamat
+      const ordersList = ordersRes?.data?.data || ordersRes?.data || [];
+      const ordersMap = new Map<string, any>();
+      if (Array.isArray(ordersList)) {
+        ordersList.forEach((o: any) => {
+          ordersMap.set(o.id, o);
+        });
+      }
+      
+      const filteredDataArray = dataArray.filter((t: any) => {
+        if (!isOwner || !myTenantId) return true; // Customer/Teknisi/Jika belum ter-load, skip filter
+        return t.orders?.layanan?.tenant_id === myTenantId;
+      });
+
+      // Ambil profile customer secara parallel untuk mendapatkan nomor HP & alamat (hanya untuk task yang disaring)
       const customerIds = Array.from(
-        new Set(dataArray.map((t: any) => t.orders?.customer_id).filter(Boolean))
+        new Set(filteredDataArray.map((t: any) => t.orders?.id_customer).filter(Boolean))
       ) as string[];
 
-      const customerProfiles: Record<string, { phone: string; address: string }> = {};
+      const customerProfiles: Record<string, { phone: string; address: string; fullName: string }> = {};
 
       await Promise.all(
         customerIds.map(async (id) => {
@@ -50,6 +93,7 @@ export function useTasks() {
             const p = profileRes?.data?.data || profileRes?.data || profileRes;
             if (p) {
               customerProfiles[id] = {
+                fullName: p.full_name || p.fullName || "-",
                 phone: p.phone || "-",
                 address: p.address || "-",
               };
@@ -60,18 +104,18 @@ export function useTasks() {
         })
       );
 
-      const mapped: TaskUI[] = dataArray.map((item: any) => {
-        const customerId = item.orders?.customer_id;
-        const customerInfo = customerProfiles[customerId] || { phone: "-", address: "-" };
+      const mapped: TaskUI[] = filteredDataArray.map((item: any) => {
+        const customerId = item.orders?.id_customer;
+        const customerInfo = customerProfiles[customerId] || { phone: "-", address: "-", fullName: "-" };
         
-        // Mapping status_tugas dari DB ke UI
+        // Mapping status_tugas dari DB ke UI (Dukungan integer bigint)
         let mappedStatus: "Menunggu" | "Dalam Perjalanan" | "Selesai" | "Dibatalkan" = "Menunggu";
-        const dbStatus = (item.status_tugas || "").toLowerCase();
-        if (dbStatus === "dikerjakan" || dbStatus === "dalam perjalanan") {
+        const dbStatus = String(item.status_tugas || "").toLowerCase();
+        if (dbStatus === "dikerjakan" || dbStatus === "dalam perjalanan" || dbStatus === "3") {
           mappedStatus = "Dalam Perjalanan";
-        } else if (dbStatus === "selesai") {
+        } else if (dbStatus === "selesai" || dbStatus === "4") {
           mappedStatus = "Selesai";
-        } else if (dbStatus === "dibatalkan") {
+        } else if (dbStatus === "dibatalkan" || dbStatus === "5") {
           mappedStatus = "Dibatalkan";
         } else {
           mappedStatus = "Menunggu";
@@ -95,20 +139,34 @@ export function useTasks() {
         const hash = item.id.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         const priority = priorities[hash % priorities.length];
 
+        const orderData = ordersMap.get(item.order_id);
+        const actualServiceName = orderData?.layanan?.nama_layanan || "Layanan Servis";
+
+        let displayTitle = actualServiceName;
+        let displayDesc = item.deskripsi || "";
+
+        if (item.deskripsi) {
+          const parts = item.deskripsi.split(/ - | – /);
+          if (parts.length > 1) {
+            displayTitle = parts[0];
+            displayDesc = parts.slice(1).join(" - ");
+          }
+        }
+
         return {
           id: item.id,
           orderId: item.order_id,
-          customerName: item.orders?.customer_name || "Pelanggan",
-          serviceName: item.deskripsi || "Layanan Servis",
+          customerName: customerInfo.fullName !== "-" ? customerInfo.fullName : (item.orders?.customer?.full_name || "Pelanggan"),
+          serviceName: displayTitle,
           address: customerInfo.address,
-          phone: customerInfo.phone,
+          phone: customerInfo.phone !== "-" ? customerInfo.phone : (item.orders?.customer?.phone || "-"),
           status: mappedStatus,
           time: timeStr,
           date: dateStr,
           priority,
           technicianName: item.technician?.full_name || "Belum Ditugaskan",
           rawDeadline: item.deadline,
-          deskripsi: item.deskripsi,
+          deskripsi: displayDesc || item.deskripsi,
         };
       });
 
@@ -123,18 +181,18 @@ export function useTasks() {
 
   const updateTaskStatus = async (id: string, statusUI: "Menunggu" | "Dalam Perjalanan" | "Selesai" | "Dibatalkan") => {
     setIsSubmitting(true);
-    // Petakan status UI kembali ke DB
-    let dbStatus = "Pending";
+    // Petakan status UI kembali ke DB (Menggunakan tipe integer/bigint)
+    let dbStatus = 2; // Default Menunggu
     if (statusUI === "Dalam Perjalanan") {
-      dbStatus = "Dikerjakan";
+      dbStatus = 3;
     } else if (statusUI === "Selesai") {
-      dbStatus = "Selesai";
+      dbStatus = 4;
     } else if (statusUI === "Dibatalkan") {
-      dbStatus = "Dibatalkan";
+      dbStatus = 5;
     }
 
     try {
-      const res = await taskService.updateTaskStatus(id, dbStatus);
+      const res = await taskService.updateTaskStatus(id, String(dbStatus));
       if (res.error) {
         throw new Error(res.error);
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { 
   Wrench, 
   Star, 
@@ -37,14 +38,17 @@ export default function TeknisiDashboard() {
   useEffect(() => {
     const loadProfile = async () => {
       const profileId = localStorage.getItem("profile_id");
-      if (profileId) {
-        try {
-          const res = await authService.getProfile(profileId);
-          const data = res.data.data || res.data;
+      try {
+        const res = await authService.getProfile(profileId || undefined);
+        const data = res?.data?.data || res?.data || res;
+        if (data) {
           setProfile(data);
-        } catch (err) {
-          console.error("Failed to load profile:", err);
+          if (data.id && !profileId) {
+            localStorage.setItem("profile_id", data.id);
+          }
         }
+      } catch (err) {
+        console.error("Failed to load profile:", err);
       }
     };
     loadProfile();
@@ -58,8 +62,6 @@ export default function TeknisiDashboard() {
 
   const stats = [
     { label: "Tugas Aktif", value: tasksHariIni.length.toString(), trend: `${selesaiHariIni} Selesai`, color: "text-blue-600", bg: "bg-blue-50", icon: <Wrench size={18} /> },
-    { label: "Pendapatan Bulan Ini", value: "Rp 3.5M", trend: "+15%", color: "text-emerald-600", bg: "bg-emerald-50", icon: <Wallet size={18} /> },
-    { label: "Rating Anda", value: "4.9", trend: "Sangat Baik", color: "text-amber-600", bg: "bg-amber-50", icon: <Star size={18} /> },
     { label: "Total Selesai", value: totalSelesai.toString(), trend: "Bulan Ini", color: "text-purple-600", bg: "bg-purple-50", icon: <CheckCircle2 size={18} /> },
   ];
 
@@ -97,7 +99,7 @@ export default function TeknisiDashboard() {
       </section>
 
       {/* STATS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {stats.map((stat, i) => (
           <motion.div
             key={i}
@@ -111,7 +113,7 @@ export default function TeknisiDashboard() {
                 {stat.icon}
               </div>
               <span className={`text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-tighter ${
-                stat.trend.startsWith('+') || stat.trend === 'Sangat Baik' 
+                stat.label === "Tugas Aktif" && selesaiHariIni > 0 
                 ? 'bg-emerald-50 text-emerald-600' 
                 : 'bg-gray-100 text-gray-600'
               }`}>
@@ -221,7 +223,7 @@ export default function TeknisiDashboard() {
 
         {/* SIDE PANELS */}
         <div className="space-y-8">
-          {/* UPCOMING SCHEDULE */}
+          {/* COMPLETED TASKS HISTORY */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -229,33 +231,42 @@ export default function TeknisiDashboard() {
             className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-6"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black text-black">Peralatan Dibutuhkan</h2>
+              <h2 className="text-sm font-black text-black">Riwayat Tugas Selesai</h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold">
+                {tasks.filter(t => t.status === "Selesai").length} Selesai
+              </span>
             </div>
             
-            <div className="space-y-3">
-              {[
-                { item: "Freon R32", qty: "2 Tabung", desc: "Untuk service AC pelanggan" },
-                { item: "Pipa PVC 1/2", qty: "5 Meter", desc: "Instalasi air pipa" },
-                { item: "Kabel NYM", qty: "10 Meter", desc: "Instalasi listrik" },
-              ].map((tool, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-                  <div className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-black">
-                    <Wrench size={16} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-black">{tool.item}</p>
-                      <span className="text-[10px] font-black text-gray-500">{tool.qty}</span>
-                    </div>
-                    <p className="text-[10px] font-medium text-gray-400 mt-0.5">{tool.desc}</p>
-                  </div>
+            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+              {tasks.filter(t => t.status === "Selesai").length === 0 ? (
+                <div className="py-8 text-center flex flex-col items-center justify-center">
+                  <CheckCircle2 size={24} className="text-gray-300 mb-2" />
+                  <p className="text-xs font-medium text-gray-400">Belum ada tugas selesai.</p>
                 </div>
-              ))}
+              ) : (
+                tasks.filter(t => t.status === "Selesai").map((task, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50">
+                    <div className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-emerald-500 shrink-0">
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-bold text-black truncate">{task.serviceName}</p>
+                        <span className="text-[9px] font-black text-gray-400 shrink-0">{task.date}</span>
+                      </div>
+                      <p className="text-[10px] font-medium text-gray-400 mt-0.5 truncate">Pelanggan: {task.customerName}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
-            <button className="w-full py-3 rounded-xl border border-dashed border-gray-300 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-black hover:text-black transition-all">
-              Cek Gudang
-            </button>
+            <Link 
+              href="/dashboard/teknisi/tugas" 
+              className="w-full py-3 block text-center rounded-xl border border-dashed border-gray-300 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-black hover:text-black transition-all"
+            >
+              Lihat Semua Tugas
+            </Link>
           </motion.div>
         </div>
 

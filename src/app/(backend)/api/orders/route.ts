@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { verifySessionToken } from '@/lib/session';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 /**
  * @swagger
@@ -70,6 +71,8 @@ import { verifySessionToken } from '@/lib/session';
  *         description: Profil belum lengkap atau masih ada order aktif yang berjalan
  *       404:
  *         description: Layanan tidak ditemukan
+ *       429:
+ *         description: Terlalu banyak permintaan (Spam Prevention)
  * */
 
 export async function GET(request: NextRequest) {
@@ -155,6 +158,15 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = (session as any).userId;
+
+    // --- PROTEKSI SPAM KLIK (RATE LIMITING) ---
+    // Maksimal 1 request setiap 5 detik per user_id
+    const { allowed, remainingMs } = await checkRateLimit('create_order', userId, 1, 5000);
+    if (!allowed) {
+      return NextResponse.json({ 
+        error: `Terlalu banyak permintaan. Silakan tunggu ${Math.ceil(remainingMs / 1000)} detik sebelum membuat pesanan lagi.` 
+      }, { status: 429 });
+    }
 
     // Dapatkan profil pemesan
     const { data: profile } = await supabaseAdmin

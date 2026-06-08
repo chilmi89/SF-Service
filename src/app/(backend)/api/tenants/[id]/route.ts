@@ -46,12 +46,14 @@ import { checkProfileCompletion } from '@/lib/profile';
  *             type: object
  *             properties:
  *               phone: { type: string, description: "Nomor HP baru" }
+ *               norek: { type: string, description: "Nomor Rekening Pembayaran" }
  *               image_url: { type: string, description: "URL Gambar baru" }
  *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               phone: { type: string, description: "Nomor HP baru" }
+ *               norek: { type: string, description: "Nomor Rekening Pembayaran" }
  *               file:
  *                 type: string
  *                 format: binary
@@ -163,6 +165,7 @@ export async function PUT(
         address: formData.get('address') as string || undefined,
         phone: formData.get('phone') as string || undefined,
         kode_tenant: formData.get('kode_tenant') as string || undefined,
+        norek: formData.get('norek') as string || undefined,
       };
 
       if (updateFields.name) {
@@ -188,6 +191,7 @@ export async function PUT(
         phone: fullBody.phone || undefined,
         kode_tenant: fullBody.kode_tenant || undefined,
         image_url: fullBody.image_url || undefined,
+        norek: fullBody.norek || undefined,
       };
 
       if (updateFields.name) {

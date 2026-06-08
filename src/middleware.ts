@@ -86,8 +86,7 @@ export async function middleware(request: NextRequest) {
     if (!session) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
-    const isOwnerTunggalVerifikasi = session.role === 'owner tunggal' && pathname === '/dashboard/admin/verifikasi-order';
-    if (session.role !== 'admin' && session.role !== 'admin tenant' && !isOwnerTunggalVerifikasi) {
+    if (session.role !== 'admin' && session.role !== 'admin tenant') {
       return NextResponse.redirect(new URL('/forbidden', request.url));
     }
   }

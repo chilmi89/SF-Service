@@ -19,6 +19,19 @@ import { Toast } from "@/components/toast";
 
 const tabs = ["Semua", "Menunggu", "Dalam Perjalanan", "Selesai", "Dibatalkan"];
 
+const formatServiceName = (name: string) => {
+  const clean = name.replace(/^(pekerjaan:\s*|pekerjaan\s*-\s*)/i, "");
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+};
+
+const getPriorityBorderColor = (priority: string) => {
+  switch(priority) {
+    case 'Tinggi': return 'border-l-4 border-l-red-500';
+    case 'Sedang': return 'border-l-4 border-l-amber-500';
+    default: return 'border-l-4 border-l-emerald-500';
+  }
+};
+
 export default function TeknisiTugasPage() {
   const {
     tasks,
@@ -117,60 +130,72 @@ export default function TeknisiTugasPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredTasks.map((task, i) => (
-            <motion.div
+             <motion.div
               key={task.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group flex flex-col"
+              className={`bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group flex flex-col ${getPriorityBorderColor(task.priority)}`}
             >
               {/* Card Header */}
-              <div className="p-5 border-b border-gray-100 bg-gray-50/30 flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Task</span>
-                    <div className={`px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 ${getStatusColor(task.status)}`}>
+              <div className="p-4 sm:p-5 border-b border-gray-100 bg-gray-50/20 flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold tracking-wider text-gray-400 uppercase">
+                      ID: #{task.id.slice(0, 8).toUpperCase()}
+                    </span>
+                    <span className="text-gray-300">•</span>
+                    <div className={`px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${getStatusColor(task.status)}`}>
                       {task.status === 'Dalam Perjalanan' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
                       {task.status}
                     </div>
                   </div>
-                  <h3 className="text-lg font-black text-black leading-tight group-hover:text-blue-600 transition-colors">{task.serviceName}</h3>
+                  <h3 className="text-base font-black text-black leading-tight group-hover:text-black/85 transition-colors">
+                    {formatServiceName(task.serviceName)}
+                  </h3>
                 </div>
-                <button className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
+                <button className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors shrink-0">
                   <MoreVertical size={16} />
                 </button>
               </div>
 
               {/* Card Body */}
-              <div className="p-5 space-y-4 flex-grow">
-                <div className="flex items-start gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center font-black text-gray-600 shrink-0 border border-gray-200">
+              <div className="p-4 sm:p-5 space-y-3 sm:space-y-4 flex-grow">
+                <div className="flex items-start gap-2.5">
+                  <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center font-black text-gray-600 shrink-0 border border-gray-200 text-xs">
                     {task.customerName.charAt(0)}
                   </div>
                   <div>
                     <p className="text-sm font-bold text-black">{task.customerName}</p>
-                    <p className="text-xs font-medium text-gray-500">{task.phone}</p>
+                    <p className="text-[11px] font-medium text-gray-500">{task.phone}</p>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2 text-sm">
-                    <MapPin size={16} className="text-gray-400 mt-0.5 shrink-0" />
+                <div className="space-y-1.5 sm:space-y-2">
+                  <div className="flex items-start gap-2 text-xs sm:text-sm">
+                    <MapPin size={15} className="text-gray-400 mt-0.5 shrink-0" />
                     <p className="font-medium text-gray-600 leading-snug">{task.address}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar size={16} className="text-gray-400 shrink-0" />
+                  <div className="flex items-center gap-2 text-xs sm:text-sm">
+                    <Calendar size={15} className="text-gray-400 shrink-0" />
                     <p className="font-medium text-gray-600">{task.date}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock size={16} className="text-gray-400 shrink-0" />
+                  <div className="flex items-center gap-2 text-xs sm:text-sm">
+                    <Clock size={15} className="text-gray-400 shrink-0" />
                     <p className="font-medium text-gray-600">{task.time}</p>
                   </div>
                 </div>
+
+                {task.deskripsi && (
+                  <div className="p-3 bg-gray-50 rounded-xl border border-black/[0.03] space-y-1 mt-1 sm:mt-2">
+                    <span className="text-[8px] font-black uppercase tracking-wider text-gray-400 block">Detail Tugas</span>
+                    <p className="text-[11px] font-medium text-gray-600 leading-relaxed whitespace-pre-wrap">{task.deskripsi}</p>
+                  </div>
+                )}
               </div>
 
               {/* Card Footer */}
-              <div className="p-5 border-t border-gray-100 flex items-center justify-between bg-white">
+              <div className="p-4 sm:p-5 border-t border-gray-100 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
                   {getPriorityIcon(task.priority)}
                   Prioritas {task.priority}

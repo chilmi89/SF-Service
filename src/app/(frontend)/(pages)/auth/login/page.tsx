@@ -15,7 +15,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { authService } from "@/lib/api/auth.service";
-import { apiClient } from "@/lib/api/api-client";
+import { apiClient, clearSessionCache } from "@/lib/api/api-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Toast, ToastType } from "@/components/toast";
@@ -66,6 +66,10 @@ function LoginContent() {
 
     // Login Berhasil (Token sudah ada di HttpOnly Cookie)
     try {
+      // Hapus sisa cache session & permissions sebelumnya
+      localStorage.removeItem("user_permissions");
+      clearSessionCache();
+
       if (data.profile_id) {
         localStorage.setItem("profile_id", data.profile_id);
         

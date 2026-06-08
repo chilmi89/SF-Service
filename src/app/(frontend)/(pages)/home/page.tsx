@@ -48,9 +48,12 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const servicesSectionRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = (query?: string) => {
+  const handleSearch = (query?: string, shouldResetCategory: boolean = true) => {
     if (query !== undefined) {
       setSearchQuery(query);
+    }
+    if (shouldResetCategory) {
+      setActiveCategory("Semua");
     }
     setTimeout(() => {
       if (servicesSectionRef.current) {
@@ -97,7 +100,7 @@ export default function Home() {
         const mapped = dataArray.map((item: any) => ({
           id: item.layanan_id || item.id,
           title: item.nama_layanan || "Layanan",
-          category: (item.id_kategori && categoryMap[item.id_kategori]) || item.kategori || "Servis AC",
+          category: (item.id_kategori && categoryMap[item.id_kategori]) || item.kategori || "Pendingin (HVAC)",
           img: item.gambar || "/images/ac.png",
           tech: item.tenants?.name || "Teknisi FixIt", 
           avatar: "/images/budi.png",
@@ -116,7 +119,8 @@ export default function Home() {
   }, []);
 
   const filteredServices = services.filter(service => {
-    const matchesCategory = activeCategory === "Semua" || service.category === activeCategory;
+    const matchesCategory = activeCategory === "Semua" || 
+      service.category.toLowerCase().includes(activeCategory.toLowerCase());
     const matchesSearch = searchQuery.trim() === "" || 
       service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -219,18 +223,18 @@ export default function Home() {
                     key={i} 
                     onClick={() => {
                       if (tag === "Servis AC") {
-                        setActiveCategory("Servis AC");
+                        setActiveCategory("Pendingin");
                         setSearchQuery("");
                       } else if (tag === "Pipa Bocor") {
-                        setActiveCategory("Pipa Air");
+                        setActiveCategory("Sanitasi dan Air");
                         setSearchQuery("Pipa");
                       } else if (tag === "Instalasi Listrik") {
-                        setActiveCategory("Listrik");
+                        setActiveCategory("Kelistrikan");
                         setSearchQuery("Listrik");
                       } else {
                         setSearchQuery(tag);
                       }
-                      handleSearch();
+                      handleSearch(undefined, false);
                     }}
                     className="text-black/60 hover:text-black transition-colors underline decoration-black/10 hover:decoration-black underline-offset-4 decoration-1 font-bold"
                   >
@@ -314,10 +318,13 @@ export default function Home() {
                 </button>
               </div>
               <div className="flex overflow-x-auto items-center gap-6 md:gap-8 w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
-                {["Semua", "Servis AC", "Pipa Air", "Listrik", "Elektronik", "Pertukangan"].map((tab) => (
+                {["Semua", "Kelistrikan", "Pendingin", "Sanitasi dan Air", "Struktur Ringan"].map((tab) => (
                   <button 
                     key={tab} 
-                    onClick={() => setActiveCategory(tab)}
+                    onClick={() => {
+                      setActiveCategory(tab);
+                      setSearchQuery("");
+                    }}
                     className={`text-sm whitespace-nowrap font-bold transition-all hover:text-black ${activeCategory === tab ? "text-black border-b-2 border-black pb-1" : "text-[#a1a1a1]"}`}
                   >
                     {tab}

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/api/auth.service";
 
+import { clearSessionCache } from "@/lib/api/api-client";
+
 /**
  * useAuth Hook
  * Digunakan untuk mengelola status autentikasi, role pengguna,
@@ -51,10 +53,14 @@ export const useAuth = () => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // 2. Bersihkan localStorage
+      // 2. Bersihkan localStorage & sessionStorage cache
       localStorage.removeItem("token");
       localStorage.removeItem("user_role");
       localStorage.removeItem("profile_id");
+      localStorage.removeItem("user_permissions");
+      localStorage.removeItem("my_tenant_id");
+      localStorage.removeItem("kode_tenant");
+      clearSessionCache();
       
       // 3. Update state lokal
       setIsLoggedIn(false);

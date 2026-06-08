@@ -5,6 +5,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  env: {
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "",
+  },
   images: {
     remotePatterns: [
       {

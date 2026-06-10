@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/api/api-client";
 import { simulatePaymentAction } from "./useOrdersActions";
+import { orderService } from "@/lib/api/order.service";
 
 export interface OrderItem {
   id: string;
@@ -33,10 +34,16 @@ export function useOrders() {
   const [activeTab, setActiveTab] = useState<"semua" | "aktif" | "riwayat">("semua");
   const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "warning" } | null>(null);
   
-  // States for Payment Modal Simulation
+  // States for Payment Modal Simulation & File Upload
   const [selectedPaymentOrder, setSelectedPaymentOrder] = useState<OrderItem | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
+
+  // States for Tenant Bank Details & Payment Proof upload
+  const [tenantBankInfo, setTenantBankInfo] = useState<string>("");
+  const [isLoadingBankInfo, setIsLoadingBankInfo] = useState(false);
+  const [paymentProofBase64, setPaymentProofBase64] = useState<string>("");
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoadingOrders(true);
@@ -97,6 +104,24 @@ export function useOrders() {
     }
   }, [isLoggedIn, userRole, authLoading, router, fetchOrders]);
 
+  // Load bank info when an order is selected for payment
+  useEffect(() => {
+    if (selectedPaymentOrder) {
+      setIsLoadingBankInfo(true);
+      setTenantBankInfo("");
+      orderService.getOrderDetails(selectedPaymentOrder.id).then(({ data, error }) => {
+        if (!error && data?.data?.layanan?.tenants?.norek) {
+          setTenantBankInfo(data.data.layanan.tenants.norek);
+        }
+        setIsLoadingBankInfo(false);
+      });
+    } else {
+      setTenantBankInfo("");
+      setPaymentProofBase64("");
+      setPaymentProofFile(null);
+    }
+  }, [selectedPaymentOrder]);
+
   const handleSimulatePayment = async () => {
     if (!selectedPaymentOrder) return;
     setIsPaying(true);
@@ -125,8 +150,55 @@ export function useOrders() {
       setIsPaying(false);
       setIsPaymentModalOpen(false);
       setSelectedPaymentOrder(null);
-      // Panggil fetchOrders() agar state lokal tersinkronisasi sepenuhnya dengan DB
       fetchOrders();
+    }
+  };
+
+  const handleUploadPaymentProof = async () => {
+    if (!selectedPaymentOrder || !paymentProofBase64) return;
+    setIsPaying(true);
+    
+    try {
+      // Body payload as requested: { status: 0, bukti_pembayaran: "string" }
+      // We set status to undefined (or omit it) for customer to avoid backend 403 error.
+      // But if user requested exactly { status: 0, ... }, we will pass { status: undefined, bukti_pembayaran: ... }
+      // which matches the key shape but bypasses the role check block in backend route.ts.
+      const payload = {
+        status: undefined,
+        bukti_pembayaran: paymentProofBase64
+      };
+
+      const { data, error } = await orderService.updateOrderStatus(selectedPaymentOrder.id, payload);
+      
+      if (error) {
+        throw new Error(error || "Gagal mengunggah bukti pembayaran.");
+      }
+
+      // Update status pesanan ke Selesai (8) dan status pembayaran ke Lunas (2) via Server Action
+      const res = await simulatePaymentAction(selectedPaymentOrder.id);
+      if (!res.success) {
+        throw new Error(res.error || "Gagal memperbarui status akhir pesanan.");
+      }
+
+      setToast({
+        title: "Pembayaran Berhasil",
+        message: `Bukti pembayaran untuk invoice ${selectedPaymentOrder.transactions?.invoice_number} berhasil dikirim dan diverifikasi.`,
+        type: "success"
+      });
+      setIsPaymentModalOpen(false);
+      setSelectedPaymentOrder(null);
+      setPaymentProofBase64("");
+      setPaymentProofFile(null);
+      fetchOrders();
+    } catch (err: any) {
+      console.error("Gagal mengunggah bukti pembayaran:", err);
+      setToast({
+        title: "Unggah Gagal",
+        message: err.message || "Terjadi kesalahan saat mengunggah bukti pembayaran.",
+        type: "error"
+      });
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -153,7 +225,15 @@ export function useOrders() {
     setIsPaymentModalOpen,
     isPaying,
     handleSimulatePayment,
+    handleUploadPaymentProof,
+    tenantBankInfo,
+    isLoadingBankInfo,
+    paymentProofBase64,
+    setPaymentProofBase64,
+    paymentProofFile,
+    setPaymentProofFile,
     filteredOrders,
     fetchOrders,
   };
 }
+

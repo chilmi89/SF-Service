@@ -10,12 +10,12 @@ import {
   CreditCard,
   AlertCircle,
   CheckCircle2,
+  User,
+  ExternalLink,
   XCircle,
   Loader2,
   TrendingUp,
-  Receipt,
-  User,
-  ExternalLink
+  Receipt
 } from "lucide-react";
 import { useOrders, OrderItem } from "@/hooks/useOrders";
 import { Toast } from "@/components/toast";
@@ -35,7 +35,12 @@ export default function OrdersPage() {
     isPaymentModalOpen,
     setIsPaymentModalOpen,
     isPaying,
-    handleSimulatePayment,
+    handleUploadPaymentProof,
+    tenantBankInfo,
+    isLoadingBankInfo,
+    paymentProofFile,
+    setPaymentProofFile,
+    setPaymentProofBase64,
     filteredOrders
   } = useOrders();
 
@@ -276,7 +281,7 @@ export default function OrdersPage() {
 
       </main>
 
-      {/* Simulated Payment Modal */}
+      {/* Upload Bukti Pembayaran Modal */}
       <AnimatePresence>
         {isPaymentModalOpen && selectedPaymentOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -284,10 +289,10 @@ export default function OrdersPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white border border-black/15 shadow-2xl rounded-3xl p-6 w-full max-w-md space-y-6"
+              className="bg-white border border-black/15 shadow-2xl rounded-3xl p-6 w-full max-w-md space-y-5"
             >
               <div className="flex items-center justify-between border-b border-black/[0.06] pb-3">
-                <h3 className="font-black text-sm text-black uppercase tracking-wider">Simulasi Pembayaran</h3>
+                <h3 className="font-black text-sm text-black uppercase tracking-wider">Penyelesaian Pembayaran</h3>
                 <button
                   onClick={() => {
                     setIsPaymentModalOpen(false);
@@ -311,20 +316,69 @@ export default function OrdersPage() {
                   </div>
                   <div className="h-px bg-black/[0.05]" />
                   <div className="flex justify-between items-end">
-                    <span className="text-xs font-semibold text-gray-400">Total Pembayaran</span>
+                    <span className="text-xs font-semibold text-gray-400">Total Tagihan</span>
                     <span className="text-base font-black text-black">
                       Rp {(selectedPaymentOrder.transactions?.total_bayar || selectedPaymentOrder.layanan?.harga_dasar || 0).toLocaleString("id-ID")}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs font-medium text-gray-500 leading-relaxed">
-                  <p>
-                    Fitur ini adalah **simulasi sistem pembayaran** lokal untuk mempermudah alur pengerjaan tugas oleh teknisi.
-                  </p>
-                  <p>
-                    Dengan menekan tombol di bawah, status transaksi akan diperbarui ke database sebagai **Lunas** (Pembayaran Selesai).
-                  </p>
+                {/* Bank Accounts Section */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-black uppercase tracking-wider block">Transfer ke Rekening Merchant</span>
+                  {isLoadingBankInfo ? (
+                    <div className="flex items-center gap-2 py-3 justify-center bg-gray-50 rounded-xl border border-black/[0.03]">
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                      <span className="text-[11px] font-bold text-gray-400">Memuat info rekening...</span>
+                    </div>
+                  ) : tenantBankInfo ? (
+                    <div className="space-y-1.5">
+                      {tenantBankInfo.split(";").filter(Boolean).map((item, idx) => {
+                        const [bank, number] = item.split(",");
+                        return (
+                          <div key={idx} className="flex justify-between items-center bg-black/[0.02] p-2.5 rounded-xl border border-black/[0.03] text-xs font-bold">
+                            <span className="text-gray-500">{bank}</span>
+                            <span className="text-black select-all">{number}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-amber-800 text-[10px] font-bold">
+                      Merchant belum menyetel rekening pembayaran. Silakan hubungi CS untuk detail transfer.
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload File Input */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-black uppercase tracking-wider block">Upload Bukti Transfer</label>
+                  <div className="relative border border-dashed border-black/15 hover:border-black/30 transition-colors rounded-2xl p-4 flex flex-col items-center justify-center bg-gray-50/50 cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setPaymentProofFile(file);
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setPaymentProofBase64(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <div className="text-center space-y-1">
+                      <span className="text-xs font-bold text-black block">
+                        {paymentProofFile ? paymentProofFile.name : "Pilih File Gambar Bukti Pembayaran"}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-medium block">
+                        Format file: PNG, JPG, JPEG (Max. 5MB)
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -339,19 +393,19 @@ export default function OrdersPage() {
                   Batal
                 </button>
                 <button
-                  onClick={handleSimulatePayment}
-                  disabled={isPaying}
-                  className="w-1/2 py-3 rounded-2xl bg-black text-white hover:bg-black/90 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md"
+                  onClick={handleUploadPaymentProof}
+                  disabled={isPaying || !paymentProofFile}
+                  className="w-1/2 py-3 rounded-2xl bg-black text-white hover:bg-black/90 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md"
                 >
                   {isPaying ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin text-white" />
-                      Memproses...
+                      Mengunggah...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="h-4 w-4" />
-                      Bayar Sekarang
+                      Kirim Bukti
                     </>
                   )}
                 </button>

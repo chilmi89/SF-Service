@@ -86,7 +86,13 @@ function LoginContent() {
 
       localStorage.setItem("token", "true"); // UI flag for Navbar
       
-      const nextPath = data.redirectPath || "/home";
+      const role = (localStorage.getItem("user_role") || "").toLowerCase();
+      const isDashboardUser = ["super admin", "superadmin", "admin", "teknisi", "owner", "owner tunggal", "owner_tunggal", "admin tenant"].includes(role);
+      
+      const queryRedirect = searchParams.get("redirect");
+      const nextPath = isDashboardUser 
+        ? (data.redirectPath || "/dashboard") 
+        : (queryRedirect || data.redirectPath || "/home");
 
       setToast({
         title: "Berhasil Masuk",
@@ -95,7 +101,7 @@ function LoginContent() {
       });
 
       // Simpan path redirect untuk digunakan setelah toast ditutup
-      (window as any)._nextRedirectPath = data.redirectPath || "/";
+      (window as any)._nextRedirectPath = nextPath;
     } catch (err) {
       console.error("Login handling error:", err);
       setToast({

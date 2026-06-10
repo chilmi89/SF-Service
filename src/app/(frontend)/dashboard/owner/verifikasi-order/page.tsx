@@ -118,8 +118,8 @@ export default function OwnerOrderVerificationPage() {
           animate={{ opacity: 1, x: 0 }}
           className="space-y-1"
         >
-          <h1 className="text-3xl font-black tracking-tight text-black flex items-center gap-3">
-            <ClipboardCheck className="text-black h-8 w-8" />
+          <h1 className="text-xl font-black text-black flex items-center gap-3">
+            <ClipboardCheck className="text-black h-6 w-6" />
             Verifikasi Pesanan
           </h1>
           <p className="text-sm font-medium text-gray-500">
@@ -129,7 +129,7 @@ export default function OwnerOrderVerificationPage() {
       </section>
 
       {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         {/* TABS */}
         <div className="flex overflow-x-auto w-full md:w-auto gap-1 p-1 bg-gray-50 rounded-xl border border-gray-200/50">
           {(["Menunggu Konfirmasi", "Diterima", "Ditolak", "Semua"] as const).map((tab) => {
@@ -140,7 +140,7 @@ export default function OwnerOrderVerificationPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 whitespace-nowrap ${
+                className={`relative px-4 py-2 text-xs font-medium rounded-lg transition-all flex items-center gap-2 whitespace-nowrap ${
                   isActive 
                     ? "bg-white text-black shadow-sm" 
                     : "text-gray-500 hover:text-black"
@@ -173,145 +173,226 @@ export default function OwnerOrderVerificationPage() {
       </div>
 
       {/* ORDERS GRID */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 animate-pulse">
-              <div className="flex justify-between items-center">
-                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-5 bg-gray-200 rounded-full w-1/4"></div>
-              </div>
-              <div className="space-y-2 pt-2">
-                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-              <div className="h-10 bg-gray-200 rounded-xl w-full mt-4"></div>
-            </div>
-          ))}
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-16 bg-white rounded-3xl border border-gray-100 shadow-sm text-center px-4"
-        >
-          <div className="h-14 w-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 border border-gray-100">
-            <AlertCircle className="text-gray-400 h-7 w-7" />
-          </div>
-          <h3 className="text-lg font-black text-black">Tidak ada pesanan</h3>
-          <p className="text-sm font-medium text-gray-500 max-w-sm mt-1">
-            {searchTerm 
-              ? "Tidak dapat menemukan pesanan yang cocok dengan pencarian Anda." 
-              : `Saat ini tidak ada pesanan dengan status "${activeTab}".`}
-          </p>
-        </motion.div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredOrders.map((order) => {
-              const statusColors = {
-                "Menunggu Konfirmasi": "bg-amber-50 text-amber-700 border-amber-100",
-                "Diterima": "bg-emerald-50 text-emerald-700 border-emerald-100",
-                "Ditolak": "bg-red-50 text-red-700 border-red-100"
-              };
-
-              return (
-                <motion.div
-                  layout
-                  key={order.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all flex flex-col justify-between"
-                >
-                  <div className="space-y-4">
-                    {/* Top Row: Invoice & Status */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-black tracking-wider text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">
-                        {order.transactions?.invoice_number}
-                      </span>
-                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase border ${statusColors[order.status_order]}`}>
-                        {order.status_order}
-                      </span>
-                    </div>
-
-                    {/* Service & Price */}
-                    <div>
-                      <h3 className="text-lg font-black text-black leading-tight">
-                        {order.layanan?.nama_layanan}
-                      </h3>
-                      <p className="text-emerald-600 font-extrabold text-sm mt-1">
-                        {formatRupiah(order.transactions?.total_bayar)}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50 text-xs text-gray-400 text-center [&>th]:font-medium">
+                  <th className="py-4 px-6">Invoice ID</th>
+                  <th className="py-4 px-6">Customer</th>
+                  <th className="py-4 px-6">Product/Service</th>
+                  <th className="py-4 px-6">Price</th>
+                  <th className="py-4 px-6">Date</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                // SKELETON LOADER
+                [1, 2, 3].map((n) => (
+                  <tr key={n} className="animate-pulse">
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+                        <div className="space-y-1">
+                          <div className="h-3 bg-gray-200 rounded w-20"></div>
+                          <div className="h-3 bg-gray-200 rounded w-28"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                    <td className="py-4 px-6"><div className="h-5 bg-gray-200 rounded-full w-16"></div></td>
+                    <td className="py-4 px-6"><div className="h-8 bg-gray-200 rounded-xl w-12 mx-auto"></div></td>
+                  </tr>
+                ))
+              ) : filteredOrders.length === 0 ? (
+                // EMPTY STATE
+                <tr>
+                  <td colSpan={7} className="py-16">
+                    <div className="flex flex-col items-center justify-center text-center px-4">
+                      <div className="h-14 w-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 border border-gray-100">
+                        <AlertCircle className="text-gray-400 h-7 w-7" />
+                      </div>
+                      <h3 className="text-lg font-bold ">Tidak ada pesanan</h3>
+                      <p className="text-sm font-medium text-gray-500 max-w-sm mt-1">
+                        {searchTerm 
+                          ? "Tidak dapat menemukan pesanan yang cocok dengan pencarian Anda." 
+                          : `Saat ini tidak ada pesanan dengan status "${activeTab}".`}
                       </p>
                     </div>
+                  </td>
+                </tr>
+              ) : (
+                // REAL DATA ROWS
+                <AnimatePresence mode="popLayout">
+                  {filteredOrders.map((order) => {
+                    const statusColors = {
+                      "Menunggu Konfirmasi": "bg-amber-50 text-amber-700 border-amber-100",
+                      "Diterima": "bg-emerald-50 text-emerald-700 border-emerald-100",
+                      "Ditolak": "bg-red-50 text-red-700 border-red-100"
+                    };
+                    
+                    // Generate initials
+                    const initials = order.customer_name
+                      ? order.customer_name.trim().split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
+                      : "P";
+                      
+                    // Simulated email for aesthetic completeness (matching Gmail style from user reference screenshot)
+                    const simulatedEmail = order.customer_name
+                      ? `${order.customer_name.toLowerCase().replace(/\s+/g, "")}@gmail.com`
+                      : "customer@gmail.com";
 
-                    {/* Customer Details */}
-                    <div className="pt-3 border-t border-gray-50 space-y-2 text-xs font-semibold text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 text-gray-400" />
-                        <span className="text-gray-900 font-bold">{order.customer_name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                        <span>{formatOrderDate(order.tanggal_order, order.jam)}</span>
-                      </div>
-                      {order.catatan && (
-                        <div className="mt-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1">
-                            <FileText className="h-3 w-3" /> Catatan Pelanggan:
-                          </p>
-                          <p className="text-[11px] font-medium text-gray-600 italic whitespace-pre-line leading-relaxed">
-                            {order.catatan}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    // Background color options for avatar based on name letters (like Google Contacts)
+                    const colors = [
+                      "bg-rose-100 text-rose-700",
+                      "bg-blue-100 text-blue-700",
+                      "bg-amber-100 text-amber-700",
+                      "bg-purple-100 text-purple-700",
+                      "bg-emerald-100 text-emerald-700",
+                      "bg-indigo-100 text-indigo-700"
+                    ];
+                    const charCode = order.customer_name ? order.customer_name.charCodeAt(0) : 65;
+                    const avatarColorClass = colors[charCode % colors.length];
 
-                  {/* Actions (Show if status is Menunggu Konfirmasi OR if status is Diterima but no task exists) */}
-                  {(order.status_order === "Menunggu Konfirmasi" || (order.status_order === "Diterima" && !order.hasTask)) && (
-                    <div className="flex gap-3 mt-6 pt-4 border-t border-gray-50">
-                      {order.status_order === "Menunggu Konfirmasi" && (
-                        <button
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setActionType("Ditolak");
-                          }}
-                          className="flex-1 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-all flex items-center justify-center gap-2"
-                        >
-                          <XIcon className="h-3.5 w-3.5" />
-                          Tolak
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setActionType("Diterima");
-                          // Initialize task details
-                          setTaskName(`Pekerjaan: ${order.layanan?.nama_layanan || "Servis"}`);
-                          setDescription(
-                            `Detail pesanan untuk customer ${order.customer_name}. Catatan: ${
-                              order.catatan || "-"
-                            }`
-                          );
-                          const tomorrow = new Date();
-                          tomorrow.setDate(tomorrow.getDate() + 1);
-                          const formattedDate = tomorrow.toISOString().substring(0, 16);
-                          setDeadline(formattedDate);
-                        }}
-                        className={`${order.status_order === "Diterima" ? "w-full" : "flex-1"} py-2.5 rounded-xl bg-black text-white hover:bg-zinc-800 text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2`}
+                    return (
+                      <motion.tr
+                        layout
+                        key={order.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="hover:bg-gray-50/50 transition-colors"
                       >
-                        <Check className="h-3.5 w-3.5" />
-                        {order.status_order === "Diterima" ? "Buat Tugas Pengerjaan" : "Terima"}
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                        {/* Invoice ID */}
+                        <td className="py-4 px-6 font-medium text-xs text-gray-950">
+                          {order.transactions?.invoice_number || "N/A"}
+                        </td>
+
+                        {/* Customer */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${avatarColorClass}`}>
+                              {initials}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-black leading-tight">
+                                {order.customer_name}
+                              </span>
+                              <span className="text-[10px] text-gray-400 font-semibold leading-normal">
+                                {simulatedEmail}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Product/Service */}
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium text-gray-900">
+                              {order.layanan?.nama_layanan || "Jasa Perbaikan"}
+                            </span>
+                            {order.catatan && (
+                              <span className="text-[10px] font-medium text-gray-400 italic mt-0.5 truncate max-w-[200px]" title={order.catatan}>
+                                "{order.catatan}"
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Price */}
+                        <td className="py-4 px-6 text-xs font-small text-emerald-600">
+                          {formatRupiah(order.transactions?.total_bayar)}
+                        </td>
+
+                        {/* Date */}
+                        <td className="py-4 px-6 text-xs font-semibold text-gray-500">
+                          {formatOrderDate(order.tanggal_order, order.jam)}
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-4 px-6">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[order.status_order]}`}>
+                            {order.status_order}
+                          </span>
+                        </td>
+
+                        {/* Action */}
+                        <td className="py-4 px-6">
+                          <div className="flex gap-2 justify-center items-center">
+                            {order.status_order === "Menunggu Konfirmasi" ? (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setActionType("Diterima");
+                                    setTaskName(`Pekerjaan: ${order.layanan?.nama_layanan || "Servis"}`);
+                                    setDescription(
+                                      `Detail pesanan untuk customer ${order.customer_name}. Catatan: ${
+                                        order.catatan || "-"
+                                      }`
+                                    );
+                                    const tomorrow = new Date();
+                                    tomorrow.setDate(tomorrow.getDate() + 1);
+                                    const formattedDate = tomorrow.toISOString().substring(0, 16);
+                                    setDeadline(formattedDate);
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg bg-black text-white hover:bg-zinc-800 text-[11px] font-bold uppercase transition-all shadow-sm flex items-center gap-1 active:scale-95"
+                                >
+                                  <Check className="h-3 w-3" />
+                                  Terima
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setActionType("Ditolak");
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-50 text-red-600 text-[10px] font-black uppercase transition-all flex items-center gap-1 active:scale-95"
+                                >
+                                  <XIcon className="h-3 w-3" />
+                                  Tolak
+                                </button>
+                              </>
+                            ) : (order.status_order === "Diterima" && !order.hasTask) ? (
+                              <button
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setActionType("Diterima");
+                                  setTaskName(`Pekerjaan: ${order.layanan?.nama_layanan || "Servis"}`);
+                                  setDescription(
+                                    `Detail pesanan untuk customer ${order.customer_name}. Catatan: ${
+                                      order.catatan || "-"
+                                    }`
+                                  );
+                                  const tomorrow = new Date();
+                                  tomorrow.setDate(tomorrow.getDate() + 1);
+                                  const formattedDate = tomorrow.toISOString().substring(0, 16);
+                                  setDeadline(formattedDate);
+                                }}
+                                className="px-2.5 py-1.5 rounded-lg bg-black text-white hover:bg-zinc-800 text-[10px] font-black uppercase transition-all shadow-sm flex items-center gap-1 active:scale-95"
+                              >
+                                <Check className="h-3 w-3" />
+                                Tugas
+                              </button>
+                            ) : (
+                              <span className="text-[10px] font-medium text-gray-400 uppercase">
+                                Selesai Konfirmasi
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </AnimatePresence>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       {/* CONFIRMATION ACTION MODAL */}
       <AnimatePresence>

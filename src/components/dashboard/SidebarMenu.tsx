@@ -283,10 +283,10 @@ export default function SidebarMenu({ role, onNavigate }: SidebarMenuProps) {
               />
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-black truncate max-w-[100px]">
+              <p className="text-xs font-bold truncate max-w-[100px]">
                 {profile?.full_name || "Memuat..."}
               </p>
-              <p className="text-[10px] font-bold text-[#666] capitalize">
+              <p className="text-[10px] font-medium text-[#666] capitalize">
                 {getRoleLabel(role)}
               </p>
             </div>

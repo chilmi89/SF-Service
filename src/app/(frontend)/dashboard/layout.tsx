@@ -72,7 +72,7 @@ export default function RootDashboardLayout({
             <span className="text-base font-black tracking-tight text-black">
               FixIt
             </span>
-            <span className="text-[9px] font-black uppercase tracking-wider text-[#a1a1a1] bg-black/5 px-1.5 py-0.5 rounded shrink-0">
+            <span className="text-[9px] font-bold uppercase text-[#a1a1a1] bg-black/10 px-1.5 py-0.5 rounded shrink-0">
               {normalizedRole === "superadmin" ? "Admin" : "Tenant"}
             </span>
           </Link>

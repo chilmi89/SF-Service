@@ -70,7 +70,7 @@ export const tenantService = {
     });
   },
 
-  /**
+  /** 
    * Mengambil daftar staf yang ada di tenant saat ini.
    * Super Admin dapat menyertakan kode_tenant untuk melihat staf tenant lain.
    */

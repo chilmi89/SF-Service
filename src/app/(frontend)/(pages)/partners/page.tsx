@@ -22,147 +22,9 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { apiClient } from "@/lib/api/api-client";
-import { tenantService } from "@/lib/api/(tenant)/tenant.service";
-import { layananService } from "@/lib/api/layanan.service";
 import BookingModal from "@/components/BookingModal";
 import { Toast } from "@/components/toast";
-
-// Fallback Mock Tenants matching the database schema for a gorgeous premium display
-const FALLBACK_TENANTS = [
-  {
-    id: "tenant-1",
-    name: "PT Digital Cool Nusantara",
-    slug: "pt-digital-cool-nusantara",
-    address: "Jl. HR Rasuna Said No. 10, Kuningan, Jakarta Selatan",
-    phone: "0812-3456-7890",
-    image_url: "https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?auto=format&fit=crop&q=80&w=800",
-    kode_tenant: "COOL",
-    rating: 4.9,
-    ordersCount: 320,
-    categories: ["Servis AC", "Listrik"],
-    desc: "Spesialis perawatan pendingin ruangan (HVAC) dan instalasi listrik perkantoran maupun hunian dengan teknisi bersertifikat nasional."
-  },
-  {
-    id: "tenant-2",
-    name: "Sanitasi Prima Jaya",
-    slug: "sanitasi-prima-jaya",
-    address: "Ruko Gading Serpong Block A/5, Tangerang",
-    phone: "0818-9876-5432",
-    image_url: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800",
-    kode_tenant: "PIPE",
-    rating: 4.8,
-    ordersCount: 195,
-    categories: ["Pipa Air", "Pertukangan"],
-    desc: "Solusi cepat kebocoran pipa, wastafel tersumbat, instalasi tandon air, dan pompa air mati. Siaga melayani wilayah Jabodetabek."
-  },
-  {
-    id: "tenant-3",
-    name: "CV Elektro Mandiri",
-    slug: "cv-elektro-mandiri",
-    address: "Jl. Margonda Raya No. 45, Depok, Jawa Barat",
-    phone: "0857-1122-3344",
-    image_url: "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80&w=800",
-    kode_tenant: "ELEC",
-    rating: 5.0,
-    ordersCount: 412,
-    categories: ["Listrik", "Elektronik"],
-    desc: "Pemasangan instalasi listrik rumah baru, perbaikan korsleting, perapihan kabel panel MCB, dan servis barang elektronik rumah tangga."
-  },
-  {
-    id: "tenant-4",
-    name: "Teknik Sejahtera Bersama",
-    slug: "teknik-sejahtera-bersama",
-    address: "Kompleks Harapan Indah Block C/12, Bekasi",
-    phone: "0813-5566-7788",
-    image_url: "https://images.unsplash.com/photo-1610557892470-76d747eed2f1?auto=format&fit=crop&q=80&w=800",
-    kode_tenant: "TECH",
-    rating: 4.7,
-    ordersCount: 85,
-    categories: ["Elektronik", "Servis AC"],
-    desc: "Penyedia jasa reparasi mesin cuci, kulkas, smart TV, microwave, dan AC split rumah tangga dengan garansi sparepart orisinal."
-  },
-  {
-    id: "tenant-5",
-    name: "Karya Kayu Abadi",
-    slug: "karya-kayu-abadi",
-    address: "Jl. KH Mas Mansyur No. 88, Tanah Abang, Jakarta Pusat",
-    phone: "0899-8877-6655",
-    image_url: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&q=80&w=800",
-    kode_tenant: "WOOD",
-    rating: 4.9,
-    ordersCount: 140,
-    categories: ["Pertukangan"],
-    desc: "Bengkel kayu profesional melayani pembuatan lemari kustom, kitchen set, perbaikan engsel pintu, pengecatan ulang, dan pasang wallpaper."
-  }
-];
-
-// Fallback Mock Services to load when viewing a tenant's details
-const FALLBACK_SERVICES = [
-  {
-    id: "fb-1",
-    tenantName: "PT Digital Cool Nusantara",
-    title: "Servis AC Split Rutin & Cuci AC",
-    category: "Servis AC",
-    img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800",
-    price: 75000,
-    desc: "Layanan cuci AC, pengecekan tekanan freon, dan pembersihan filter udara untuk AC split 0.5 - 2 PK."
-  },
-  {
-    id: "fb-2",
-    tenantName: "Sanitasi Prima Jaya",
-    title: "Deteksi & Perbaikan Pipa Bocor",
-    category: "Pipa Air",
-    img: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800",
-    price: 150000,
-    desc: "Deteksi kebocoran pipa air bersih/kotor di dalam dinding dengan sensor ultrasonik serta perbaikan cepat."
-  },
-  {
-    id: "fb-3",
-    tenantName: "CV Elektro Mandiri",
-    title: "Instalasi Panel Listrik & Panel MCB",
-    category: "Listrik",
-    img: "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80&w=800",
-    price: 250000,
-    desc: "Pemasangan instalasi listrik baru, pembagian beban MCB, dan perapihan jalur kabel utama rumah."
-  },
-  {
-    id: "fb-4",
-    tenantName: "Teknik Sejahtera Bersama",
-    title: "Reparasi Mesin Cuci Front Load",
-    category: "Elektronik",
-    img: "https://images.unsplash.com/photo-1610557892470-76d747eed2f1?auto=format&fit=crop&q=80&w=800",
-    price: 175000,
-    desc: "Perbaikan modul eror, pergantian dinamo, pintu macet, atau pipa pembuangan mesin cuci tersumbat."
-  },
-  {
-    id: "fb-5",
-    tenantName: "Karya Kayu Abadi",
-    title: "Pembuatan & Perbaikan Lemari Custom",
-    category: "Pertukangan",
-    img: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&q=80&w=800",
-    price: 350000,
-    desc: "Perbaikan engsel pintu lemari, pembuatan rak kayu kustom, pengecatan ulang, dan restorasi furnitur kayu."
-  },
-  {
-    id: "fb-6",
-    tenantName: "Sanitasi Prima Jaya",
-    title: "Instalasi Water Heater Listrik/Gas",
-    category: "Pipa Air",
-    img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800",
-    price: 200000,
-    desc: "Pemasangan unit water heater baru lengkap dengan instalasi pipa air panas dan instalasi kran mixer."
-  },
-  {
-    id: "fb-7",
-    tenantName: "PT Digital Cool Nusantara",
-    title: "Tambah Freon AC (R22 / R32 / R410)",
-    category: "Servis AC",
-    img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800",
-    price: 120000,
-    desc: "Pengisian freon AC sesuai kapasitas PK dan jenis gas pendingin untuk mengembalikan suhu dingin maksimal."
-  }
-];
+import { usePartnersData } from "@/hooks/usePartnersData";
 
 export default function PartnersDirectoryPage() {
   const { isLoggedIn, isLoading: authLoading } = useAuth();
@@ -170,9 +32,7 @@ export default function PartnersDirectoryPage() {
 
   // Search and Loading States
   const [searchQuery, setSearchQuery] = useState("");
-  const [tenants, setTenants] = useState<any[]>([]);
-  const [allServices, setAllServices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { tenants, allServices, loading } = usePartnersData();
 
   // Selected Tenant Modal & Services States
   const [selectedTenant, setSelectedTenant] = useState<any | null>(null);
@@ -186,152 +46,43 @@ export default function PartnersDirectoryPage() {
   // Toast State
   const [toast, setToast] = useState<{ title: string; message: string; type: "success" | "error" | "warning" } | null>(null);
 
-  // Fetch Tenants, Services, Categories, and Orders on Mount
+  // Auto-open booking modal if there's a pending service from before login
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // 1. Fetch categories
-        let categoryMap: Record<number, string> = {};
+    if (!authLoading && isLoggedIn) {
+      const pendingServiceStr = localStorage.getItem("pending_booking_service");
+      if (pendingServiceStr) {
         try {
-          const catRes = await layananService.getAllKategori();
-          const catData = catRes?.data || catRes;
-          const categoriesList = Array.isArray(catData) ? catData : (Array.isArray(catData.data) ? catData.data : []);
-          categoriesList.forEach((c: any) => {
-            if (c.id && c.nama) categoryMap[c.id] = c.nama;
-          });
-        } catch (e) {
-          console.error("Error categories mapping:", e);
-        }
-
-        // 2. Fetch all services
-        let servicesList: any[] = [];
-        try {
-          const res = await layananService.getAllLayanan();
-          let rawData = res?.data;
-          if (rawData && !Array.isArray(rawData)) {
-            if (Array.isArray(rawData.data)) rawData = rawData.data;
-            else if (Array.isArray(rawData.layanan)) rawData = rawData.layanan;
-            else rawData = [rawData];
-          }
-          servicesList = Array.isArray(rawData) ? rawData : [];
-        } catch (e) {
-          console.error("Gagal memuat layanan:", e);
-        }
-
-        // 3. Fetch current user role and completed orders count (if logged in as owner)
-        let myCompletedCount = 0;
-        let myTenantId: string | null = null;
-        const userRole = localStorage.getItem("user_role")?.toLowerCase() || "";
-        const isOwner = ["owner", "owner tunggal", "owner_tunggal", "admin tenant"].includes(userRole);
-        if (isOwner) {
-          try {
-            const profileId = localStorage.getItem("profile_id");
-            if (profileId) {
-              const profileRes = await apiClient(`/api/profiles/${profileId}`);
-              const p = profileRes?.data?.data || profileRes?.data || profileRes;
-              if (p && p.kode_tenant) {
-                const tenantsRes = await apiClient('/api/tenants');
-                const tenantsList = tenantsRes?.data?.data || tenantsRes?.data || [];
-                const myTenant = tenantsList.find((t: any) => t.kode_tenant === p.kode_tenant);
-                if (myTenant) {
-                  myTenantId = myTenant.id;
-                }
-              }
-            }
-            const ordersRes = await apiClient("/api/orders?as=tenant");
-            const ordersList = ordersRes?.data?.data || ordersRes?.data || [];
-            if (Array.isArray(ordersList)) {
-              myCompletedCount = ordersList.filter((o: any) => o.status === 8).length;
-            }
-          } catch (e) {
-            console.error("Gagal mendeteksi jumlah order selesai pemilik:", e);
-          }
-        }
-
-        // 4. Fetch all tenants
-        const tenantsRes = await tenantService.getAllTenants();
-        let rawTenants = tenantsRes?.data;
-        if (rawTenants && !Array.isArray(rawTenants)) {
-          if (Array.isArray(rawTenants.data)) rawTenants = rawTenants.data;
-          else rawTenants = [rawTenants];
-        }
-        const tenantsArray = Array.isArray(rawTenants) ? rawTenants : [];
-
-        if (tenantsArray.length > 0) {
-          const mapped = tenantsArray.map((item: any, idx: number) => {
-            const fallbackExtra = FALLBACK_TENANTS[idx % FALLBACK_TENANTS.length];
-            const hasValidImage = item.image_url && typeof item.image_url === "string" && 
-              (item.image_url.startsWith("http") || item.image_url.startsWith("/"));
-            
-            // Filter services belonging to this tenant
-            const tenantServicesList = servicesList.filter((s: any) => 
-              s.tenant_id === item.id || s.tenants?.name?.toLowerCase() === item.name.toLowerCase()
-            );
-
-            // Calculate dynamic categories from actual services
-            const dynamicCategories = Array.from(
-              new Set(tenantServicesList.map((s: any) => categoryMap[s.id_kategori] || s.kategori).filter(Boolean))
-            ) as string[];
-
-            // Determine completed orders count (if it's owner's tenant, use actual count, else generate deterministic count)
-            let finalOrdersCount = fallbackExtra.ordersCount;
-            const hash = item.id.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-            finalOrdersCount = 15 + (hash % 65);
-
-            if (isOwner && myTenantId === item.id) {
-              finalOrdersCount = myCompletedCount;
-            }
-
-            return {
-              id: item.id,
-              name: item.name,
-              slug: item.slug,
-              address: item.address || "Alamat tidak dicantumkan",
-              phone: item.phone || "No telepon tidak dicantumkan",
-              image_url: hasValidImage ? item.image_url : fallbackExtra.image_url,
-              kode_tenant: item.kode_tenant,
-              rating: fallbackExtra.rating,
-              ordersCount: finalOrdersCount,
-              categories: dynamicCategories.length > 0 ? dynamicCategories : fallbackExtra.categories,
-              desc: item.descripsi || fallbackExtra.desc,
-              servicesCount: tenantServicesList.length
+          const pendingService = JSON.parse(pendingServiceStr);
+          if (pendingService) {
+            const formatted = {
+              ...pendingService,
+              price: typeof pendingService.price === "number"
+                ? `Rp ${pendingService.price.toLocaleString("id-ID")}`
+                : pendingService.price
             };
-          });
-          setTenants(mapped);
-        } else {
-          setTenants(FALLBACK_TENANTS);
+            setSelectedService(formatted);
+            setIsBookingModalOpen(true);
+          }
+        } catch (e) {
+          console.error("Gagal memproses pending service:", e);
+        } finally {
+          localStorage.removeItem("pending_booking_service");
         }
-
-        // Map and save all services for quick client-side filtering
-        const mappedServices = servicesList.map((item: any) => {
-          const hasValidImg = item.gambar && typeof item.gambar === "string" && 
-            (item.gambar.startsWith("http") || item.gambar.startsWith("/"));
-          return {
-            id: item.layanan_id || item.id,
-            tenantId: item.tenant_id,
-            title: item.nama_layanan || "Layanan",
-            category: categoryMap[item.id_kategori] || item.kategori || "Servis AC",
-            img: hasValidImg ? item.gambar : "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800",
-            price: item.harga_dasar || 0,
-            desc: item.descripsi || "Dapatkan pengerjaan service rumah rapi, aman, dan bergaransi.",
-            tech: item.tenants?.name || "Mitra",
-            avatar: item.tenants?.image_url || "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150"
-          };
-        });
-        setAllServices(mappedServices);
-
-      } catch (err) {
-        console.error("Gagal memuat data mitra:", err);
-        setTenants(FALLBACK_TENANTS);
-      } finally {
-        setLoading(false);
       }
-    };
+    }
+  }, [authLoading, isLoggedIn]);
 
-    fetchData();
-  }, []);
+  // Mencegah scroll pada body saat right bar (selectedTenant) terbuka
+  useEffect(() => {
+    if (!selectedTenant) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [selectedTenant]);
 
   // Fetch Services for Selected Tenant
   const handleViewServices = (tenant: any) => {
@@ -359,13 +110,15 @@ export default function PartnersDirectoryPage() {
   const handleBookService = (service: any) => {
     if (authLoading) return;
     if (!isLoggedIn) {
+      // Simpan layanan ke localStorage sebelum redirect
+      localStorage.setItem("pending_booking_service", JSON.stringify(service));
       setToast({
         title: "Login Diperlukan",
         message: "Silakan login ke akun Anda terlebih dahulu untuk memesan layanan ini.",
         type: "warning",
       });
       setTimeout(() => {
-        router.push("/auth/login");
+        router.push(`/auth/login?redirect=${window.location.pathname}`);
       }, 2000);
       return;
     }
@@ -711,21 +464,37 @@ export default function PartnersDirectoryPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedTenant(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/40 backdrop-blur-md"
             />
 
             {/* Panel */}
             <motion.div
-              initial={{ opacity: 0, x: 200 }}
+              initial={{ opacity: 0, x: 250 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 200 }}
-              transition={{ type: "spring", damping: 25, stiffness: 250 }}
-              className="relative w-full max-w-xl h-full sm:h-[95vh] sm:rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden z-10"
+              exit={{ opacity: 0, x: 250 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="relative w-full max-w-lg h-full sm:h-[calc(100vh-2rem)] sm:my-4 sm:mr-4 sm:rounded-2xl bg-white/95 backdrop-blur-xl border border-black/[0.05] sm:border border-black/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden z-10"
             >
+              <style dangerouslySetInnerHTML={{__html: `
+                .custom-scrollbar::-webkit-scrollbar {
+                  width: 5px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                  background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                  background-color: rgba(0, 0, 0, 0.08);
+                  border-radius: 9px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                  background-color: rgba(0, 0, 0, 0.16);
+                }
+              `}} />
+
               {/* Header */}
-              <div className="p-6 border-b border-black/[0.06] flex items-center justify-between bg-gray-50/50">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 relative rounded-full overflow-hidden border border-black/10">
+              <div className="p-6 border-b border-black/[0.04] flex items-center justify-between bg-gradient-to-b from-gray-50/50 to-transparent">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 relative rounded-xl overflow-hidden border border-black/5 ring-4 ring-black/[0.01]">
                     <Image
                       src={selectedTenant.image_url}
                       alt={selectedTenant.name}
@@ -734,76 +503,87 @@ export default function PartnersDirectoryPage() {
                     />
                   </div>
                   <div>
-                    <h3 className="font-black text-base text-black flex items-center gap-1.5 leading-tight">
+                    <h3 className="font-extrabold text-base text-gray-900 flex items-center gap-1.5 leading-tight">
                       {selectedTenant.name}
-                      <Shield className="h-4 w-4 text-emerald-600 fill-emerald-50 text-xs shrink-0" />
+                      <Shield className="h-4 w-4 text-indigo-600 fill-indigo-50 shrink-0" />
                     </h3>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none">Catalog Layanan</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Katalog Layanan</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider">Terverifikasi</span>
+                    </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedTenant(null)}
-                  className="h-10 w-10 flex items-center justify-center rounded-full bg-black/5 hover:bg-black/10 text-black transition-colors"
+                  className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-gray-400 hover:text-gray-950 transition-colors"
                 >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Services List Content */}
-              <div className="flex-grow overflow-y-auto p-6 space-y-6">
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tentang Perusahaan</p>
-                  <p className="text-xs text-gray-500 leading-relaxed font-medium">{selectedTenant.desc}</p>
+              <div className="flex-grow overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <div className="p-4 rounded-xl bg-gray-50/60 border border-black/[0.03] space-y-1.5">
+                  <p className="text-[11px] font-bold text-gray-400">Tentang Mitra</p>
+                  <p className="text-xs text-gray-600 leading-relaxed font-medium">{selectedTenant.desc}</p>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-black/[0.04]">
-                  <h4 className="text-sm font-black uppercase tracking-wider text-black">Jasa Service Yang Ditawarkan</h4>
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-400">Jasa Yang Ditawarkan</h4>
+                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                      {tenantServices.length} Layanan
+                    </span>
+                  </div>
 
                   {loadingServices ? (
                     <div className="space-y-3">
                       {[1, 2].map((i) => (
-                        <div key={i} className="animate-pulse h-24 rounded-2xl bg-gray-100" />
+                        <div key={i} className="animate-pulse h-28 rounded-2xl bg-gray-50 border border-black/[0.02]" />
                       ))}
                     </div>
                   ) : tenantServices.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 text-center rounded-2xl border border-dashed border-black/10 bg-gray-50/50">
-                      <Briefcase className="h-8 w-8 text-gray-300 mb-2" />
+                    <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl border border-dashed border-black/10 bg-gray-50/30">
+                      <Briefcase className="h-8 w-8 text-gray-300 mb-2.5" />
                       <p className="text-xs font-bold text-gray-500">Tidak ada layanan aktif</p>
-                      <p className="text-[10px] text-gray-400">Mitra belum menambahkan layanan ke katalog mereka.</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">Mitra belum menambahkan layanan ke katalog mereka.</p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       {tenantServices.map((service) => (
                         <div
                           key={service.id}
-                          className="group p-4 rounded-2xl border border-black/[0.06] hover:border-black bg-white transition-all flex items-start gap-4"
+                          className="group p-4 rounded-2xl border border-black/[0.04] bg-white hover:border-indigo-600/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 flex items-start gap-4"
                         >
-                          <div className="relative h-16 w-16 rounded-xl overflow-hidden bg-gray-50 shrink-0">
+                          <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-gray-50 border border-black/[0.03] shrink-0">
                             <Image
                               src={service.img}
                               alt={service.title}
                               fill
-                              className="object-cover"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
                           </div>
 
-                          <div className="flex-grow space-y-1 min-w-0">
-                            <span className="inline-block px-2 py-0.5 rounded-full bg-black/5 text-[8px] font-bold text-gray-500 uppercase tracking-wider leading-none mb-1">
-                              {service.category}
-                            </span>
-                            <h5 className="font-bold text-sm text-black truncate leading-tight group-hover:text-black/80">
-                              {service.title}
-                            </h5>
-                            <p className="text-[11px] text-gray-400 font-medium leading-tight line-clamp-1">
-                              {service.desc}
-                            </p>
-                            <div className="flex items-center justify-between pt-2">
-                              <span className="text-xs font-black text-black">
+                          <div className="flex-grow space-y-1 min-w-0 flex flex-col h-full justify-between">
+                            <div>
+                              <span className="inline-block px-2 py-0.5 rounded bg-indigo-50 text-[8px] font-bold text-indigo-600 uppercase tracking-wider leading-none mb-1">
+                                {service.category}
+                              </span>
+                              <h5 className="font-bold text-sm text-gray-950 truncate leading-tight group-hover:text-indigo-600 transition-colors">
+                                {service.title}
+                              </h5>
+                              <p className="text-xs text-gray-500 font-medium leading-relaxed mt-1 line-clamp-2">
+                                {service.desc}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-2">
+                              <span className="text-sm font-extrabold text-gray-900">
                                 Rp {service.price.toLocaleString("id-ID")}
                               </span>
                               <button
                                 onClick={() => handleBookService(service)}
-                                className="px-3.5 py-1.5 rounded-lg bg-black hover:bg-black/90 text-white text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                                className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all duration-200 shadow-sm hover:shadow shadow-indigo-100 active:scale-95 cursor-pointer"
                               >
                                 Pesan Jasa
                               </button>
@@ -814,6 +594,8 @@ export default function PartnersDirectoryPage() {
                     </div>
                   )}
                 </div>
+                {/* Bottom Spacer to ensure space below the last card */}
+                <div className="h-4" />
               </div>
             </motion.div>
           </div>

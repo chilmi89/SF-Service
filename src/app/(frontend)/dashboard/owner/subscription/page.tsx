@@ -71,7 +71,7 @@ export default function SubscriptionPage() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-black" />
-        <p className="text-sm font-bold text-gray-400">Menyiapkan penawaran terbaik...</p>
+        <p className="text-sm font-medium text-gray-400">Menyiapkan penawaran terbaik...</p>
       </div>
     );
   }
@@ -98,10 +98,10 @@ export default function SubscriptionPage() {
     <div className="p-6 md:p-10 space-y-12 max-w-7xl mx-auto">
       {/* HEADER SECTION */}
       <section className="space-y-2">
-        <h1 className="text-3xl font-black tracking-tight text-black">
+        <h1 className="text-2xl font-bold">
           {isSubscribed ? "Langganan Saya" : "Pilih Paket Langganan"}
         </h1>
-        <p className="text-[11px] font-small text-gray-400 max-w-xl">
+        <p className="text-[12px] font-small text-gray-400 max-w-xl">
           {isSubscribed 
             ? "Kelola paket langganan aktif Anda dan nikmati fitur manajemen tim tanpa batas."
             : "Tingkatkan akun Anda ke paket premium untuk membuka fitur manajemen karyawan dan optimasi performa tenant."

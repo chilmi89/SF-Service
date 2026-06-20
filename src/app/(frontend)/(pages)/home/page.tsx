@@ -118,6 +118,26 @@ export default function Home() {
     fetchServices();
   }, []);
 
+  // Auto-open booking modal if there's a pending service from before login
+  useEffect(() => {
+    if (!isLoading && isLoggedIn) {
+      const pendingServiceStr = localStorage.getItem("pending_booking_service");
+      if (pendingServiceStr) {
+        try {
+          const pendingService = JSON.parse(pendingServiceStr);
+          if (pendingService) {
+            setSelectedService(pendingService);
+            setIsBookingModalOpen(true);
+          }
+        } catch (e) {
+          console.error("Gagal memproses pending service:", e);
+        } finally {
+          localStorage.removeItem("pending_booking_service");
+        }
+      }
+    }
+  }, [isLoading, isLoggedIn]);
+
   const filteredServices = services.filter(service => {
     const matchesCategory = activeCategory === "Semua" || 
       service.category.toLowerCase().includes(activeCategory.toLowerCase());
@@ -344,13 +364,15 @@ export default function Home() {
                       onClick={() => {
                         if (isLoading) return; // tunggu status auth selesai
                         if (!isLoggedIn) {
+                          // Simpan layanan ke localStorage sebelum redirect
+                          localStorage.setItem("pending_booking_service", JSON.stringify(service));
                           setToast({
                             title: "Login Diperlukan",
                             message: "Silakan login atau daftar sebagai user untuk memesan layanan ini.",
                             type: "warning"
                           });
                           setTimeout(() => {
-                            router.push("/auth/login");
+                            router.push(`/auth/login?redirect=${window.location.pathname}`);
                           }, 2500);
                           return;
                         }

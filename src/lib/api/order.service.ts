@@ -47,10 +47,10 @@ export const orderService = {
    * @param id ID Pesanan
    * @param statusOrder Status pesanan baru (contoh: 'Diterima', 'Ditolak', 'Selesai')
    */
-  async updateOrderStatus(id: string, statusOrder: string) {
+  async updateOrderStatus(id: string, payload: any) {
     return apiClient(`/api/orders/${id}`, {
       method: 'PUT',
-      body: { status_order: statusOrder },
+      body: payload,
     });
   },
 };

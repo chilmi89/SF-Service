@@ -1,4 +1,5 @@
 import { apiClient } from '../api-client';
+import { authService } from '../auth.service';
 
 /**
  * Tenant Service Library
@@ -26,10 +27,17 @@ export const tenantService = {
     phone?: string;
     image_url?: string;
   }) {
-    return apiClient('/api/tenants', {
+    const response = await apiClient('/api/tenants', {
       method: 'POST',
       body: tenantData,
     });
+    
+    // Refresh token secara rahasia jika berhasil, agar role otomatis update di session
+    if (!response.error) {
+      await authService.refreshToken().catch(e => console.error('Gagal merefresh session', e));
+    }
+    
+    return response;
   },
 
   /**

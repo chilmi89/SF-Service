@@ -52,6 +52,7 @@ import { verifySessionToken } from '@/lib/session';
  *       
  *       **Alur Kerja (Workflow):**
  *       1. Melakukan hard-delete pada tabel `Langganan_tenant` berdasarkan ID langganan-tenant.
+ *       2. Otomatis men-downgrade role akun pemilik tenant tersebut dari `owner` kembali menjadi `owner tunggal` pada tabel `profiles`.
  *     responses:
  *       200:
  *         description: Berhasil dihapus
@@ -109,12 +110,60 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    
+    // 1. Ambil target kode_tenant (ID Tenant) sebelum data dihapus
+    const { data: langgananTenant, error: fetchError } = await supabaseAdmin
+      .from('Langganan_tenant')
+      .select('kode_tenant')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !langgananTenant) {
+      return NextResponse.json({ error: 'Data langganan tidak ditemukan.' }, { status: 404 });
+    }
+
+    // 2. Hapus data langganan tenant
     const { error } = await supabaseAdmin
       .from('Langganan_tenant')
       .delete()
       .eq('id', id);
 
     if (error) throw error;
+
+    // --- LOGIKA DOWNGRADE ROLE OWNER ---
+    try {
+      // 1. Ambil UUID role 'owner' dan 'owner tunggal'
+      const { data: roles } = await supabaseAdmin
+        .from('roles')
+        .select('id, name')
+        .in('name', ['owner', 'owner tunggal']);
+      
+      const roleOwner = roles?.find(r => r.name === 'owner');
+      const roleOwnerTunggal = roles?.find(r => r.name === 'owner tunggal');
+
+      if (roleOwner && roleOwnerTunggal) {
+        // 2. Cari string kode_tenant untuk tenant tersebut
+        const { data: tenantData } = await supabaseAdmin
+          .from('tenants')
+          .select('kode_tenant')
+          .eq('id', langgananTenant.kode_tenant)
+          .single();
+        
+        if (tenantData) {
+          // 3. Update profil yang memiliki kode_tenant tersebut dan role 'owner'
+          await supabaseAdmin
+            .from('profiles')
+            .update({ role_id: roleOwnerTunggal.id })
+            .eq('kode_tenant', tenantData.kode_tenant)
+            .eq('role_id', roleOwner.id);
+          
+          console.log(`Role owner untuk tenant ${tenantData.kode_tenant} berhasil di-downgrade ke 'owner tunggal'.`);
+        }
+      }
+    } catch (roleDowngradeError) {
+      console.error('Gagal mengupdate role owner setelah penghapusan langganan:', roleDowngradeError);
+      // Jangan lempar error agar penghapusan data utama tetap berhasil
+    }
 
     return NextResponse.json({ message: 'Data langganan berhasil dihapus.' }, { status: 200 });
   } catch (error: any) {

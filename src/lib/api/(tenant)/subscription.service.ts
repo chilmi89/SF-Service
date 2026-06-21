@@ -1,4 +1,5 @@
 import { apiClient } from '../api-client';
+import { authService } from '../auth.service';
 
 export const subscriptionService = {
   // --- Paket Langganan (Global) ---
@@ -60,10 +61,16 @@ export const subscriptionService = {
    * Mendaftarkan tenant ke sebuah paket langganan
    */
   async subscribeTenant(data: { kode_tenant: number | string; id_langganan: number | string }) {
-    return apiClient('/api/langganan-tenant', {
+    const response = await apiClient('/api/langganan-tenant', {
       method: 'POST',
       body: data,
     });
+
+    if (!response.error) {
+      await authService.refreshToken().catch(e => console.error('Gagal merefresh session', e));
+    }
+
+    return response;
   },
 
   /**
@@ -87,8 +94,14 @@ export const subscriptionService = {
    * Menghapus/Membatalkan langganan tenant
    */
   async deleteTenantSubscription(id: string | number) {
-    return apiClient(`/api/langganan-tenant/${id}`, {
+    const response = await apiClient(`/api/langganan-tenant/${id}`, {
       method: 'DELETE',
     });
+
+    if (!response.error) {
+      await authService.refreshToken().catch(e => console.error('Gagal merefresh session', e));
+    }
+
+    return response;
   }
 };

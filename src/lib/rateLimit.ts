@@ -38,7 +38,8 @@ export async function checkRateLimit(
   action: string, 
   identifier: string, 
   maxAttempts: number, 
-  windowMs: number
+  windowMs: number,
+  recordAttempt: boolean = true
 ): Promise<{ allowed: boolean; remainingMs: number }> {
   const db = await getDb();
   const key = `${action}_${identifier}`;
@@ -55,9 +56,31 @@ export async function checkRateLimit(
     return { allowed: false, remainingMs: timeUntilReset };
   }
   
+  if (recordAttempt) {
+    timestamps.push(now);
+    db[key] = timestamps;
+    await saveDb(db);
+  }
+  
+  return { allowed: true, remainingMs: 0 };
+}
+
+export async function incrementRateLimit(action: string, identifier: string, windowMs: number) {
+  const db = await getDb();
+  const key = `${action}_${identifier}`;
+  const now = Date.now();
+  let timestamps = db[key] || [];
+  timestamps = timestamps.filter(t => now - t < windowMs);
   timestamps.push(now);
   db[key] = timestamps;
-  
   await saveDb(db);
-  return { allowed: true, remainingMs: 0 };
+}
+
+export async function resetRateLimit(action: string, identifier: string) {
+  const db = await getDb();
+  const key = `${action}_${identifier}`;
+  if (db[key]) {
+    delete db[key];
+    await saveDb(db);
+  }
 }

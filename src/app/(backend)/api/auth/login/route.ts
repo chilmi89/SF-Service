@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { createSessionToken } from '@/lib/session';
-import { checkRateLimit } from '@/lib/rateLimit';
+import { checkRateLimit, incrementRateLimit, resetRateLimit } from '@/lib/rateLimit';
 
 /**
  * @swagger
@@ -76,9 +76,9 @@ export async function POST(request: Request) {
       );
     }
     
-    // 0. Pengecekan Limit (Max 5x Login per Hari)
+    // 0. Pengecekan Limit (Max 5x Login Gagal per Hari)
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-    const rateLimit = await checkRateLimit('login', email.toLowerCase(), 5, ONE_DAY_MS);
+    const rateLimit = await checkRateLimit('login', email.toLowerCase(), 5, ONE_DAY_MS, false);
     
     if (!rateLimit.allowed) {
       const hoursLeft = Math.ceil(rateLimit.remainingMs / (60 * 60 * 1000));
@@ -96,6 +96,7 @@ export async function POST(request: Request) {
       .single();
 
     if (findError || !user) {
+      await incrementRateLimit('login', email.toLowerCase(), ONE_DAY_MS);
       return NextResponse.json(
         { error: 'Email atau password salah' },
         { status: 401 }
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
+      await incrementRateLimit('login', email.toLowerCase(), ONE_DAY_MS);
       return NextResponse.json(
         { error: 'Email atau password salah' },
         { status: 401 }
@@ -146,6 +148,9 @@ export async function POST(request: Request) {
       profileId: profile?.id,
       tenantId: tenantId
     });
+
+    // 4.5. Reset Rate Limit karena login berhasil
+    await resetRateLimit('login', email.toLowerCase());
 
     // 5. Login berhasil - Set Token di HttpOnly Cookie
     const response = NextResponse.json(

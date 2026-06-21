@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useUserManagement, UserData } from "@/hooks/useUserManagement";
 import { Toast } from "@/components/toast";
+import { PremiumTableTemplate, Column } from "@/components/PremiumTableTemplate";
 
 export default function SuperAdminUsersPage() {
   const { users, isLoading, toast, hideToast, deleteUser } = useUserManagement();
@@ -39,6 +40,94 @@ export default function SuperAdminUsersPage() {
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const columns: Column<UserData>[] = [
+    {
+      key: "user",
+      label: "User",
+      align: "left",
+      render: (user) => {
+        const initials = user.full_name?.charAt(0) || user.email.charAt(0) || "U";
+        
+        // Background color options for avatar based on name letters (like Google Contacts)
+        const colors = [
+          "bg-rose-100 text-rose-700",
+          "bg-blue-100 text-blue-700",
+          "bg-amber-100 text-amber-700",
+          "bg-purple-100 text-purple-700",
+          "bg-emerald-100 text-emerald-700",
+          "bg-indigo-100 text-indigo-700"
+        ];
+        const charCode = user.full_name ? user.full_name.charCodeAt(0) : (user.email ? user.email.charCodeAt(0) : 65);
+        const avatarColorClass = colors[charCode % colors.length];
+
+        return (
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center border border-gray-100 bg-gray-50">
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
+              ) : (
+                <span className={`h-full w-full flex items-center justify-center text-sm font-black ${avatarColorClass}`}>{initials.toUpperCase()}</span>
+              )}
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-medium text-black leading-tight">
+                {user.full_name || "Tanpa Nama"}
+              </span>
+              <span className="flex items-center gap-1 text-[11px] text-gray-400 font-medium mt-1">
+                <Mail size={12} className="text-gray-400" />
+                {user.email}
+              </span>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: "role",
+      label: "Role",
+      align: "left",
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          <div className={`h-2 w-2 rounded-full ${
+            user.role_name?.toLowerCase() === 'superadmin' ? 'bg-purple-500' :
+            user.role_name?.toLowerCase() === 'admin' ? 'bg-blue-500' : 'bg-emerald-500'
+          }`} />
+          <span className="text-xs font-semibold capitalize text-gray-700">{user.role_name}</span>
+        </div>
+      )
+    },
+    {
+      key: "created_at",
+      label: "Tanggal Daftar",
+      align: "left",
+      render: (user) => (
+        <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+          <Calendar size={14} className="text-gray-400" />
+          {new Date(user.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </div>
+      )
+    },
+    {
+      key: "aksi",
+      label: "Aksi",
+      align: "right",
+      render: (user) => (
+        <div className="flex items-center justify-end gap-2">
+          <button 
+            onClick={() => triggerDeleteConfirm(user.id, user.full_name)}
+            disabled={isDeleting !== null}
+            className={`h-9 w-9 inline-flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-gray-400 transition-all active:scale-90 ${
+              isDeleting === user.id ? "animate-pulse text-red-600 bg-red-50" : ""
+            }`}
+            title="Hapus User"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      )
+    }
+  ];
 
   return (
     <div className="p-8 md:p-12 space-y-10 max-w-[1600px] mx-auto pb-32">
@@ -78,87 +167,14 @@ export default function SuperAdminUsersPage() {
       </div>
 
       {/* USER TABLE/LIST */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden relative">
-        {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
-             <div className="h-10 w-10 border-4 border-black/10 border-t-black rounded-full animate-spin" />
-          </div>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">User</th>
-                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Role</th>
-                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Tanggal Daftar</th>
-                <th className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="group hover:bg-black/[0.01] transition-all">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-full bg-black/5 border border-black/5 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                          {user.avatar_url ? (
-                            <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="text-lg font-black text-black/20">{user.full_name?.charAt(0) || user.email.charAt(0)}</span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-black">{user.full_name || "Tanpa Nama"}</p>
-                          <div className="flex items-center gap-1 text-xs text-[#a1a1a1]">
-                            <Mail size={12} />
-                            {user.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full ${
-                          user.role_name?.toLowerCase() === 'superadmin' ? 'bg-purple-500' :
-                          user.role_name?.toLowerCase() === 'admin' ? 'bg-blue-500' : 'bg-emerald-500'
-                        }`} />
-                        <span className="text-xs font-bold capitalize text-gray-700">{user.role_name}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
-                        <Calendar size={14} />
-                        {new Date(user.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => triggerDeleteConfirm(user.id, user.full_name)}
-                          disabled={isDeleting !== null}
-                          className={`h-9 w-9 inline-flex items-center justify-center rounded-xl hover:bg-red-50 hover:text-red-600 text-gray-400 transition-all active:scale-90 ${
-                            isDeleting === user.id ? "animate-pulse text-red-600 bg-red-50" : ""
-                          }`}
-                          title="Hapus User"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="px-8 py-24 text-center text-gray-400 font-medium italic">
-                    {isLoading ? "Memuat data pengguna..." : "Tidak ada pengguna yang ditemukan."}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <PremiumTableTemplate
+        columns={columns}
+        data={filteredUsers}
+        isLoading={isLoading}
+        rowKey={(user) => user.id}
+        emptyStateTitle="Tidak ada pengguna"
+        emptyStateDescription={searchTerm ? "Tidak ditemukan hasil pencarian yang cocok." : "Belum ada pengguna yang terdaftar."}
+      />
 
       {/* MODAL DIALOG CONFIRMATION */}
       <AnimatePresence>

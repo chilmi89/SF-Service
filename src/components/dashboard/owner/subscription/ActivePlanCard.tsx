@@ -49,9 +49,9 @@ export const ActivePlanCard: React.FC<ActivePlanCardProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-emerald-400">
               <CheckCircle2 size={14} />
-              <span className="text-[9px] font-black uppercase tracking-widest">Langganan Aktif</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest">Langganan Aktif</span>
             </div>
-            <h2 className="text-2xl font-black">{subscription.langganan?.nama_paket || "Paket Premium"}</h2>
+            <h2 className="text-2xl font-bold">{subscription.langganan?.nama_paket || "Paket Premium"}</h2>
           </div>
           
           <div className="px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center gap-3">
@@ -65,16 +65,20 @@ export const ActivePlanCard: React.FC<ActivePlanCardProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
           {[
-            { icon: <ShieldCheck className="text-blue-400" />, title: "Fitur Terbuka", desc: "Akses penuh manajemen tim" },
-            { icon: <CheckCircle2 className="text-emerald-400" />, title: "Tanpa Batas", desc: "Input teknisi sepuasnya" },
-            { icon: <Calendar className="text-amber-400" />, title: "Otomatis", desc: "Penugasan cerdas aktif" },
+            { icon: <ShieldCheck className="text-blue-400 shrink-0" size={18} />, title: "Fitur Terbuka", desc: "Akses penuh manajemen tim" },
+            { icon: <CheckCircle2 className="text-emerald-400 shrink-0" size={18} />, title: "Tanpa Batas", desc: "Input teknisi sepuasnya" },
+            { icon: <Calendar className="text-amber-400 shrink-0" size={18} />, title: "Otomatis", desc: "Penugasan cerdas aktif" },
           ].map((item, i) => (
-            <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-              {item.icon}
-              <h4 className="text-xs font-black">{item.title}</h4>
-              <p className="text-[10px] text-white/40 font-medium">{item.desc}</p>
+            <div key={i} className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2">
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                {item.icon}
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-bold sm:font-black text-white">{item.title}</h4>
+                <p className="text-[10px] text-white/50 font-medium mt-0.5 sm:mt-1">{item.desc}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -83,19 +87,19 @@ export const ActivePlanCard: React.FC<ActivePlanCardProps> = ({
           <p className="text-[11px] font-medium text-white/60">
             Ingin menambah durasi atau upgrade paket?
           </p>
-          <div className="flex w-full sm:w-auto gap-3">
+          <div className="flex flex-row w-full sm:w-auto gap-2 sm:gap-3">
             {onCancel && (
               <button 
                 onClick={onCancel}
                 disabled={isCancelling}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 h-11 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all disabled:opacity-50"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 sm:px-5 h-11 rounded-lg font-bold text-[9px] sm:text-[10px] uppercase transition-all disabled:opacity-50"
               >
                 {isCancelling ? "Membatalkan..." : "Batalkan Langganan"}
               </button>
             )}
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white text-black px-5 h-11 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all">
+            <button className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-white text-black px-3 sm:px-5 h-11 rounded-lg font-bold text-[9px] sm:text-[10px] uppercase hover:bg-gray-100 transition-all">
               Kelola Langganan
-              <ArrowRight size={14} />
+              <ArrowRight size={14} className="shrink-0" />
             </button>
           </div>
         </div>

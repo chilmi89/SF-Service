@@ -62,7 +62,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, x: 0 }}
           className="space-y-1"
         >
-          <h1 className="text-3xl font-black tracking-tight text-black">
+          <h1 className="text-2xl font-bold">
             Halo, {profile?.full_name?.split(' ')[0] || "Admin"} 👋
           </h1>
           <p className="text-sm font-medium text-gray-500">
@@ -96,12 +96,12 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="p-6 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden"
+            className="p-6 rounded-xl bg-white border border-gray-200 shadow-sm flex flex-col justify-between relative overflow-hidden"
           >
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{stat.label}</span>
-                <h3 className="text-3xl font-extrabold text-black tracking-tight mt-1">{stat.value}</h3>
+                <span className="text-[10px] uppercase font-medium text-gray-400">{stat.label}</span>
+                <h3 className="text-2xl font-bold text-black mt-1">{stat.value}</h3>
               </div>
               <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center`}>
                 {stat.icon}
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
             </div>
             {stat.trend && (
               <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-tighter ${
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase ${
                   stat.trend === 'Aktif' || stat.trend === 'Semua' || stat.trend === 'Hari ini'
                     ? 'bg-emerald-50/70 text-emerald-600' 
                     : 'bg-amber-50/70 text-amber-600'
@@ -132,10 +132,10 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
+          className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
         >
           <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-            <h2 className="text-lg font-black text-black">Pesanan Terbaru</h2>
+            <h2 className="text-lg font-bold text-black">Pesanan Terbaru</h2>
             <Link href="/dashboard/admin/verifikasi-order" className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
               Lihat Semua <ChevronRight size={14} />
             </Link>
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50/50 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">
+                  <tr className="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase  text-center">
                     <th className="px-6 py-4">ID & Pelanggan</th>
                     <th className="px-6 py-4">Layanan</th>
                     <th className="px-6 py-4">Status</th>
@@ -161,28 +161,28 @@ export default function AdminDashboard() {
                     <tr key={i} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="space-y-0.5">
-                          <p className="text-[10px] font-black text-gray-400">{order.id}</p>
+                          <p className="text-[10px] font-medium text-gray-400">{order.id}</p>
                           <p className="text-sm font-bold text-black">{order.customerName}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm font-medium text-gray-700">{order.serviceName}</p>
-                        <p className="text-[10px] font-bold text-gray-400">Teknisi: {order.technicianName}</p>
+                        <p className="text-sm font-medium text-gray-700 text-center">{order.serviceName}</p>
+                        <p className="text-[10px] font-medium text-gray-400">Teknisi: {order.technicianName}</p>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter ${
-                          order.statusText === 'Selesai' ? 'bg-emerald-50 text-emerald-600' :
-                          order.statusText === 'Dalam Proses' ? 'bg-blue-50 text-blue-600' :
-                          order.statusText === 'Menunggu' ? 'bg-amber-50 text-amber-600' :
-                          'bg-gray-100 text-gray-500'
+                      <td className="px-6 py-4 text-center">
+                        <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full uppercase ${
+                          order.statusText === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                          order.statusText === 'Dalam Proses' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                          order.statusText === 'Menunggu' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                          'bg-gray-100 text-gray-500 border border-gray-100'
                         }`}>
                           {order.statusText}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-xs font-bold text-gray-400">
+                      <td className="px-6 py-4 text-xs font-medium text-gray-400 text-center">
                         {order.timeText}
                       </td>
-                      <td className="px-6 py-4 text-xs font-bold text-black">
+                      <td className="px-6 py-4 text-xs font-medium text-black text-center">
                         {order.amount}
                       </td>
                     </tr>
@@ -200,10 +200,10 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-6"
+            className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black text-black">Status Teknisi</h2>
+              <h2 className="text-sm font-bold text-black">Status Teknisi</h2>
             </div>
             
             {technicianStatus.length === 0 ? (
@@ -218,11 +218,11 @@ export default function AdminDashboard() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-black">{tech.name}</p>
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">{tech.status}</span>
+                        <span className="text-[11px] font-medium text-gray-400">{tech.status}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className={`h-1.5 w-1.5 rounded-full ${tech.color}`} />
-                        <p className="text-[10px] font-bold text-gray-400">{tech.task}</p>
+                        <p className="text-[10px] font-medium text-gray-400">{tech.task}</p>
                       </div>
                     </div>
                   </div>
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
             )}
 
             <Link href="/dashboard/admin/kelola-staf" className="block w-full">
-              <button className="w-full py-3 rounded-xl border border-dashed border-gray-300 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-black hover:text-black transition-all">
+              <button className="w-full py-3 rounded-xl border border-gray-100 border-gray-300 text-[10px] font-bold text-gray-400 uppercase hover:border-black hover:text-black transition-all">
                 Kelola Semua Staf
               </button>
             </Link>

@@ -85,7 +85,7 @@ export default function LayananOwnerPage() {
           animate={{ opacity: 1, x: 0 }}
           className="space-y-0.5"
         >
-          <h1 className="text-3xl font-black tracking-tight text-black">Layanan Saya</h1>
+          <h1 className="text-2xl font-bold text-black">Layanan Saya</h1>
           <p className="text-[13px] font-small text-gray-500">Kelola semua jenis layanan perbaikan yang Anda tawarkan kepada pelanggan.</p>
         </motion.div>
       </section>
@@ -110,8 +110,8 @@ export default function LayananOwnerPage() {
                 {stat.icon}
               </div>
               <div className="min-w-0">
-                <p className="text-[8px] sm:text-[9px] font-medium uppercase text-gray-400 truncate">{stat.label}</p>
-                <h3 className="text-lg sm:text-xl font-black text-black leading-none mt-1 sm:mt-0">{stat.value}</h3>
+                <p className="text-[8px] sm:text-[12px] font-medium text-gray-400 truncate">{stat.label}</p>
+                <h3 className="text-lg sm:text-xl font-bold text-black leading-none mt-1 sm:mt-0">{stat.value}</h3>
               </div>
             </motion.div>
           ))}
@@ -134,7 +134,7 @@ export default function LayananOwnerPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-row items-center gap-2 sm:gap-3 flex-none">
-          <button className="h-11 px-3 sm:px-5 rounded-xl border border-gray-100 bg-white text-gray-400 hover:text-black hover:border-black transition-all flex items-center justify-center gap-2 font-bold text-[11px] shadow-sm">
+          <button className="h-11 px-3 sm:px-5 rounded-xl border border-gray-100 bg-white text-gray-400 hover:text-black hover:border-black transition-all flex items-center justify-center gap-2 font-medium text-[11px] shadow-sm">
             <Filter size={16} />
             <span className="hidden sm:inline">Filter Kategori</span>
           </button>
@@ -147,7 +147,7 @@ export default function LayananOwnerPage() {
               setImagePreview("");
               setIsModalOpen(true);
             }}
-            className="flex items-center justify-center gap-2 bg-black text-white h-11 px-3 sm:px-6 rounded-xl font-black text-xs shadow-lg shadow-black/10 transition-all hover:bg-zinc-800"
+            className="flex items-center justify-center gap-2 bg-black text-white h-11 px-3 sm:px-6 rounded-xl font-bold text-xs shadow-lg shadow-black/10 transition-all hover:bg-zinc-800"
           >
             <Plus size={16} />
             <span className="hidden sm:inline">Tambah Layanan Baru</span>
@@ -183,7 +183,7 @@ export default function LayananOwnerPage() {
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
-                    <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-sm ${
+                    <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[8px] sm:text-[10px] font-bold shadow-sm ${
                       service.status === 'Aktif' 
                       ? 'bg-emerald-500 text-white' 
                       : 'bg-gray-500 text-white'
@@ -202,7 +202,7 @@ export default function LayananOwnerPage() {
                         <p className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase truncate">
                           ID: {service.id.length > 8 ? service.id.slice(0, 8) : service.id}
                         </p>
-                        <p className="text-[11px] sm:text-sm font-black text-black shrink-0">{service.price}</p>
+                        <p className="text-[11px] sm:text-sm font-bold text-black shrink-0">{service.price}</p>
                       </div>
                     </div>
 

@@ -37,21 +37,21 @@ export const PricingCard: React.FC<PricingCardProps> = ({
       }`}
     >
       {isPopular && (
-        <div className="absolute top-0 right-6 -translate-y-1/2 bg-black text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+        <div className="absolute top-0 right-6 -translate-y-1/2 bg-black text-white px-3 py-1 rounded-full text-[9px] font-bold tracking-widest flex items-center gap-2">
           <Zap size={10} className="fill-current" />
           Populer
         </div>
       )}
 
       <div className="mb-6">
-        <h3 className="text-lg font-black text-black mb-1">{plan.nama_paket || "Paket Langganan"}</h3>
-        <p className="text-[10px] text-gray-400 font-bold leading-relaxed">
+        <h3 className="text-lg font-bold text-black mb-1">{plan.nama_paket || "Paket Langganan"}</h3>
+        <p className="text-[12px] text-gray-400 font-medium leading-relaxed">
           {plan.deskripsi || "Buka semua fitur manajemen tim dan kelola teknisi tanpa batas."}
         </p>
       </div>
 
       <div className="mb-6 flex items-baseline gap-1">
-        <span className="text-2xl font-black text-black">{formattedHarga}</span>
+        <span className="text-2xl font-bold text-black">{formattedHarga}</span>
         <span className="text-[11px] font-bold text-gray-400">/{plan.durasi} Hari</span>
       </div>
 
@@ -74,7 +74,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
       <button
         onClick={() => onSubscribe(plan.id)}
         disabled={isLoading}
-        className={`w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+        className={`w-full h-11 rounded-xl font-b text-sm transition-all ${
           isPopular 
             ? "bg-black text-white hover:bg-zinc-800 shadow-lg shadow-black/10" 
             : "bg-gray-50 text-gray-400 hover:bg-black hover:text-white"

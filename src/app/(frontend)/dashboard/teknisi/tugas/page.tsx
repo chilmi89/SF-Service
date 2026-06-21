@@ -121,124 +121,192 @@ export default function TeknisiTugasPage() {
         ))}
       </div>
 
-      {/* TASK LIST (CARD GRID FOR RESPONSIVENESS) */}
+      {/* TASK LIST TABLE */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-black mb-4" />
-          <h3 className="text-sm font-bold text-black">Memuat Daftar Tugas...</h3>
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-[10px] font-black uppercase tracking-wider text-gray-400">
+                  <th className="py-4 px-6">ID</th>
+                  <th className="py-4 px-6">Customer</th>
+                  <th className="py-4 px-6">Product/Service</th>
+                  <th className="py-4 px-6">Location</th>
+                  <th className="py-4 px-6">Schedule</th>
+                  <th className="py-4 px-6">Priority</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {[1, 2, 3].map((n) => (
+                  <tr key={n}>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+                        <div className="space-y-1">
+                          <div className="h-3 bg-gray-200 rounded w-20"></div>
+                          <div className="h-3 bg-gray-200 rounded w-28"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                    <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+                    <td className="py-4 px-6"><div className="h-5 bg-gray-200 rounded-full w-16"></div></td>
+                    <td className="py-4 px-6"><div className="h-5 bg-gray-200 rounded-full w-16"></div></td>
+                    <td className="py-4 px-6"><div className="h-8 bg-gray-200 rounded-xl w-24 mx-auto"></div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : filteredTasks.length === 0 ? (
+        <div className="py-12 flex flex-col items-center justify-center text-center border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+            <AlertCircle size={24} />
+          </div>
+          <h3 className="text-sm font-bold text-black mb-1">Tidak Ada Tugas</h3>
+          <p className="text-xs font-medium text-gray-500 max-w-sm">
+            Tidak ada tugas yang sesuai dengan pencarian atau filter Anda saat ini.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredTasks.map((task, i) => (
-             <motion.div
-              key={task.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className={`bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group flex flex-col ${getPriorityBorderColor(task.priority)}`}
-            >
-              {/* Card Header */}
-              <div className="p-4 sm:p-5 border-b border-gray-100 bg-gray-50/20 flex items-start justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold tracking-wider text-gray-400 uppercase">
-                      ID: #{task.id.slice(0, 8).toUpperCase()}
-                    </span>
-                    <span className="text-gray-300">•</span>
-                    <div className={`px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${getStatusColor(task.status)}`}>
-                      {task.status === 'Dalam Perjalanan' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
-                      {task.status}
-                    </div>
-                  </div>
-                  <h3 className="text-base font-black text-black leading-tight group-hover:text-black/85 transition-colors">
-                    {formatServiceName(task.serviceName)}
-                  </h3>
-                </div>
-                <button className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors shrink-0">
-                  <MoreVertical size={16} />
-                </button>
-              </div>
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-[10px] font-black uppercase tracking-wider text-gray-400">
+                  <th className="py-4 px-6">ID</th>
+                  <th className="py-4 px-6">Customer</th>
+                  <th className="py-4 px-6">Product/Service</th>
+                  <th className="py-4 px-6">Location</th>
+                  <th className="py-4 px-6">Schedule</th>
+                  <th className="py-4 px-6">Priority</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filteredTasks.map((task) => {
+                  const initials = task.customerName
+                    ? task.customerName.trim().split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
+                    : "P";
 
-              {/* Card Body */}
-              <div className="p-4 sm:p-5 space-y-3 sm:space-y-4 flex-grow">
-                <div className="flex items-start gap-2.5">
-                  <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center font-black text-gray-600 shrink-0 border border-gray-200 text-xs">
-                    {task.customerName.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-black">{task.customerName}</p>
-                    <p className="text-[11px] font-medium text-gray-500">{task.phone}</p>
-                  </div>
-                </div>
+                  // Background color options for avatar based on name letters (like Google Contacts)
+                  const colors = [
+                    "bg-rose-100 text-rose-700",
+                    "bg-blue-100 text-blue-700",
+                    "bg-amber-100 text-amber-700",
+                    "bg-purple-100 text-purple-700",
+                    "bg-emerald-100 text-emerald-700",
+                    "bg-indigo-100 text-indigo-700"
+                  ];
+                  const charCode = task.customerName ? task.customerName.charCodeAt(0) : 65;
+                  const avatarColorClass = colors[charCode % colors.length];
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <div className="flex items-start gap-2 text-xs sm:text-sm">
-                    <MapPin size={15} className="text-gray-400 mt-0.5 shrink-0" />
-                    <p className="font-medium text-gray-600 leading-snug">{task.address}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <Calendar size={15} className="text-gray-400 shrink-0" />
-                    <p className="font-medium text-gray-600">{task.date}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <Clock size={15} className="text-gray-400 shrink-0" />
-                    <p className="font-medium text-gray-600">{task.time}</p>
-                  </div>
-                </div>
-
-                {task.deskripsi && (
-                  <div className="p-3 bg-gray-50 rounded-xl border border-black/[0.03] space-y-1 mt-1 sm:mt-2">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-gray-400 block">Detail Tugas</span>
-                    <p className="text-[11px] font-medium text-gray-600 leading-relaxed whitespace-pre-wrap">{task.deskripsi}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Card Footer */}
-              <div className="p-4 sm:p-5 border-t border-gray-100 flex items-center justify-between bg-white">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
-                  {getPriorityIcon(task.priority)}
-                  Prioritas {task.priority}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button className="h-9 w-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-black transition-colors shadow-sm">
-                    <MessageSquare size={14} />
-                  </button>
-                  {task.status !== 'Selesai' && task.status !== 'Dibatalkan' && (
-                    <button
-                      onClick={() =>
-                        updateTaskStatus(
-                          task.id,
-                          task.status === 'Menunggu' ? 'Dalam Perjalanan' : 'Selesai'
-                        )
-                      }
-                      className="px-4 py-2 rounded-xl bg-black text-white text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
+                  return (
+                    <tr
+                      key={task.id}
+                      className="hover:bg-gray-50/50 transition-colors"
                     >
-                      {task.status === 'Menunggu' ? 'Mulai Tugas' : 'Selesaikan'}
-                    </button>
-                  )}
-                  {task.status === 'Selesai' && (
-                    <button className="px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-wider cursor-not-allowed">
-                      Tugas Selesai
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-          
-          {filteredTasks.length === 0 && (
-            <div className="col-span-full py-12 flex flex-col items-center justify-center text-center border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
-                <AlertCircle size={24} />
-              </div>
-              <h3 className="text-sm font-bold text-black mb-1">Tidak Ada Tugas</h3>
-              <p className="text-xs font-medium text-gray-500 max-w-sm">
-                Tidak ada tugas yang sesuai dengan pencarian atau filter Anda saat ini.
-              </p>
-            </div>
-          )}
+                      {/* ID */}
+                      <td className="py-4 px-6 font-bold text-xs text-gray-950">
+                        #{task.id.slice(0, 8).toUpperCase()}
+                      </td>
+
+                      {/* Customer */}
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${avatarColorClass}`}>
+                            {initials}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-black leading-tight">
+                              {task.customerName}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-semibold leading-normal">
+                              {task.phone}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Product/Service */}
+                      <td className="py-4 px-6">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-gray-900">
+                            {formatServiceName(task.serviceName)}
+                          </span>
+                          {task.deskripsi && (
+                            <span className="text-[10px] font-medium text-gray-400 italic mt-0.5 truncate max-w-[200px]" title={task.deskripsi}>
+                              "{task.deskripsi}"
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Location */}
+                      <td className="py-4 px-6 text-xs font-medium text-gray-600 max-w-[180px] truncate" title={task.address}>
+                        {task.address}
+                      </td>
+
+                      {/* Schedule */}
+                      <td className="py-4 px-6 text-xs font-semibold text-gray-500">
+                        <div className="flex flex-col">
+                          <span>{task.date}</span>
+                          <span className="text-[10px] text-gray-400 font-medium">{task.time}</span>
+                        </div>
+                      </td>
+
+                      {/* Priority */}
+                      <td className="py-4 px-6">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500">
+                          {getPriorityIcon(task.priority)}
+                          {task.priority}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase border tracking-wider ${getStatusColor(task.status)}`}>
+                          {task.status}
+                        </span>
+                      </td>
+
+                      {/* Action */}
+                      <td className="py-4 px-6">
+                        <div className="flex gap-2 justify-center items-center">
+                          <button className="h-8 w-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-black transition-colors shadow-sm shrink-0">
+                            <MessageSquare size={13} />
+                          </button>
+                          {task.status !== 'Selesai' && task.status !== 'Dibatalkan' ? (
+                            <button
+                              onClick={() =>
+                                updateTaskStatus(
+                                  task.id,
+                                  task.status === 'Menunggu' ? 'Dalam Perjalanan' : 'Selesai'
+                                )
+                              }
+                              className="px-3 py-1.5 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-all active:scale-95 shadow-sm"
+                            >
+                              {task.status === 'Menunggu' ? 'Mulai' : 'Selesaikan'}
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                              {task.status === 'Selesai' ? 'Selesai' : 'Batal'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

@@ -8,6 +8,7 @@ import { tenantService } from "@/lib/api/(tenant)/tenant.service";
 import { authService } from "@/lib/api/auth.service";
 import { apiClient } from "@/lib/api/api-client";
 import { Toast } from "@/components/toast";
+import { PremiumTableTemplate, Column } from "@/components/PremiumTableTemplate";
 
 export default function ManageStaffPage() {
   const [staffList, setStaffList] = useState<any[]>([]);
@@ -165,73 +166,173 @@ export default function ManageStaffPage() {
   const totalTechnicians = staffList.filter(s => s.role === "teknisi").length;
   const totalAdmins = staffList.filter(s => s.role === "admin tenant" || s.role === "admin").length;
 
+  const columns: Column<any>[] = [
+    {
+      key: "identitas",
+      label: "Identitas Staf",
+      align: "left",
+      render: (staff: any) => {
+        const name = staff.full_name || "Nama Belum Diatur";
+        const initials = name
+          ? name.trim().split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()
+          : "S";
+        const colors = [
+          "bg-rose-100 text-rose-700",
+          "bg-blue-100 text-blue-700",
+          "bg-amber-100 text-amber-700",
+          "bg-purple-100 text-purple-700",
+          "bg-emerald-100 text-emerald-700",
+          "bg-indigo-100 text-indigo-700"
+        ];
+        const charCode = name ? name.charCodeAt(0) : 65;
+        const avatarColorClass = colors[charCode % colors.length];
+
+        return (
+          <div className="flex items-center gap-3">
+            {staff.avatar_url ? (
+              <div className="h-10 w-10 rounded-full overflow-hidden bg-black/5 flex-shrink-0 relative border border-gray-100">
+                <Image
+                  src={staff.avatar_url}
+                  alt={name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${avatarColorClass}`}>
+                {initials}
+              </div>
+            )}
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-medium text-black leading-tight">
+                {name}
+              </span>
+              <span className={`w-fit mt-1 text-[10px] font-medium uppercase px-2 py-0.5 rounded-full ${
+                staff.role === "teknisi"
+                  ? "bg-amber-50 text-amber-600 border border-amber-100"
+                  : "bg-purple-50 text-purple-600 border border-purple-100"
+              }`}>
+                {staff.role === "admin tenant" ? "Admin" : staff.role}
+              </span>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: "kontak",
+      label: "Kontak",
+      align: "left",
+      render: (staff: any) => (
+        <div className="space-y-1 text-left">
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+            <Mail size={12} className="text-gray-400" />
+            {staff.email || "-"}
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+            <Phone size={12} className="text-gray-400" />
+            {staff.phone || "-"}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: () => (
+        <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full text-[11px] font-medium">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          Aktif
+        </span>
+      )
+    },
+    {
+      key: "aksi",
+      label: "Aksi",
+      align: "right",
+      render: (staff: any) => (
+        <button
+          onClick={() => {
+            setSelectedStaff(staff);
+            setShowDeleteModal(true);
+          }}
+          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+          title="Hapus Staf"
+        >
+          <Trash2 size={16} />
+        </button>
+      )
+    }
+  ];
+
   return (
-    <div className="flex-1 flex flex-col pt-8 pb-10 px-6 sm:px-8 w-full text-black">
+    <div className="flex-1 flex flex-col pt-8 pb-10 px-4 sm:px-8 md:px-12 w-full text-black">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">Kelola Staf</h1>
+          <h1 className="text-2xl sm:text-2xl font-bold text-black tracking-tight">Kelola Staff</h1>
           <p className="text-sm font-medium text-gray-500 mt-1">Daftar staf admin dan teknisi yang terasosiasi dengan tenant Anda.</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-row items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto">
           {tenantInfo?.kode_tenant && (
-            <div className="flex items-center justify-between sm:justify-start gap-2 bg-gray-50 border border-gray-250 px-4 py-2.5 rounded-xl">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Kode Tenant:</span>
-                <code className="text-xs font-black text-black">{tenantInfo.kode_tenant}</code>
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-gray-50 border border-gray-200 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-[9px] sm:text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Kode Tenant:</span>
+                <code className="text-[11px] sm:text-xs font-bold text-black">{tenantInfo.kode_tenant}</code>
               </div>
               <button 
                 onClick={handleCopyCode} 
-                className="text-gray-400 hover:text-black transition-colors ml-1"
+                className="text-gray-400 hover:text-black transition-colors ml-0.5 sm:ml-1"
                 title="Salin Kode"
               >
-                {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
               </button>
             </div>
           )}
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800 font-bold text-sm px-5 py-3 rounded-xl transition-all shadow-lg shadow-black/10 active:scale-95 w-full sm:w-auto"
+            className="flex items-center justify-center gap-1.5 sm:gap-2 bg-black text-white hover:bg-gray-800 font-bold text-[11px] sm:text-[13px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg shadow-black/10 active:scale-95"
           >
-            <UserPlus size={18} />
-            Tambah Staf Baru
+            <UserPlus size={14} className="sm:w-4 sm:h-4" />
+            Tambah Staff
           </button>
         </div>
       </div>
 
       {/* Stats Widgets */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8 w-full max-w-3xl">
-        <div className="p-3 sm:p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-4">
-          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-6 mb-8 w-full max-w-3xl">
+        <div className="p-2.5 sm:p-6 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+          <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div>
-            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest text-gray-400">Total Staf</p>
-            <p className="text-lg sm:text-2xl font-black text-black leading-none mt-1">{staffList.length}</p>
-          </div>
-        </div>
-        <div className="p-3 sm:p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-4">
-          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
-            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div>
-            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest text-gray-400">Teknisi</p>
-            <p className="text-lg sm:text-2xl font-black text-black leading-none mt-1">{totalTechnicians}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-gray-400 truncate">Total Staff</p>
+            <p className="text-xl font-bold text-black mt-0.5 sm:mt-1">{staffList.length}</p>
           </div>
         </div>
-        <div className="p-3 sm:p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-4">
-          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center shrink-0">
-            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+        <div className="p-2.5 sm:p-6 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+          <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div>
-            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest text-gray-400">Admin</p>
-            <p className="text-lg sm:text-2xl font-black text-black leading-none mt-1">{totalAdmins}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-gray-400 truncate">Teknisi</p>
+            <p className="text-xl font-bold text-black mt-0.5 sm:mt-1">{totalTechnicians}</p>
+          </div>
+        </div>
+        <div className="p-2.5 sm:p-6 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+          <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4 sm:h-6 sm:w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-gray-400 truncate">Admin</p>
+            <p className="text-xl font-bold text-black mt-0.5 sm:mt-1">{totalAdmins}</p>
           </div>
         </div>
       </div>
 
       {/* Search & Table Section */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col flex-1">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col flex-1">
         <div className="p-5 border-b border-gray-100 flex items-center bg-gray-50/50">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -240,7 +341,7 @@ export default function ManageStaffPage() {
               placeholder="Cari nama atau email staf..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-gray-200 text-black text-sm font-semibold rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-black transition-colors"
+              className="w-full bg-white border border-gray-200 text-black text-xs font-medium rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-black transition-colors"
             />
           </div>
         </div>
@@ -255,7 +356,7 @@ export default function ManageStaffPage() {
           ) : filteredStaff.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center py-20 px-4 text-center">
               <Users size={48} className="text-gray-300 mb-3" />
-              <h3 className="text-base font-black text-black">Tidak Ada Staf</h3>
+              <h3 className="text-base font-bold text-black">Tidak Ada Staf</h3>
               <p className="text-xs text-gray-500 max-w-xs mt-1">
                 {searchTerm ? "Tidak ditemukan hasil pencarian yang cocok." : "Belum ada staf yang bergabung di tenant Anda."}
               </p>
@@ -263,133 +364,95 @@ export default function ManageStaffPage() {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-100 text-[10px] font-black uppercase tracking-wider text-gray-400 bg-gray-50/30">
-                      <th className="py-4 px-6">Identitas Staf</th>
-                      <th className="py-4 px-6">Kontak</th>
-                      <th className="py-4 px-6">Status</th>
-                      <th className="py-4 px-6 text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {filteredStaff.map((staff) => (
-                      <tr key={staff.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
+              <div className="hidden md:block">
+                <PremiumTableTemplate
+                  columns={columns}
+                  data={filteredStaff}
+                  isLoading={false}
+                  rowKey={(staff) => staff.id}
+                  hideWrapper={true}
+                />
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="block md:hidden divide-y divide-gray-100">
+                {filteredStaff.map((staff) => {
+                  const name = staff.full_name || "Nama Belum Diatur";
+                  const initials = name
+                    ? name.trim().split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()
+                    : "S";
+                  const colors = [
+                    "bg-rose-100 text-rose-700",
+                    "bg-blue-100 text-blue-700",
+                    "bg-amber-100 text-amber-700",
+                    "bg-purple-100 text-purple-700",
+                    "bg-emerald-100 text-emerald-700",
+                    "bg-indigo-100 text-indigo-700"
+                  ];
+                  const charCode = name ? name.charCodeAt(0) : 65;
+                  const avatarColorClass = colors[charCode % colors.length];
+
+                  return (
+                    <div key={staff.id} className="p-4 flex flex-col gap-4 hover:bg-gray-50/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {staff.avatar_url ? (
                             <div className="h-10 w-10 rounded-full overflow-hidden bg-black/5 flex-shrink-0 relative border border-gray-100">
                               <Image
-                                src={staff.avatar_url || "/images/budi.png"}
-                                alt={staff.full_name || "Staff Avatar"}
+                                src={staff.avatar_url}
+                                alt={name}
                                 fill
                                 className="object-cover"
                               />
                             </div>
-                            <div>
-                              <p className="text-sm font-bold text-black">{staff.full_name || "Nama Belum Diatur"}</p>
-                              <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
-                                staff.role === "teknisi"
-                                  ? "bg-amber-50 text-amber-600"
-                                  : "bg-purple-50 text-purple-600"
-                              }`}>
-                                {staff.role === "admin tenant" ? "Admin" : staff.role}
-                              </span>
+                          ) : (
+                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${avatarColorClass}`}>
+                              {initials}
                             </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-bold text-black">{name}</p>
+                            <span className={`inline-block mt-0.5 text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                              staff.role === "teknisi"
+                                ? "bg-amber-50 text-amber-600 border border-amber-100"
+                                : "bg-purple-50 text-purple-600 border border-purple-100"
+                            }`}>
+                              {staff.role === "admin tenant" ? "Admin" : staff.role}
+                            </span>
                           </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
-                              <Mail size={12} />
-                              {staff.email || "-"}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
-                              <Phone size={12} />
-                              {staff.phone || "-"}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full text-xs font-bold">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                            <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse"></span>
                             Aktif
                           </span>
-                        </td>
-                        <td className="py-4 px-6 text-right">
                           <button
                             onClick={() => {
                               setSelectedStaff(staff);
                               setShowDeleteModal(true);
                             }}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                             title="Hapus Staf"
                           >
                             <Trash2 size={16} />
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="block md:hidden divide-y divide-gray-100">
-                {filteredStaff.map((staff) => (
-                  <div key={staff.id} className="p-4 flex flex-col gap-4 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full overflow-hidden bg-black/5 flex-shrink-0 relative border border-gray-100">
-                          <Image
-                            src={staff.avatar_url || "/images/budi.png"}
-                            alt={staff.full_name || "Staff Avatar"}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-black">{staff.full_name || "Nama Belum Diatur"}</p>
-                          <span className={`inline-block mt-0.5 text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                            staff.role === "teknisi"
-                              ? "bg-amber-50 text-amber-600"
-                              : "bg-purple-50 text-purple-600"
-                          }`}>
-                            {staff.role === "admin tenant" ? "Admin" : staff.role}
-                          </span>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
-                          <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse"></span>
-                          Aktif
-                        </span>
-                        <button
-                          onClick={() => {
-                            setSelectedStaff(staff);
-                            setShowDeleteModal(true);
-                          }}
-                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          title="Hapus Staf"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-2 bg-gray-50/50 p-2.5 rounded-xl text-xs text-gray-500 font-semibold">
-                      <div className="flex items-center gap-1.5 overflow-hidden">
-                        <Mail size={12} className="shrink-0 text-gray-400" />
-                        <span className="truncate" title={staff.email}>{staff.email || "-"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 overflow-hidden">
-                        <Phone size={12} className="shrink-0 text-gray-400" />
-                        <span className="truncate" title={staff.phone}>{staff.phone || "-"}</span>
+                      <div className="grid grid-cols-2 gap-2 bg-gray-50/50 p-2.5 rounded-xl text-xs text-gray-500 font-semibold">
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          <Mail size={12} className="shrink-0 text-gray-400" />
+                          <span className="truncate" title={staff.email}>{staff.email || "-"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          <Phone size={12} className="shrink-0 text-gray-400" />
+                          <span className="truncate" title={staff.phone}>{staff.phone || "-"}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}

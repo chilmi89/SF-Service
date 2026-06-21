@@ -65,19 +65,21 @@ export default function TenantDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="group rounded-xl border border-gray-300 bg-white p-4 sm:p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-black/5 flex flex-col sm:block"
+            className="group rounded-xl border border-gray-300 bg-white p-3.5 sm:p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-black/5 flex flex-col justify-between"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2 sm:gap-0">
-              <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-2xl bg-black/[0.03] flex items-center justify-center shrink-0 transition-colors group-hover:bg-black group-hover:text-white ${stat.color}`}>
-                <div className="scale-75 sm:scale-100">{stat.icon}</div>
+            <div>
+              <div className="flex items-center justify-between mb-2.5">
+                <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-lg sm:rounded-2xl bg-black/[0.03] flex items-center justify-center shrink-0 transition-colors group-hover:bg-black group-hover:text-white ${stat.color}`}>
+                  <div className="scale-75 sm:scale-100">{stat.icon}</div>
+                </div>
+                <span className={`w-fit rounded-md sm:rounded-lg border px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[10px] font-bold bg-gray-50 text-gray-600 border-gray-200 truncate max-w-[75px] sm:max-w-none`} title={stat.trend}>
+                  {stat.trend}
+                </span>
               </div>
-              <span className={`w-fit rounded-md sm:rounded-lg border px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[10px] uppercase tracking-tighter font-black bg-gray-50 text-gray-600 border-gray-100`}>
-                {stat.trend}
-              </span>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-500 mb-0.5 sm:mb-1 truncate" title={stat.label}>{stat.label}</p>
             </div>
-            <div className="mt-auto sm:mt-0">
-              <p className="text-[9px] sm:text-xs font-medium text-gray-600 mb-0.5 sm:mb-1 line-clamp-1">{stat.label}</p>
-              <h3 className="text-lg sm:text-2xl font-bold tracking-tight leading-none">{stat.value}</h3>
+            <div>
+              <h3 className="text-sm sm:text-2xl font-bold tracking-tight text-black truncate" title={stat.value.toString()}>{stat.value}</h3>
             </div>
           </motion.div>
         ))}
@@ -91,7 +93,7 @@ export default function TenantDashboard() {
               <h2 className="text-xl font-bold mb-1">Pertumbuhan Order Diterima</h2>
               <p className="text-xs font-medium text-gray-600">Statistik pesanan masuk harian yang disetujui (diterima) oleh tenant Anda.</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {/* HOVER DETAIL */}
               {hoveredPoint && (
                 <div className="px-4 py-2 rounded-xl bg-black text-white text-xs font-bold flex items-center gap-3 w-fit shadow-md animate-fade-in">
@@ -143,8 +145,8 @@ export default function TenantDashboard() {
           </div>
 
           {/* Dynamic SVG Chart */}
-          <div className="relative w-full mt-6 sm:mt-8 aspect-[10/3] min-h-[150px]">
-            <svg className="h-full w-full overflow-visible" viewBox="0 0 1000 300">
+          <div className="relative w-full mt-6 sm:mt-8 aspect-[16/9] sm:aspect-[10/3]">
+            <svg className="h-full w-full overflow-visible" viewBox="0 0 1000 300" preserveAspectRatio="none">
               {/* Y-Axis Labels */}
               {[0, 1, 2, 3].map((i) => {
                 const val = chartPaths ? Math.round(chartPaths.maxVal - (i / 3) * chartPaths.maxVal) : 0;
@@ -152,13 +154,10 @@ export default function TenantDashboard() {
                 return (
                   <text 
                     key={`y-label-${i}`}
-                    x="30" 
+                    x="25" 
                     y={y + 4} 
-                    fill="#a1a1a1" 
-                    fontSize="10" 
-                    fontWeight="black" 
                     textAnchor="end"
-                    className="select-none"
+                    className="select-none fill-[#a1a1a1] text-[9px] sm:text-xs font-bold"
                   >
                     {val}
                   </text>
@@ -234,11 +233,8 @@ export default function TenantDashboard() {
                         <text 
                           x={p.x} 
                           y="280" 
-                          fill="#a1a1a1" 
-                          fontSize="10" 
-                          fontWeight="black" 
                           textAnchor="middle"
-                          className="select-none"
+                          className="select-none fill-[#a1a1a1] text-[9px] sm:text-xs font-bold"
                         >
                           {formattedDate}
                         </text>
@@ -265,7 +261,13 @@ export default function TenantDashboard() {
             {/* Tooltip Overlay */}
             {hoveredPoint && (
               <div 
-                className="absolute rounded-xl bg-black p-3 text-white shadow-2xl pointer-events-none transform -translate-x-1/2 -translate-y-[120%] transition-all duration-150"
+                className={`absolute rounded-xl bg-black p-3 text-white shadow-2xl pointer-events-none -translate-y-[120%] transition-all duration-150 ${
+                  hoveredPoint.x < 150 
+                    ? "translate-x-0" 
+                    : hoveredPoint.x > 850 
+                    ? "-translate-x-full" 
+                    : "-translate-x-1/2"
+                }`}
                 style={{ 
                   top: `${(hoveredPoint.y / 300) * 100}%`, 
                   left: `${(hoveredPoint.x / 1000) * 100}%` 
@@ -285,7 +287,7 @@ export default function TenantDashboard() {
         <section className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-black text-black">Tugas Mandiri Saya</h2>
+              <h2 className="text-xl font-bold text-black">Tugas Mandiri Saya</h2>
               <p className="text-xs font-medium text-gray-500">Kelola dan kerjakan pesanan pelanggan Anda secara langsung.</p>
             </div>
           </div>
@@ -316,13 +318,13 @@ export default function TenantDashboard() {
                   <div className="p-5 border-b border-gray-100 bg-gray-50/30 flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase">Tugas Mandiri</span>
-                        <div className={`px-2 py-0.5 border rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 ${getStatusColor(task.status)}`}>
+                        <span className="text-sm font-bold  text-gray-400">Tugas Mandiri</span>
+                        <div className={`px-2 py-0.5 border rounded-full text-[12px] font-medium flex items-center gap-1 ${getStatusColor(task.status)}`}>
                           {task.status === 'Dalam Perjalanan' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
                           {task.status}
                         </div>
                       </div>
-                      <h3 className="text-base font-black text-black leading-tight group-hover:text-blue-600 transition-colors">{task.serviceName}</h3>
+                      <h3 className="text-medium font-bold text-black leading-tight group-hover:text-blue-600 transition-colors">{task.serviceName}</h3>
                     </div>
                   </div>
 
@@ -396,45 +398,109 @@ export default function TenantDashboard() {
               <p className="text-xs font-bold">Belum ada tugas pengerjaan yang dibuat di tenant ini.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto pb-4">
-              <table className="w-full text-left min-w-[800px]">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
-                  <tr className="bg-black/[0.02] text-[10px] font-medium uppercase tracking-widest text-gray-400">
-                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">NAMA TUGAS</th>
-                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">PELANGGAN</th>
-                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">TEKNISI</th>
-                    <th className="px-4 sm:px-8 py-4 whitespace-nowrap">DEADLINE</th>
-                    <th className="px-4 sm:px-8 py-4 text-center whitespace-nowrap">STATUS</th>
+                  <tr className="border-b border-gray-100 bg-gray-50 text-[12px] text-gray-400 [&>th]:font-medium text-center">
+                    <th className="py-4 px-6 text-left">Nama Tugas</th>
+                    <th className="py-4 px-6 text-left">Pelanggan</th>
+                    <th className="py-4 px-6 text-left">Teknisi</th>
+                    <th className="py-4 px-6">Deadline</th>
+                    <th className="py-4 px-6 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/[0.03]">
-                  {tasks.map((task) => (
-                    <tr key={task.id} className="text-xs font-bold transition-all hover:bg-black/[0.01]">
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
-                        <span className="block text-black">{task.serviceName}</span>
-                      </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">{task.customerName}</td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-[8px] font-black shrink-0 border border-gray-200">
-                            {task.technicianName.charAt(0)}
+                <tbody className="divide-y divide-gray-50">
+                  {tasks.map((task) => {
+                    const initials = task.customerName
+                      ? task.customerName.trim().split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
+                      : "P";
+
+                    const simulatedEmail = task.customerName
+                      ? `${task.customerName.toLowerCase().replace(/\s+/g, "")}@gmail.com`
+                      : "customer@gmail.com";
+
+                    const colors = [
+                      "bg-rose-100 text-rose-700",
+                      "bg-blue-100 text-blue-700",
+                      "bg-amber-100 text-amber-700",
+                      "bg-purple-100 text-purple-700",
+                      "bg-emerald-100 text-emerald-700",
+                      "bg-indigo-100 text-indigo-700"
+                    ];
+                    const charCode = task.customerName ? task.customerName.charCodeAt(0) : 65;
+                    const avatarColorClass = colors[charCode % colors.length];
+
+                    const techInitials = task.technicianName
+                      ? task.technicianName.trim().split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
+                      : "T";
+
+                    return (
+                      <tr key={task.id} className="hover:bg-gray-50/50 transition-colors">
+                        {/* Nama Tugas */}
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col text-left">
+                            <span className="text-xs font-bold text-gray-900">
+                              {task.serviceName}
+                            </span>
+                            {task.deskripsi && (
+                              <span className="text-[10px] font-medium text-gray-400 mt-0.5 truncate max-w-[200px]" title={task.deskripsi}>
+                                {task.deskripsi}
+                              </span>
+                            )}
                           </div>
-                          {task.technicianName}
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Clock size={12} className="shrink-0" />
-                          <span>{task.date} {task.time}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 text-center whitespace-nowrap">
-                        <span className={`rounded-lg border px-2.5 py-1 text-[9px] uppercase tracking-wider font-black ${getStatusColor(task.status)}`}>
-                          {task.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+
+                        {/* Pelanggan */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3 text-left">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${avatarColorClass}`}>
+                              {initials}
+                            </div>
+                            <div className="flex flex-col text-left">
+                              <span className="text-sm font-medium text-black leading-tight">
+                                {task.customerName}
+                              </span>
+                              <span className="text-[11px] text-gray-400 font-medium leading-normal">
+                                {simulatedEmail}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Teknisi */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3 text-left">
+                            <div className="h-8 w-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600 shrink-0">
+                              {techInitials}
+                            </div>
+                            <div className="flex flex-col text-left">
+                              <span className="text-sm font-medium text-black leading-tight">
+                                {task.technicianName}
+                              </span>
+                              <span className="text-[10px] text-gray-400 font-medium leading-normal">
+                                Teknisi Lapangan
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Deadline */}
+                        <td className="py-4 px-6 text-xs font-semibold text-gray-500 text-center">
+                          <div className="flex items-center justify-center gap-1.5 text-center">
+                            <Clock size={12} className="shrink-0 text-gray-400" />
+                            <span>{task.date} {task.time}</span>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-4 px-6 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border ${getStatusColor(task.status)}`}>
+                            {task.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

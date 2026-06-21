@@ -1,139 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Building2, MapPin, Phone, ShieldCheck, Camera, Mail } from "lucide-react";
+import { Building2, ShieldCheck } from "lucide-react";
 import Image from "next/image";
-import { authService } from "@/lib/api/auth.service";
-import { tenantService } from "@/lib/api/(tenant)/tenant.service";
 import { Toast } from "@/components/toast";
+import { useTenantProfile } from "@/hooks/useTenantProfile";
 
 export default function ProfileTenantPage() {
-  const [tenant, setTenant] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: "", address: "", phone: "", slug: "" });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [toast, setToast] = useState<{ show: boolean; title: string; message: string; type: "success" | "error" | "warning" }>({ show: false, title: "", message: "", type: "success" });
-
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  useEffect(() => {
-    const fetchTenantData = async () => {
-      try {
-        setIsLoading(true);
-        const profileId = localStorage.getItem("profile_id");
-        
-        if (!profileId) {
-          throw new Error("Sesi pengguna tidak valid.");
-        }
-
-        const profileResponse = await authService.getProfile(profileId);
-        const userProfile = profileResponse?.data?.data || profileResponse?.data;
-
-        if (!userProfile?.tenant_name) {
-          throw new Error("Anda belum memiliki perusahaan/tenant yang terdaftar.");
-        }
-
-        const allTenantsResponse = await tenantService.getAllTenants();
-        const allTenants = allTenantsResponse?.data?.data || allTenantsResponse?.data || [];
-        
-        const myTenantMatch = allTenants.find((t: any) => t.name === userProfile.tenant_name);
-
-        if (!myTenantMatch?.id) {
-          throw new Error("Data perusahaan Anda tidak ditemukan di sistem.");
-        }
-
-        const detailResponse = await tenantService.getTenantDetails(myTenantMatch.id);
-        const tenantDetail = detailResponse?.data?.data || detailResponse?.data;
-        
-        if (tenantDetail) {
-          // Cek apakah ada riwayat ganti nama di penyimpanan lokal browser
-          const isNameChangedLocal = localStorage.getItem(`name_changed_${tenantDetail.id}`) === "true";
-          
-          setTenant({
-            ...tenantDetail,
-            is_name_changed: tenantDetail.is_name_changed || isNameChangedLocal
-          });
-          setFormData({
-            name: tenantDetail.name || "",
-            address: tenantDetail.address || "",
-            phone: tenantDetail.phone || "",
-            slug: tenantDetail.slug || "",
-          });
-        } else {
-          throw new Error("Gagal memuat detail perusahaan.");
-        }
-        
-      } catch (error: any) {
-        console.error("Gagal mengambil profil tenant:", error);
-        setToast({ show: true, title: "Peringatan", message: error.message || "Terjadi kesalahan saat memuat data.", type: "warning" });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTenantData();
-  }, []);
-
-  const executeUpdate = async () => {
-    try {
-      setIsSaving(true);
-      setShowConfirmModal(false);
-      await tenantService.updateTenant(tenant.id, formData);
-      setToast({ show: true, title: "Berhasil", message: "Profil perusahaan berhasil diperbarui!", type: "success" });
-      
-      const isChangingName = formData.name !== tenant.name;
-      
-      // Simpan riwayat ganti nama ke local storage agar tidak hilang saat direfresh
-      if (isChangingName) {
-        localStorage.setItem(`name_changed_${tenant.id}`, "true");
-      }
-
-      // Jika nama berubah, kita anggap jatahnya habis (optimistic lock)
-      setTenant({ 
-        ...tenant, 
-        ...formData, 
-        is_name_changed: isChangingName ? true : tenant.is_name_changed 
-      });
-    } catch (error: any) {
-      console.error("Gagal memperbarui tenant:", error);
-      setToast({ show: true, title: "Gagal", message: error.message || "Terjadi kesalahan saat menyimpan perubahan.", type: "error" });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleUpdateClick = () => {
-    if (!tenant?.id) return;
-    
-    const isChangingName = formData.name !== tenant.name;
-
-    // Peringatan jika pengguna mencoba mengubah nama
-    if (isChangingName) {
-      if (tenant?.is_name_changed) {
-        setToast({ show: true, title: "Ditolak", message: "Kesempatan ubah nama perusahaan sudah habis.", type: "error" });
-        return;
-      }
-      
-      // Tampilkan Custom Modal Dialog Box
-      setShowConfirmModal(true);
-      return;
-    }
-
-    // Jika tidak ubah nama, langsung simpan
-    executeUpdate();
-  };
-
-  const handleCancel = () => {
-    if (tenant) {
-      setFormData({
-        name: tenant.name || "",
-        address: tenant.address || "",
-        phone: tenant.phone || "",
-        slug: tenant.slug || "",
-      });
-    }
-  };
+  const {
+    tenant,
+    formData,
+    setFormData,
+    isLoading,
+    isSaving,
+    toast,
+    setToast,
+    showConfirmModal,
+    setShowConfirmModal,
+    bankAccounts,
+    setBankAccounts,
+    BANK_OPTIONS,
+    handleUpdateClick,
+    handleCancel,
+    executeUpdate
+  } = useTenantProfile();
 
   if (isLoading) {
     return (
@@ -147,7 +37,7 @@ export default function ProfileTenantPage() {
   return (
     <div className="flex-1 flex flex-col pt-8 pb-10 px-6 sm:px-8 w-full">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">Profil Perusahaan</h1>
+        <h1 className="text-2xl font-bold text-bold">Profil Perusahaan</h1>
         <p className="text-sm font-medium text-gray-500 mt-1">Identitas bisnis atau CV yang Anda daftarkan di platform kami.</p>
       </div>
 
@@ -175,7 +65,7 @@ export default function ProfileTenantPage() {
               )}
             </div>
             <div className="space-y-2">
-               <h3 className="text-lg font-black text-black">Logo Bisnis</h3>
+               <h3 className="text-lg font-bold text-black">Logo Bisnis</h3>
                <p className="text-sm text-gray-500 font-medium max-w-md leading-relaxed">
                  Gambar ini digunakan sebagai logo atau foto profil bisnis Anda. Format yang disarankan adalah persegi (1:1).
                </p>
@@ -189,10 +79,10 @@ export default function ProfileTenantPage() {
 
           {/* Form-like Data Display */}
           <div className="space-y-6 pb-8 border-b border-black/[0.08]">
-            <h3 className="text-lg font-black text-black mb-2">Informasi Dasar</h3>
+            <h3 className="text-md font-bold text-black mb-2">Informasi Dasar</h3>
             
             <div className="grid sm:grid-cols-[200px_1fr] gap-2 sm:gap-6 items-center">
-              <label className="text-sm font-bold text-gray-700">Nama Perusahaan</label>
+              <label className="text-sm font-medium text-gray-700">Nama Perusahaan</label>
               <div className="w-full">
                 <input 
                   type="text" 
@@ -211,7 +101,7 @@ export default function ProfileTenantPage() {
             </div>
 
             <div className="grid sm:grid-cols-[200px_1fr] gap-2 sm:gap-6 items-center">
-              <label className="text-sm font-bold text-gray-700">ID Registrasi</label>
+              <label className="text-sm font-medium text-gray-700">ID Registrasi</label>
               <div className="w-full">
                 <input 
                   readOnly 
@@ -225,7 +115,7 @@ export default function ProfileTenantPage() {
             </div>
             
             <div className="grid sm:grid-cols-[200px_1fr] gap-2 sm:gap-6 items-start">
-              <label className="text-sm font-bold text-gray-700 pt-3">Alamat Operasional</label>
+              <label className="text-sm font-medium text-gray-700 pt-3">Alamat Operasional</label>
               <div className="w-full">
                 <textarea 
                   rows={3}
@@ -238,7 +128,7 @@ export default function ProfileTenantPage() {
             </div>
 
             <div className="grid sm:grid-cols-[200px_1fr] gap-2 sm:gap-6 items-center">
-              <label className="text-sm font-bold text-gray-700">Nomor Telepon</label>
+              <label className="text-sm font-medium text-gray-700">Nomor Telepon</label>
               <div className="w-full">
                 <input 
                   type="text" 
@@ -252,10 +142,10 @@ export default function ProfileTenantPage() {
           </div>
 
           <div className="space-y-6 pb-8 border-b border-black/[0.08]">
-            <h3 className="text-lg font-black text-black mb-2">Publikasi & Tautan</h3>
+            <h3 className="text-lg font-bold text-black mb-2">Publikasi & Tautan</h3>
             
             <div className="grid sm:grid-cols-[200px_1fr] gap-2 sm:gap-6 items-center">
-              <label className="text-sm font-bold text-gray-700">Tautan Bisnis (Slug)</label>
+              <label className="text-sm font-medium text-gray-700">Tautan Bisnis (Slug)</label>
               <div className="w-full flex items-stretch">
                 <span className="bg-black/5 text-gray-500 font-semibold px-4 py-3 rounded-l-lg border border-gray-200 border-r-0 shrink-0 text-sm flex items-center">
                   /tenant/
@@ -271,11 +161,77 @@ export default function ProfileTenantPage() {
             </div>
 
             <div className="grid sm:grid-cols-[200px_1fr] gap-2 sm:gap-6 items-center">
-              <label className="text-sm font-bold text-gray-700">Status Verifikasi</label>
+              <label className="text-sm font-medium text-gray-700">Status Verifikasi</label>
               <div className="w-full flex items-center gap-2 text-emerald-600 bg-emerald-50 w-max px-4 py-2 rounded-lg font-bold text-xs border border-emerald-100">
                 <ShieldCheck size={16} /> Owner Terverifikasi
               </div>
             </div>
+          </div>
+
+          {/* Bank Accounts Section */}
+          <div className="space-y-6 pb-8 border-b border-black/[0.08]">
+            <div className="flex justify-between items-center mb-2">
+              <div>
+                <h3 className="text-lg font-bold text-black">Rekening Pembayaran</h3>
+                <p className="text-xs text-gray-500 font-medium leading-relaxed mt-1">
+                  Tambahkan hingga maksimal 3 rekening bank untuk menerima pembayaran dari pelanggan.
+                </p>
+              </div>
+              {bankAccounts.length < 3 && (
+                <button
+                  type="button"
+                  onClick={() => setBankAccounts([...bankAccounts, { bank: "", number: "" }])}
+                  className="text-xs font-bold bg-black text-white px-4 py-2.5 rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  + Tambah Rekening
+                </button>
+              )}
+            </div>
+
+            {bankAccounts.map((account, index) => (
+              <div key={index} className="grid sm:grid-cols-[200px_1fr] gap-2 sm:gap-6 items-start">
+                <label className="text-sm font-medium text-gray-700 pt-3">Rekening #{index + 1}</label>
+                <div className="w-full flex flex-col sm:flex-row gap-3 items-stretch">
+                  <select
+                    value={account.bank}
+                    onChange={(e) => {
+                      const newAccs = [...bankAccounts];
+                      newAccs[index].bank = e.target.value;
+                      setBankAccounts(newAccs);
+                    }}
+                    className="w-full sm:w-1/3 bg-white border border-gray-200 text-black font-semibold rounded-lg px-4 py-3 outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                  >
+                    <option value="">-- Pilih Bank --</option>
+                    {BANK_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={account.number}
+                    onChange={(e) => {
+                      const newAccs = [...bankAccounts];
+                      newAccs[index].number = e.target.value.replace(/[^0-9]/g, ""); // Hanya angka
+                      setBankAccounts(newAccs);
+                    }}
+                    placeholder="Nomor Rekening / Nomor Telepon E-Wallet"
+                    className="w-full sm:flex-1 bg-white border border-gray-200 text-black font-semibold rounded-lg px-4 py-3 outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                  />
+                  {bankAccounts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newAccs = bankAccounts.filter((_, idx) => idx !== index);
+                        setBankAccounts(newAccs);
+                      }}
+                      className="text-red-600 hover:text-red-800 font-bold text-sm px-4 flex items-center justify-center border border-red-100 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      Hapus
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Action Buttons */}

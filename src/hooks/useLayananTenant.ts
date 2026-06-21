@@ -62,12 +62,16 @@ export function useLayananTenant() {
   const createLayanan = async (payload: any) => {
     setIsSubmitting(true);
     try {
-      await layananTenantService.createLayanan(payload);
+      const { data, error } = await layananTenantService.createLayanan(payload);
+      if (error) {
+        setToast({ show: true, title: "Error", message: error, type: "error" });
+        return false;
+      }
       setToast({ show: true, title: "Berhasil", message: "Layanan baru berhasil dibuat.", type: "success" });
       await fetchLayanan();
       return true;
-    } catch (err) {
-      setToast({ show: true, title: "Error", message: "Gagal menyimpan layanan.", type: "error" });
+    } catch (err: any) {
+      setToast({ show: true, title: "Error", message: err.message || "Gagal menyimpan layanan.", type: "error" });
       return false;
     } finally {
       setIsSubmitting(false);
@@ -77,12 +81,16 @@ export function useLayananTenant() {
   const updateLayanan = async (id: string, payload: any) => {
     setIsSubmitting(true);
     try {
-      await layananTenantService.updateLayanan(id, payload);
+      const { data, error } = await layananTenantService.updateLayanan(id, payload);
+      if (error) {
+        setToast({ show: true, title: "Error", message: error, type: "error" });
+        return false;
+      }
       setToast({ show: true, title: "Tersimpan", message: "Layanan berhasil diperbarui.", type: "success" });
       await fetchLayanan();
       return true;
-    } catch (err) {
-      setToast({ show: true, title: "Error", message: "Gagal memperbarui layanan.", type: "error" });
+    } catch (err: any) {
+      setToast({ show: true, title: "Error", message: err.message || "Gagal memperbarui layanan.", type: "error" });
       return false;
     } finally {
       setIsSubmitting(false);
@@ -91,11 +99,15 @@ export function useLayananTenant() {
 
   const deleteLayanan = async (id: string) => {
     try {
-      await layananTenantService.deleteLayanan(id);
+      const { data, error } = await layananTenantService.deleteLayanan(id);
+      if (error) {
+        setToast({ show: true, title: "Error", message: error, type: "error" });
+        return;
+      }
       setToast({ show: true, title: "Layanan Dihapus", message: "Layanan telah dihapus.", type: "info" });
       await fetchLayanan();
-    } catch (err) {
-      setToast({ show: true, title: "Error", message: "Gagal menghapus layanan.", type: "error" });
+    } catch (err: any) {
+      setToast({ show: true, title: "Error", message: err.message || "Gagal menghapus layanan.", type: "error" });
     }
   };
 

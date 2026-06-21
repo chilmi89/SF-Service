@@ -15,7 +15,8 @@ import {
   XCircle,
   Loader2,
   TrendingUp,
-  Receipt
+  Receipt,
+  Truck
 } from "lucide-react";
 import { useOrders, OrderItem } from "@/hooks/useOrders";
 import { Toast } from "@/components/toast";
@@ -45,17 +46,55 @@ export default function OrdersPage() {
   } = useOrders();
 
   // Helper untuk mendapatkan status teks dan styling badge
-  const getStatusDetails = (statusId: number) => {
-    switch (statusId) {
-      case 2:
+  const getStatusDetails = (order: any) => {
+    const statusId = order.status;
+    const taskStatus = order.taskStatus;
+    const hasBukti = order?.transactions && (order.transactions['bukti pembayaran'] || order.transactions.status_pembayaran === 3 || order.transactions.status_pembayaran === 'menunggu_verifikasi');
+
+    // Override visualisasi berdasarkan status spesifik dari tabel tugas (jika bukan Lunas/Ditolak/Menunggu Pembayaran)
+    if (taskStatus !== undefined && taskStatus !== null && ![6, 7, 8].includes(statusId)) {
+      if (taskStatus == 2) {
         return {
-          label: "Proses Verifikasi",
-          colorClass: "bg-gray-100 text-gray-800 border-gray-200",
-          icon: <Loader2 className="h-3 w-3 animate-spin text-gray-500" />
+          label: "Proses",
+          colorClass: "bg-blue-50 text-blue-700 border-blue-100",
+          icon: <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+        };
+      }
+      if (taskStatus == 3) {
+        return {
+          label: "Perjalanan",
+          colorClass: "bg-indigo-50 text-indigo-700 border-indigo-100",
+          icon: <Truck className="h-3 w-3 text-indigo-500" />
+        };
+      }
+    }
+
+    switch (statusId) {
+      case 1:
+      case 2:
+        // Jika order punya bukti, itu Verifikasi Pembayaran (Bisa ditampilin Proses)
+        if (statusId === 2 && (hasBukti || order.hasTask)) {
+          return {
+            label: "Proses",
+            colorClass: "bg-blue-50 text-blue-700 border-blue-100",
+            icon: <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+          };
+        }
+        // Jika status 2 tapi BUKAN Verifikasi Pembayaran, itu pesanan baru.
+        return {
+          label: "Menunggu",
+          colorClass: "bg-amber-50 text-amber-700 border-amber-100",
+          icon: <Clock className="h-3 w-3 text-amber-500" />
+        };
+      case 3:
+        return {
+          label: "Perjalanan",
+          colorClass: "bg-indigo-50 text-indigo-700 border-indigo-100",
+          icon: <Truck className="h-3 w-3 text-indigo-500" />
         };
       case 5:
         return {
-          label: "Teknisi Ditugaskan",
+          label: "Menunggu",
           colorClass: "bg-blue-50 text-blue-700 border-blue-100",
           icon: <User className="h-3 w-3 text-blue-500" />
         };
@@ -156,7 +195,7 @@ export default function OrdersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AnimatePresence mode="popLayout">
               {filteredOrders.map((order, idx) => {
-                const statusDetails = getStatusDetails(order.status);
+                const statusDetails = getStatusDetails(order);
                 return (
                   <motion.div
                     key={order.id}

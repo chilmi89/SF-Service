@@ -19,6 +19,7 @@ import { useOwnerDashboard } from "@/hooks/owner/useOwnerDashboard";
 export default function TenantDashboard() {
   const {
     tasks,
+    orders,
     isLoadingTasks,
     updateTaskStatus,
     toast,
@@ -39,7 +40,8 @@ export default function TenantDashboard() {
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'Dalam Perjalanan': return 'bg-blue-50 text-blue-600 border-blue-200';
+      case 'Perjalanan': return 'bg-blue-50 text-blue-600 border-blue-200';
+      case 'Proses': return 'bg-indigo-50 text-indigo-600 border-indigo-200';
       case 'Menunggu': return 'bg-amber-50 text-amber-600 border-amber-200';
       case 'Selesai': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
       case 'Dibatalkan': return 'bg-red-50 text-red-600 border-red-200';
@@ -307,7 +309,29 @@ export default function TenantDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {tasks.map((task, i) => (
+              {tasks.map((task, i) => {
+                const relatedOrder = orders.find(o => o.id === task.orderId);
+                const isMenungguPembayaran = relatedOrder?.status === 7;
+                const isProsesVerifikasi = relatedOrder?.status === 2;
+                const isLunas = relatedOrder?.status === 8;
+
+                let badgeLabel: string = task.status;
+                let badgeColor = getStatusColor(task.status);
+                
+                if (task.status === 'Selesai') {
+                  if (isLunas) {
+                    badgeLabel = "Lunas";
+                    badgeColor = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                  } else if (isProsesVerifikasi) {
+                    badgeLabel = "Verifikasi Pembayaran";
+                    badgeColor = "bg-blue-50 text-blue-600 border-blue-200";
+                  } else {
+                    badgeLabel = "Menunggu Pembayaran";
+                    badgeColor = "bg-amber-50 text-amber-600 border-amber-200";
+                  }
+                }
+
+                return (
                 <motion.div
                   key={task.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -319,9 +343,9 @@ export default function TenantDashboard() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-bold  text-gray-400">Tugas Mandiri</span>
-                        <div className={`px-2 py-0.5 border rounded-full text-[12px] font-medium flex items-center gap-1 ${getStatusColor(task.status)}`}>
-                          {task.status === 'Dalam Perjalanan' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
-                          {task.status}
+                        <div className={`px-2 py-0.5 border rounded-full text-[12px] font-medium flex items-center gap-1 ${badgeColor}`}>
+                          {badgeLabel === 'Perjalanan' && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
+                          {badgeLabel}
                         </div>
                       </div>
                       <h3 className="text-medium font-bold text-black leading-tight group-hover:text-blue-600 transition-colors">{task.serviceName}</h3>
@@ -357,25 +381,42 @@ export default function TenantDashboard() {
                   <div className="p-4 border-t border-gray-100 bg-gray-50/30 flex justify-end gap-2">
                     {task.status !== 'Selesai' && task.status !== 'Dibatalkan' && (
                       <button
-                        onClick={() =>
-                          updateTaskStatus(
-                            task.id,
-                            task.status === 'Menunggu' ? 'Dalam Perjalanan' : 'Selesai'
-                          )
-                        }
+                        onClick={() => {
+                          let nextStatus: any = "Selesai";
+                          if (task.status === "Menunggu") nextStatus = "Perjalanan";
+                          else if (task.status === "Perjalanan") nextStatus = "Proses";
+                          updateTaskStatus(task.id, nextStatus);
+                        }}
                         className="w-full py-2 rounded-xl bg-black text-white text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-all active:scale-95 shadow-sm text-center"
                       >
-                        {task.status === 'Menunggu' ? 'Mulai Tugas' : 'Selesaikan Pekerjaan'}
+                        {task.status === 'Menunggu' ? 'Mulai Tugas' : 
+                         task.status === 'Perjalanan' ? 'Mulai Perbaikan' : 'Selesaikan Pekerjaan'}
                       </button>
                     )}
-                    {task.status === 'Selesai' && (
-                      <div className="w-full py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 text-[10px] font-bold uppercase tracking-wider text-center cursor-not-allowed">
-                        Selesai
+                    
+                    {task.status === 'Selesai' && !isProsesVerifikasi && !isLunas && (
+                      <div className="w-full py-2 rounded-xl border border-amber-200 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2">
+                        <AlertCircle size={12} /> User Belum Bayar
+                      </div>
+                    )}
+
+                    {task.status === 'Selesai' && isProsesVerifikasi && (
+                      <a 
+                        href="/dashboard/owner/verifikasi-order"
+                        className="w-full py-2 rounded-xl bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all active:scale-95 shadow-sm text-center flex items-center justify-center gap-2"
+                      >
+                        <Wallet size={12} /> Cek Bukti Bayar
+                      </a>
+                    )}
+
+                    {task.status === 'Selesai' && isLunas && (
+                      <div className="w-full py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider text-center flex items-center justify-center gap-2">
+                        <CheckCircle2 size={12} /> Selesai & Lunas
                       </div>
                     )}
                   </div>
                 </motion.div>
-              ))}
+              )})}
             </div>
           )}
         </section>

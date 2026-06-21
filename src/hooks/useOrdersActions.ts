@@ -4,22 +4,24 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function simulatePaymentAction(orderId: string) {
   try {
-    // 1. Update status order ke 8 (Selesai)
+    // 1. Update status order ke 2 (Proses Verifikasi) alih-alih 8 (Selesai)
+    // Supaya menunggu konfirmasi verifikasi dari Owner
     const { error: orderError } = await supabaseAdmin
       .from("orders")
-      .update({ status: 8 })
+      .update({ status: 2 })
       .eq("id", orderId);
 
     if (orderError) throw orderError;
 
-    // 2. Update status_pembayaran di transactions ke 2 (Lunas)
+    // 2. Berikan tanda di transaksi bahwa sedang menunggu verifikasi (agar Owner tahu ini bukan pesanan baru)
+    // Gunakan integer 3 karena kolom status_pembayaran bertipe bigint
     const { error: txError } = await supabaseAdmin
       .from("transactions")
-      .update({ status_pembayaran: 2 })
+      .update({ status_pembayaran: 3 })
       .eq("id_order", orderId);
 
     if (txError) throw txError;
-
+    
     return { success: true };
   } catch (error: any) {
     console.error("Error in simulatePaymentAction:", error);

@@ -48,20 +48,31 @@ export function useOrders() {
   const fetchOrders = useCallback(async () => {
     setLoadingOrders(true);
     try {
-      const { data, error } = await apiClient("/api/orders");
-      if (error) {
+      const timestamp = new Date().getTime();
+      const [ordersRes, tasksRes] = await Promise.all([
+        apiClient(`/api/orders?t=${timestamp}`),
+        apiClient(`/api/tasks?t=${timestamp}`).catch(() => ({ data: [] })) // Fallback jika gagal
+      ]);
+
+      if (ordersRes.error) {
         setToast({
           title: "Gagal Memuat Pesanan",
-          message: error || "Terjadi kesalahan pada server.",
+          message: ordersRes.error || "Terjadi kesalahan pada server.",
           type: "error"
         });
       } else {
-        const rawOrders = data?.data || data || [];
+        const rawOrders = ordersRes.data?.data || ordersRes.data || [];
+        const tasks = tasksRes.data?.data || tasksRes.data || [];
+        
         const mappedOrders = (Array.isArray(rawOrders) ? rawOrders : []).map((o: any) => {
           const tx = Array.isArray(o.transactions) ? o.transactions[0] : o.transactions;
+          const taskObj = tasks.find((t: any) => t.order_id === o.id);
+          const hasTask = !!taskObj;
           return {
             ...o,
             transactions: tx || null,
+            hasTask,
+            taskStatus: taskObj ? taskObj.status_tugas : null
           };
         });
         setOrders(mappedOrders);
@@ -204,7 +215,7 @@ export function useOrders() {
 
   const filteredOrders = orders.filter((order) => {
     if (activeTab === "aktif") {
-      return [2, 5, 7].includes(order.status);
+      return [2, 3, 5, 7].includes(order.status);
     }
     if (activeTab === "riwayat") {
       return [6, 8].includes(order.status);

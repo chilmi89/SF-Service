@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Clock, AlignLeft, Shield, CheckCircle2, Loader2 } from "lucide-react";
+import { X, Calendar, Clock, AlignLeft, Shield, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { Toast } from "@/components/toast";
 import { useBookingModal } from "@/hooks/useBookingModal";
 
@@ -14,6 +14,8 @@ export interface ServiceData {
   img: string;
   tech: string;
   avatar: string;
+  tenant_id?: string;
+  tenantId?: string;
 }
 
 interface BookingModalProps {
@@ -34,8 +36,14 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
     isSuccess,
     toast,
     setToast,
-    handleSubmit
-  } = useBookingModal({ isOpen, serviceId: service?.id, onClose });
+    handleSubmit,
+    isOwnService
+  } = useBookingModal({ 
+    isOpen, 
+    serviceId: service?.id, 
+    serviceTenantId: service?.tenant_id || service?.tenantId,
+    onClose 
+  });
 
   // Mencegah scroll pada body saat modal terbuka
   useEffect(() => {
@@ -176,13 +184,25 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
                 </div>
 
                 {/* Footer Action */}
+                {isOwnService && (
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 text-red-700 text-xs font-semibold">
+                    <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                    <div>
+                      <p className="font-bold">Akses Dibatasi</p>
+                      <p className="text-red-600/90 font-medium mt-0.5">
+                        Sebagai Owner/Owner Tunggal, Anda tidak diperkenankan memesan layanan milik tenant Anda sendiri.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
                   <div className="hidden sm:block">
                     <p className="text-xs text-gray-400">Pastikan data yang Anda isi sudah benar.</p>
                   </div>
                   <button 
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isOwnService}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-black px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-black/90 active:scale-95 disabled:bg-gray-400 shadow-xl shadow-black/10"
                   >
                     {isSubmitting ? (
@@ -190,6 +210,8 @@ export default function BookingModal({ isOpen, onClose, service }: BookingModalP
                         <Loader2 className="h-4 w-4 animate-spin" />
                         MEMPROSES...
                       </>
+                    ) : isOwnService ? (
+                      "TIDAK BISA MEMESAN LAYANAN SENDIRI"
                     ) : (
                       "KONFIRMASI PESANAN"
                     )}

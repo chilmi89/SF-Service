@@ -7,7 +7,7 @@ import { ToastType } from "@/components/toast";
 export interface Order {
   id: string;
   customer_name: string;
-  status_order: "Menunggu Konfirmasi" | "Diterima" | "Ditolak";
+  status_order: "Menunggu Konfirmasi" | "Diterima" | "Ditolak" | "Verifikasi Pembayaran";
   catatan: string;
   created_at: string;
   layanan: {
@@ -18,6 +18,7 @@ export interface Order {
     invoice_number: string;
     total_bayar: number;
     status_pembayaran: string | number;
+    "bukti pembayaran"?: string; // Menambahkan support bukti pembayaran
   };
   status?: number;
   tanggal_order: string;
@@ -37,9 +38,20 @@ export function useVerifikasiOrder() {
     setToast({ show: true, title, message, type });
   };
 
-  const mapStatusToOrder = (status: number): "Menunggu Konfirmasi" | "Diterima" | "Ditolak" => {
+  const mapStatusToOrder = (status: number, order: any): "Menunggu Konfirmasi" | "Diterima" | "Ditolak" | "Verifikasi Pembayaran" => {
     if (status === 6) return "Ditolak";
-    if (status === 5 || status === 7 || status === 8) return "Diterima";
+    
+    // Cek apakah ini pembayaran (Verifikasi Pembayaran)
+    const hasBukti = order?.transactions && (order.transactions['bukti pembayaran'] || order.transactions.status_pembayaran === 3 || order.transactions.status_pembayaran === 'menunggu_verifikasi');
+    if (status === 2 && hasBukti) return "Verifikasi Pembayaran";
+    
+    // Jika status 2 tapi belum ada task, ini adalah pesanan baru (backend default ke 2)
+    if ((status === 1 || status === 2) && !order?.hasTask) return "Menunggu Konfirmasi";
+    
+    // Jika status 2 tapi SUDAH ada task, berarti ini sedang "Mulai Perbaikan" (Legacy fallback)
+    if (status === 2 && order?.hasTask) return "Diterima";
+    
+    if (status === 5 || status === 7 || status === 8 || status === 3 || status === 4) return "Diterima";
     return "Menunggu Konfirmasi";
   };
 
@@ -70,7 +82,8 @@ export function useVerifikasiOrder() {
         }
       }
 
-      const res = await apiClient("/api/orders?as=tenant");
+      const timestamp = new Date().getTime();
+      const res = await apiClient(`/api/orders?as=tenant&t=${timestamp}`);
       if (res.error) {
         throw new Error(res.error);
       }
@@ -78,7 +91,7 @@ export function useVerifikasiOrder() {
       // Fetch tasks to check if they exist for each order
       let tasks: any[] = [];
       try {
-        const resTasks = await apiClient("/api/tasks");
+        const resTasks = await apiClient(`/api/tasks?t=${timestamp}`);
         tasks = resTasks?.data?.data || resTasks?.data || [];
       } catch (err) {
         console.error("Gagal memuat daftar tugas untuk pengecekan:", err);
@@ -91,7 +104,7 @@ export function useVerifikasiOrder() {
         return {
           ...o,
           transactions: tx || null,
-          status_order: mapStatusToOrder(o.status),
+          status_order: mapStatusToOrder(o.status, { ...o, transactions: tx || null, hasTask }),
           hasTask,
         };
       });
@@ -163,6 +176,7 @@ export function useVerifikasiOrder() {
       const payload: any = {
         order_id: orderId,
         deskripsi: combinedDescription,
+        status_tugas: 5, // 5 = Menunggu / Disetujui (agar muncul tombol Mulai Tugas terlebih dahulu)
       };
       
       if (technicianId) {
@@ -244,6 +258,64 @@ export function useVerifikasiOrder() {
     }
   };
 
+  const approvePayment = async (orderId: string) => {
+    setIsSubmitting(true);
+    try {
+      const res = await apiClient(`/api/orders/${orderId}`, {
+        method: "PUT",
+        body: { status: 8 },
+      });
+
+      if (res.error) {
+        throw new Error(res.error);
+      }
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId ? { ...o, status_order: "Diterima", status: 8 } : o
+        )
+      );
+
+      showToast("Berhasil", "Pembayaran disetujui, pesanan selesai.", "success");
+      return true;
+    } catch (err: any) {
+      console.error(err);
+      showToast("Gagal", err.message || "Gagal menyetujui pembayaran.", "error");
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const rejectPayment = async (orderId: string) => {
+    setIsSubmitting(true);
+    try {
+      const res = await apiClient(`/api/orders/${orderId}`, {
+        method: "PUT",
+        body: { status: 7 }, // Kembali ke Menunggu Pembayaran
+      });
+
+      if (res.error) {
+        throw new Error(res.error);
+      }
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId ? { ...o, status_order: "Diterima", status: 7 } : o
+        )
+      );
+
+      showToast("Berhasil", "Pembayaran ditolak. Pelanggan harus mengunggah ulang.", "success");
+      return true;
+    } catch (err: any) {
+      console.error(err);
+      showToast("Gagal", err.message || "Gagal menolak pembayaran.", "error");
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     orders,
     technicians,
@@ -255,5 +327,7 @@ export function useVerifikasiOrder() {
     fetchTechnicians,
     acceptOrderWithTask,
     rejectOrder,
+    approvePayment,
+    rejectPayment,
   };
 }

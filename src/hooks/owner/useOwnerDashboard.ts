@@ -280,6 +280,7 @@ export function useOwnerDashboard() {
   return {
     userRole,
     tasks,
+    orders,
     isLoadingTasks: isLoadingTasks || isLoadingDashboard,
     updateTaskStatus,
     toast,

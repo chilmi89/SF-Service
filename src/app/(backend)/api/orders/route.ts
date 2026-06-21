@@ -114,6 +114,7 @@ export async function GET(request: NextRequest) {
         .from('orders')
         .select(`
           *,
+          customer:profiles!id_customer(full_name, phone),
           layanan (nama_layanan, harga_dasar, tenant_id),
           transactions!inner (invoice_number, total_bayar, status_pembayaran, tenant_id)
         `)
@@ -128,6 +129,7 @@ export async function GET(request: NextRequest) {
         .from('orders')
         .select(`
           *,
+          customer:profiles!id_customer(full_name, phone),
           layanan (nama_layanan, harga_dasar, tenant_id),
           transactions (invoice_number, total_bayar, status_pembayaran)
         `)

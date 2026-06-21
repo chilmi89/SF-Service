@@ -64,4 +64,13 @@ export const authService = {
       method: 'POST',
     });
   },
+
+  /**
+   * Refresh session token (dipanggil setelah perubahan role/tenant)
+   */
+  async refreshToken() {
+    return apiClient('/api/auth/refresh-token', {
+      method: 'POST',
+    });
+  },
 };

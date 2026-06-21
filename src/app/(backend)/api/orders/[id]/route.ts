@@ -90,6 +90,7 @@ export async function GET(
       .from('orders')
       .select(`
         *,
+        customer:profiles!id_customer(full_name, phone),
         layanan (nama_layanan, harga_dasar, tenant_id, tenants(norek)),
         transactions (invoice_number, total_bayar, status_pembayaran)
       `)

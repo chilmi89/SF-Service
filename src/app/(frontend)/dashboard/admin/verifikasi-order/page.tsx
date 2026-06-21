@@ -32,14 +32,16 @@ export default function OrderVerificationPage() {
     fetchTechnicians,
     acceptOrderWithTask,
     rejectOrder,
+    approvePayment,
+    rejectPayment,
   } = useVerifikasiOrder();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"Menunggu Konfirmasi" | "Proses" | "Selesai" | "Ditolak" | "Semua">("Menunggu Konfirmasi");
+  const [activeTab, setActiveTab] = useState<"Menunggu Konfirmasi" | "Verifikasi Pembayaran" | "Diterima" | "Ditolak" | "Semua">("Menunggu Konfirmasi");
   
   // State Action Modals
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [actionType, setActionType] = useState<"Diterima" | "Ditolak" | null>(null);
+  const [actionType, setActionType] = useState<"Diterima" | "Ditolak" | "Lunas" | "TolakPembayaran" | null>(null);
 
   // States for Task Creation Form
   const [selectedTechId, setSelectedTechId] = useState<string>("");
@@ -69,8 +71,12 @@ export default function OrderVerificationPage() {
         taskName,
         description
       );
-    } else {
+    } else if (actionType === "Ditolak") {
       success = await rejectOrder(selectedOrder.id);
+    } else if (actionType === "Lunas") {
+      success = await approvePayment(selectedOrder.id);
+    } else if (actionType === "TolakPembayaran") {
+      success = await rejectPayment(selectedOrder.id);
     }
 
     if (success) {
@@ -103,14 +109,6 @@ export default function OrderVerificationPage() {
     }
   };
 
-  // Helper to determine status and styling based on database status code
-  const getOrderStatusDisplay = (status: number | undefined) => {
-    if (status === 5 || status === 7) return { text: "Proses", colorClass: "bg-blue-50 text-blue-700 border-blue-100" };
-    if (status === 8) return { text: "Selesai", colorClass: "bg-emerald-50 text-emerald-700 border-emerald-100" };
-    if (status === 6) return { text: "Ditolak", colorClass: "bg-red-50 text-red-700 border-red-100" };
-    return { text: "Menunggu Konfirmasi", colorClass: "bg-amber-50 text-amber-700 border-amber-100" };
-  };
-
   // Filter & Search & Sort Logic (Newest to Oldest)
   const filteredOrders = orders
     .filter((order) => {
@@ -120,8 +118,7 @@ export default function OrderVerificationPage() {
         order.layanan?.nama_layanan?.toLowerCase().includes(searchTerm.toLowerCase());
       
       if (activeTab === "Semua") return matchesSearch;
-      const statusText = getOrderStatusDisplay(order.status).text;
-      return statusText === activeTab && matchesSearch;
+      return order.status_order === activeTab && matchesSearch;
     })
     .sort((a, b) => {
       const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -130,8 +127,8 @@ export default function OrderVerificationPage() {
     });
 
   // Count helper
-  const getCount = (statusTab: "Menunggu Konfirmasi" | "Proses" | "Selesai" | "Ditolak") => {
-    return orders.filter(o => getOrderStatusDisplay(o.status).text === statusTab).length;
+  const getCount = (statusTab: "Menunggu Konfirmasi" | "Verifikasi Pembayaran" | "Diterima" | "Ditolak") => {
+    return orders.filter(o => o.status_order === statusTab).length;
   };
 
   return (
@@ -157,7 +154,7 @@ export default function OrderVerificationPage() {
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
         {/* TABS */}
         <div className="flex overflow-x-auto w-full md:w-auto gap-1 p-1 bg-gray-50 rounded-xl border border-gray-200/50">
-          {(["Menunggu Konfirmasi", "Proses", "Selesai", "Ditolak", "Semua"] as const).map((tab) => {
+          {(["Menunggu Konfirmasi", "Verifikasi Pembayaran", "Diterima", "Ditolak", "Semua"] as const).map((tab) => {
             const isActive = activeTab === tab;
             const count = tab !== "Semua" ? getCount(tab) : orders.length;
 
@@ -255,8 +252,12 @@ export default function OrderVerificationPage() {
                 // REAL DATA ROWS
                 <AnimatePresence mode="popLayout">
                   {filteredOrders.map((order) => {
-                    const statusInfo = getOrderStatusDisplay(order.status);
-                    
+                    const statusColors: Record<string, string> = {
+                      "Menunggu Konfirmasi": "bg-amber-50 text-amber-700 border-amber-100",
+                      "Verifikasi Pembayaran": "bg-blue-50 text-blue-700 border-blue-100",
+                      "Diterima": "bg-emerald-50 text-emerald-700 border-emerald-100",
+                      "Ditolak": "bg-red-50 text-red-700 border-red-100"
+                    };
                     // Generate initials
                     const initials = order.customer_name
                       ? order.customer_name.trim().split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
@@ -289,7 +290,7 @@ export default function OrderVerificationPage() {
                         className="hover:bg-gray-50/50 transition-colors"
                       >
                         {/* Invoice ID */}
-                        <td className="py-4 px-6 font-medium text-xs text-gray-950 text-center">
+                        <td className="py-4 px-6 font-medium text-xs text-gray-950 text-center whitespace-nowrap">
                           {order.transactions?.invoice_number || "N/A"}
                         </td>
 
@@ -336,15 +337,15 @@ export default function OrderVerificationPage() {
 
                         {/* Status */}
                         <td className="py-4 px-6">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border  ${statusInfo.colorClass}`}>
-                            {statusInfo.text}
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border whitespace-nowrap ${statusColors[order.status_order]}`}>
+                            {order.status_order}
                           </span>
                         </td>
 
                         {/* Action */}
                         <td className="py-4 px-6">
                           <div className="flex gap-2 justify-center items-center">
-                            {statusInfo.text === "Menunggu Konfirmasi" ? (
+                            {order.status_order === "Menunggu Konfirmasi" ? (
                               <>
                                 <button
                                   onClick={() => {
@@ -378,6 +379,58 @@ export default function OrderVerificationPage() {
                                   Tolak
                                 </button>
                               </>
+                            ) : order.status_order === "Verifikasi Pembayaran" ? (
+                              <div className="flex flex-col gap-1 items-center">
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedOrder(order);
+                                      setActionType("Lunas");
+                                    }}
+                                    className="px-2.5 py-1.5 rounded-lg bg-black text-white hover:bg-zinc-800 text-[11px] font-bold uppercase transition-all shadow-sm flex items-center gap-1 active:scale-95"
+                                  >
+                                    <Check className="h-3 w-3" />
+                                    Lunas
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedOrder(order);
+                                      setActionType("TolakPembayaran");
+                                    }}
+                                    className="px-2.5 py-1.5 rounded-lg border border-red-100 hover:bg-red-50 text-red-600 text-[10px] font-black uppercase transition-all flex items-center gap-1 active:scale-95"
+                                  >
+                                    <XIcon className="h-3 w-3" />
+                                    Tolak
+                                  </button>
+                                </div>
+                                {order.transactions?.["bukti pembayaran"] && (
+                                  <a href={order.transactions["bukti pembayaran"]} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 font-bold hover:underline">
+                                    Lihat Bukti Transfer
+                                  </a>
+                                )}
+                              </div>
+                            ) : (order.status_order === "Diterima" && !order.hasTask) ? (
+                              <button
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setActionType("Diterima");
+                                  setTaskName(`Pekerjaan: ${order.layanan?.nama_layanan || "Servis"}`);
+                                  setDescription(
+                                    `Detail pesanan untuk customer ${order.customer_name}. Catatan: ${
+                                      order.catatan || "-"
+                                    }`
+                                  );
+                                  const tomorrow = new Date();
+                                  tomorrow.setDate(tomorrow.getDate() + 1);
+                                  const formattedDate = tomorrow.toISOString().substring(0, 16);
+                                  setDeadline(formattedDate);
+                                  setSelectedTechId("");
+                                }}
+                                className="px-2.5 py-1.5 rounded-lg bg-black text-white hover:bg-zinc-800 text-[10px] font-black uppercase transition-all shadow-sm flex items-center gap-1 active:scale-95"
+                              >
+                                <Check className="h-3 w-3" />
+                                Tugas
+                              </button>
                             ) : (
                               <span className="text-[11px] font-medium text-gray-400">
                                 Selesai Konfirmasi
@@ -405,15 +458,18 @@ export default function OrderVerificationPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className={`absolute top-0 left-0 w-full h-1.5 ${actionType === "Diterima" ? "bg-emerald-500" : "bg-red-500"}`}></div>
+              <div className={`absolute top-0 left-0 w-full h-1.5 ${actionType === "Diterima" || actionType === "Lunas" ? "bg-emerald-500" : "bg-red-500"}`}></div>
               
               <h3 className="text-xl font-black text-black mb-3">
-                {actionType === "Diterima" ? "Terima & Buat Tugas" : "Tolak Pesanan ini?"}
+                {actionType === "Diterima" ? "Terima & Buat Tugas" : 
+                 actionType === "Lunas" ? "Setujui Pembayaran" :
+                 actionType === "TolakPembayaran" ? "Tolak Pembayaran" : 
+                 "Tolak Pesanan ini?"}
               </h3>
               
               <div className="flex-1 overflow-y-auto pr-1 space-y-4 text-sm font-medium text-gray-600 mb-6 leading-relaxed">
                 <p>
-                  Apakah Anda yakin ingin memproses pesanan dari <strong className="text-black">{selectedOrder.customer_name}</strong> dengan layanan <strong className="text-black">"{selectedOrder.layanan?.nama_layanan}"</strong>?
+                  Apakah Anda yakin ingin {actionType === "Lunas" ? "menyetujui pembayaran" : actionType === "TolakPembayaran" ? "menolak pembayaran" : "memproses pesanan"} dari <strong className="text-black">{selectedOrder.customer_name}</strong> dengan layanan <strong className="text-black">"{selectedOrder.layanan?.nama_layanan}"</strong>?
                 </p>
 
                 {actionType === "Diterima" && (
@@ -488,6 +544,18 @@ export default function OrderVerificationPage() {
                     Status invoice <strong className="text-black">{selectedOrder.transactions?.invoice_number}</strong> akan diubah menjadi <span className="font-bold px-1.5 py-0.5 rounded text-xs bg-red-50 text-red-700">DITOLAK</span>.
                   </p>
                 )}
+
+                {actionType === "Lunas" && (
+                  <p>
+                    Invoice <strong className="text-black">{selectedOrder.transactions?.invoice_number}</strong> akan ditandai sebagai <span className="font-bold px-1.5 py-0.5 rounded text-xs bg-emerald-50 text-emerald-700">LUNAS</span> dan pesanan dianggap sepenuhnya selesai.
+                  </p>
+                )}
+
+                {actionType === "TolakPembayaran" && (
+                  <p>
+                    Bukti pembayaran untuk invoice <strong className="text-black">{selectedOrder.transactions?.invoice_number}</strong> akan ditolak dan pelanggan diminta untuk mengunggah ulang bukti transfer.
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 bg-white shrink-0">
@@ -505,7 +573,7 @@ export default function OrderVerificationPage() {
                   onClick={handleUpdateStatus}
                   disabled={isSubmitting || (actionType === "Diterima" && !(userRole?.toLowerCase() === "owner tunggal" || userRole?.toLowerCase() === "owner_tunggal") && !selectedTechId)}
                   className={`px-5 py-2.5 flex items-center gap-2 font-bold text-xs text-white rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    actionType === "Diterima" 
+                    actionType === "Diterima" || actionType === "Lunas"
                       ? "bg-emerald-600 hover:bg-emerald-700" 
                       : "bg-red-600 hover:bg-red-700"
                   }`}
@@ -516,7 +584,10 @@ export default function OrderVerificationPage() {
                       Memproses...
                     </>
                   ) : (
-                    actionType === "Diterima" ? "Ya, Terima & Tugaskan" : "Ya, Tolak"
+                    actionType === "Diterima" ? "Ya, Terima & Tugaskan" : 
+                    actionType === "Lunas" ? "Ya, Tandai Lunas" :
+                    actionType === "TolakPembayaran" ? "Ya, Tolak Pembayaran" :
+                    "Ya, Tolak Pesanan"
                   )}
                 </button>
               </div>

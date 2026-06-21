@@ -132,6 +132,7 @@ export function usePartnersData() {
           return {
             id: item.layanan_id || item.id,
             tenantId: item.tenant_id,
+            tenant_id: item.tenant_id,
             title: item.nama_layanan || "Layanan",
             category: categoryMap[item.id_kategori] || item.kategori || "Servis AC",
             img: hasValidImg ? item.gambar : "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800",

@@ -34,13 +34,13 @@ export default function RootDashboardLayout({
 
   // Normalisasi role untuk Sidebar
   const getNormalizedRole = () : "superadmin" | "admin" | "teknisi" | "owner_tunggal" | "owner" => {
-    if (pathname?.startsWith("/dashboard/teknisi")) return "teknisi";
-    
     const role = userRole?.toLowerCase() || "";
     if (role === "super admin" || role === "superadmin") return "superadmin";
     if (role === "owner tunggal" || role === "owner_tunggal") return "owner_tunggal";
     if (role === "owner") return "owner";
     if (role === "teknisi") return "teknisi";
+    
+    if (pathname?.startsWith("/dashboard/teknisi")) return "teknisi";
     return "admin"; // Default fallback
   };
 

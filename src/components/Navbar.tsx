@@ -291,7 +291,6 @@ export default function Navbar() {
             <div className="flex flex-col gap-4 text-center font-bold">
               {[
                 { label: "Home", href: "/home" },
-                { label: "Services", href: "/services" },
                 { label: "Partners", href: "/partners" },
                 { label: "About", href: "/about" },
                 { label: "Contact", href: "/contact" },

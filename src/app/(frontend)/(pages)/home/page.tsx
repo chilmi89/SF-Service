@@ -107,6 +107,8 @@ export default function Home() {
           likes: Math.floor(Math.random() * 100),
           views: `${(Math.random() * 10 + 1).toFixed(1)}k`,
           price: `Rp ${(item.harga_dasar || 0).toLocaleString('id-ID')}`,
+          tenant_id: item.tenant_id,
+          tenantId: item.tenant_id
         }));
         setServices(mapped);
       } catch (err) {
@@ -326,7 +328,7 @@ export default function Home() {
           </div>
         </section>
         
-        <section ref={servicesSectionRef} className="px-8 lg:px-24 py-16 border-t border-black/[0.05]">
+        <section id="services" ref={servicesSectionRef} className="px-8 lg:px-24 py-16 border-t border-black/[0.05]">
           <div className="w-full">
             <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
               <div className="flex items-center w-full md:w-auto justify-between gap-2">

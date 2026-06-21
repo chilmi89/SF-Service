@@ -10,7 +10,7 @@ export interface TaskUI {
   serviceName: string;
   address: string;
   phone: string;
-  status: "Menunggu" | "Dalam Perjalanan" | "Selesai" | "Dibatalkan";
+  status: "Menunggu" | "Perjalanan" | "Proses" | "Selesai" | "Dibatalkan";
   time: string;
   date: string;
   priority: "Tinggi" | "Sedang" | "Normal" | "Rendah";
@@ -109,13 +109,15 @@ export function useTasks() {
         const customerInfo = customerProfiles[customerId] || { phone: "-", address: "-", fullName: "-" };
         
         // Mapping status_tugas dari DB ke UI (Dukungan integer bigint)
-        let mappedStatus: "Menunggu" | "Dalam Perjalanan" | "Selesai" | "Dibatalkan" = "Menunggu";
+        let mappedStatus: "Menunggu" | "Perjalanan" | "Proses" | "Selesai" | "Dibatalkan" = "Menunggu";
         const dbStatus = String(item.status_tugas || "").toLowerCase();
-        if (dbStatus === "dikerjakan" || dbStatus === "dalam perjalanan" || dbStatus === "3") {
-          mappedStatus = "Dalam Perjalanan";
+        if (dbStatus === "perjalanan" || dbStatus === "dalam perjalanan" || dbStatus === "3") {
+          mappedStatus = "Perjalanan";
+        } else if (dbStatus === "proses" || dbStatus === "dikerjakan" || dbStatus === "2") {
+          mappedStatus = "Proses";
         } else if (dbStatus === "selesai" || dbStatus === "4") {
           mappedStatus = "Selesai";
-        } else if (dbStatus === "dibatalkan" || dbStatus === "5") {
+        } else if (dbStatus === "dibatalkan" || dbStatus === "6") {
           mappedStatus = "Dibatalkan";
         } else {
           mappedStatus = "Menunggu";
@@ -179,22 +181,44 @@ export function useTasks() {
     }
   }, []);
 
-  const updateTaskStatus = async (id: string, statusUI: "Menunggu" | "Dalam Perjalanan" | "Selesai" | "Dibatalkan") => {
+  const updateTaskStatus = async (id: string, statusUI: "Menunggu" | "Perjalanan" | "Proses" | "Selesai" | "Dibatalkan") => {
     setIsSubmitting(true);
     // Petakan status UI kembali ke DB (Menggunakan tipe integer/bigint)
-    let dbStatus = 2; // Default Menunggu
-    if (statusUI === "Dalam Perjalanan") {
+    let dbStatus = 5; // Default Menunggu = Disetujui (5)
+    if (statusUI === "Perjalanan") {
       dbStatus = 3;
+    } else if (statusUI === "Proses") {
+      dbStatus = 2;
     } else if (statusUI === "Selesai") {
       dbStatus = 4;
     } else if (statusUI === "Dibatalkan") {
-      dbStatus = 5;
+      dbStatus = 6;
     }
 
     try {
       const res = await taskService.updateTaskStatus(id, String(dbStatus));
       if (res.error) {
         throw new Error(res.error);
+      }
+
+      // Sinkronkan status tugas dengan status pesanan (Order)
+      // Hal ini memastikan baik dashboard owner maupun user memiliki status perjalanan yang sama
+      const task = tasks.find((t) => t.id === id);
+      if (task && task.orderId) {
+        try {
+          // Selesai = 7 (Menunggu Pembayaran)
+          // Proses Perbaikan = 2 (Dikombinasikan dengan hasTask di frontend untuk menampilkan 'Proses')
+          let orderSyncStatus = dbStatus;
+          if (dbStatus === 4) orderSyncStatus = 7;
+          if (dbStatus === 2) orderSyncStatus = 2;
+          
+          await apiClient(`/api/orders/${task.orderId}`, {
+            method: 'PUT',
+            body: { status: orderSyncStatus },
+          });
+        } catch (syncErr) {
+          console.error("Gagal melakukan sinkronisasi status ke pesanan:", syncErr);
+        }
       }
       
       setTasks((prev) =>

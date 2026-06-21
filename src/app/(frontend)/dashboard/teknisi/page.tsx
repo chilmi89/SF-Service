@@ -55,8 +55,7 @@ export default function TeknisiDashboard() {
     fetchTasks();
   }, [fetchTasks]);
 
-  // Hitung stats berdasarkan tasks asli
-  const tasksHariIni = tasks.filter(t => t.status === "Menunggu" || t.status === "Dalam Perjalanan");
+  const tasksHariIni = tasks.filter(t => t.status === "Menunggu" || t.status === "Perjalanan" || t.status === "Proses");
   const totalSelesai = tasks.filter(t => t.status === "Selesai").length;
   const selesaiHariIni = tasks.filter(t => t.status === "Selesai").length; // sederhana
 
@@ -184,7 +183,8 @@ export default function TeknisiDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter ${
-                          task.status === 'Dalam Perjalanan' ? 'bg-blue-50 text-blue-600' :
+                          task.status === 'Perjalanan' ? 'bg-blue-50 text-blue-600' :
+                          task.status === 'Proses' ? 'bg-indigo-50 text-indigo-600' :
                           task.status === 'Menunggu' ? 'bg-amber-50 text-amber-600' :
                           'bg-gray-100 text-gray-500'
                         }`}>
@@ -201,15 +201,16 @@ export default function TeknisiDashboard() {
                             <MessageSquare size={14} />
                           </button>
                           <button
-                            onClick={() =>
-                              updateTaskStatus(
-                                task.id,
-                                task.status === 'Menunggu' ? 'Dalam Perjalanan' : 'Selesai'
-                              )
-                            }
+                            onClick={() => {
+                              let nextStatus: any = "Selesai";
+                              if (task.status === "Menunggu") nextStatus = "Perjalanan";
+                              else if (task.status === "Perjalanan") nextStatus = "Proses";
+                              updateTaskStatus(task.id, nextStatus);
+                            }}
                             className="px-3 py-1.5 rounded-lg bg-black text-white text-[10px] font-bold uppercase tracking-wider hover:bg-zinc-800 transition-colors"
                           >
-                            {task.status === 'Menunggu' ? 'Mulai' : 'Selesai'}
+                            {task.status === 'Menunggu' ? 'Mulai' : 
+                             task.status === 'Perjalanan' ? 'Mulai Perbaikan' : 'Selesai'}
                           </button>
                         </div>
                       </td>

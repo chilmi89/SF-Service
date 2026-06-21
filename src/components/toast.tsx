@@ -69,10 +69,10 @@ export const Toast: React.FC<ToastProps> = ({
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 0, x: 20, y: 0 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          className={`fixed top-5 right-5 z-[9999] flex w-full max-w-sm overflow-hidden rounded-xl border bg-white shadow-2xl transition-all ${variant.border}`}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className={`fixed top-4 left-4 right-4 md:left-auto md:right-5 md:top-5 z-[9999] flex md:w-full md:max-w-sm overflow-hidden rounded-xl border bg-white shadow-2xl transition-all ${variant.border}`}
         >
           <div className="flex items-center p-4 w-full">
             {/* Icon Box */}

@@ -7,6 +7,7 @@ import { PricingCard } from "@/components/dashboard/owner/subscription/PricingCa
 import { ActivePlanCard } from "@/components/dashboard/owner/subscription/ActivePlanCard";
 import { Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { Toast, ToastType } from "@/components/toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SubscriptionPage() {
   const { 
@@ -19,11 +20,22 @@ export default function SubscriptionPage() {
     isSubscribed 
   } = useSubscription();
 
+  const { isLoggedIn, logout } = useAuth();
   const [toast, setToast] = React.useState<{ show: boolean; title: string; message: string; type: ToastType } | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isCancelling, setIsCancelling] = React.useState(false);
 
   const onSubscribe = async (planId: string | number) => {
+    if (!isLoggedIn) {
+      setToast({
+        show: true,
+        title: "Akses Ditolak",
+        message: "Anda harus login terlebih dahulu untuk berlangganan.",
+        type: "error"
+      });
+      return;
+    }
+
     setIsProcessing(true);
     const result = await handleSubscribe(planId);
     setIsProcessing(false);
@@ -32,9 +44,12 @@ export default function SubscriptionPage() {
       setToast({
         show: true,
         title: "Berhasil Berlangganan",
-        message: "Paket Anda telah aktif. Sekarang Anda dapat menambah karyawan.",
+        message: "Paket Anda telah aktif. Silakan login ulang untuk memperbarui sistem.",
         type: "success"
       });
+      setTimeout(() => {
+        logout();
+      }, 2000);
     } else {
       setToast({
         show: true,
@@ -46,6 +61,16 @@ export default function SubscriptionPage() {
   };
 
   const onCancelClick = async () => {
+    if (!isLoggedIn) {
+      setToast({
+        show: true,
+        title: "Akses Ditolak",
+        message: "Anda harus login terlebih dahulu untuk membatalkan langganan.",
+        type: "error"
+      });
+      return;
+    }
+
     setIsCancelling(true);
     const result = await handleCancelSubscription();
     setIsCancelling(false);
@@ -54,9 +79,12 @@ export default function SubscriptionPage() {
       setToast({
         show: true,
         title: "Langganan Dibatalkan",
-        message: "Paket langganan Anda berhasil dibatalkan.",
+        message: "Paket langganan Anda berhasil dibatalkan. Silakan login ulang untuk memperbarui sistem.",
         type: "success"
       });
+      setTimeout(() => {
+        logout();
+      }, 2000);
     } else {
       setToast({
         show: true,

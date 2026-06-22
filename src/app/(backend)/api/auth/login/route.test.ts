@@ -53,7 +53,9 @@ vi.mock('@/lib/rateLimit', () => ({
       allowed: mockRateLimitAllowed,
       remainingMs: 3600000
     });
-  })
+  }),
+  incrementRateLimit: vi.fn().mockResolvedValue(undefined),
+  resetRateLimit: vi.fn().mockResolvedValue(undefined)
 }));
 
 describe('POST /api/auth/login', () => {

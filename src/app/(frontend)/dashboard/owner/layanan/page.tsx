@@ -31,6 +31,8 @@ export default function LayananOwnerPage() {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [categories, setCategories] = useState<{ id: number; nama: string }[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
 
   const {
     services,
@@ -66,8 +68,15 @@ export default function LayananOwnerPage() {
   const handleToggleStatus = (id: string) => toggleStatusLayanan(id);
 
   const handleDelete = (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus layanan ini?")) {
-      deleteLayanan(id);
+    setServiceToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (serviceToDelete) {
+      deleteLayanan(serviceToDelete);
+      setIsDeleteModalOpen(false);
+      setServiceToDelete(null);
     }
   };
 
@@ -389,6 +398,53 @@ export default function LayananOwnerPage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL - HAPUS LAYANAN */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 md:p-8 space-y-6 text-center">
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Trash2 size={32} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-black mb-2">Hapus Layanan?</h2>
+                  <p className="text-sm font-medium text-gray-500">
+                    Apakah Anda yakin ingin menghapus layanan ini? Tindakan ini tidak dapat dibatalkan.
+                  </p>
+                </div>
+                <div className="pt-4 flex gap-3">
+                  <button 
+                    onClick={() => setIsDeleteModalOpen(false)} 
+                    className="flex-1 h-11 rounded-xl border border-gray-300 text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={confirmDelete}
+                    className="flex-1 h-11 rounded-xl bg-red-500 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all"
+                  >
+                    Hapus
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

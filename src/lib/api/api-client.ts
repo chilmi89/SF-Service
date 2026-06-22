@@ -118,7 +118,18 @@ export async function apiClient<T = any>(
   const fetchPromise = (async () => {
     try {
       const response = await fetch(fullUrl, config);
-      const data = await response.json();
+      
+      let data = null;
+      if (response.status !== 204) {
+        const text = await response.text();
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            data = { message: text };
+          }
+        }
+      }
 
       let result;
       if (response.ok) {
